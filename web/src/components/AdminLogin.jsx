@@ -15,7 +15,8 @@ export default function AdminLogin() {
     try {
       await adminLogin(email, password)
     } catch (err) {
-      setError('Sign-in failed. Check your email and password.')
+      console.error('Admin sign-in failed:', err)
+      setError(`Sign-in failed: ${err.message}`)
     } finally {
       setLoading(false)
     }
