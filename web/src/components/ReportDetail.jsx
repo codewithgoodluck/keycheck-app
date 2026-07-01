@@ -73,6 +73,15 @@ export default function ReportDetail({ report, setView, saved, onToggleSave, onC
             <p className="card-id">#{report.id}</p>
             <h1>{title}</h1>
             <StampInline status={report.status} />
+            {report.agentName && (
+              <button
+                className="chip"
+                style={{ marginTop: 8, display: 'inline-flex' }}
+                onClick={() => setView('profile', report.agentName)}
+              >
+                View all reports about this name
+              </button>
+            )}
           </div>
           <div className="detail-actions">
             <button className="icon-btn" onClick={handleShare} aria-label="Share">

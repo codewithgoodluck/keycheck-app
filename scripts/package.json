@@ -6,7 +6,8 @@
   "scripts": {
     "seed": "node seed-firestore.js",
     "monitor": "node efcc-monitor.js",
-    "check-links": "node check-links.js"
+    "check-links": "node check-links.js",
+    "set-moderator": "node set-moderator.js"
   },
   "dependencies": {
     "dotenv": "^16.4.5",

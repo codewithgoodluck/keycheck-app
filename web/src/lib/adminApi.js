@@ -1,6 +1,6 @@
 import { auth, db } from './firebase.js'
 import { signInWithEmailAndPassword, signOut, onAuthStateChanged } from 'firebase/auth'
-import { doc, updateDoc, deleteDoc, getDoc } from 'firebase/firestore'
+import { doc, updateDoc, deleteDoc, getDoc, collection, query, orderBy, limit, getDocs } from 'firebase/firestore'
 
 export function watchAdminAuth(callback) {
   if (!auth) {
@@ -52,6 +52,15 @@ export async function deleteReply(reportId, replyId) {
 // Deliberately NOT exposed to public submission — every link here has been
 // personally checked by whoever added it, which is the whole point of
 // keeping this admin-only rather than open to anyone.
+// One-off fetch (not realtime) of recent zero-result searches, for the
+// admin panel's "Search misses" tab — tells a moderator what people looked
+// for and didn't find, i.e. where to focus seeding effort next.
+export async function getRecentSearchMisses(limitCount = 50) {
+  const q = query(collection(db, 'search_misses'), orderBy('at', 'desc'), limit(limitCount))
+  const snap = await getDocs(q)
+  return snap.docs.map((d) => ({ id: d.id, ...d.data() }))
+}
+
 export async function addSourceLink(reportId, source) {
   const ref = doc(db, 'reports', reportId)
   const snap = await getDoc(ref)

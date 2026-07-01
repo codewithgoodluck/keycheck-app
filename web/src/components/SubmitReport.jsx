@@ -1,8 +1,15 @@
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import { MessageCircle, Send } from 'lucide-react'
 import LocationPicker from './LocationPicker.jsx'
+import { msUntilNextSubmit, markSubmitted } from '../lib/antispam.js'
 
-const WHATSAPP_NUMBER = '2349000000000' // replace with your real WhatsApp Business number
+const WHATSAPP_NUMBER = import.meta.env.VITE_WHATSAPP_NUMBER || '2349000000000' // replace with your real WhatsApp Business number
+
+// Anyone filling this in is a bot filling every field it finds — real users
+// never see it (kept off-screen, not display:none, since some scrapers skip
+// display:none). A real form submission never takes less than a few
+// seconds, so MIN_FILL_MS catches instant scripted submissions too.
+const MIN_FILL_MS = 3000
 
 export default function SubmitReport({ addReport, setView }) {
   const [form, setForm] = useState({
@@ -12,6 +19,9 @@ export default function SubmitReport({ addReport, setView }) {
     description: ''
   })
   const [pin, setPin] = useState(null)
+  const [honeypot, setHoneypot] = useState('')
+  const [error, setError] = useState('')
+  const mountedAt = useRef(Date.now())
 
   function update(field, value) {
     setForm((f) => ({ ...f, [field]: value }))
@@ -19,7 +29,22 @@ export default function SubmitReport({ addReport, setView }) {
 
   async function handleSubmit(e) {
     e.preventDefault()
+    setError('')
     if (!form.locationText.trim() || !form.description.trim()) return
+
+    if (honeypot.trim()) return // bot filled the hidden field — drop silently, no error to tip it off
+
+    if (Date.now() - mountedAt.current < MIN_FILL_MS) {
+      setError('That was fast — please take a moment to review before submitting.')
+      return
+    }
+
+    const wait = msUntilNextSubmit()
+    if (wait > 0) {
+      setError(`You can submit again in ${Math.ceil(wait / 1000)}s. This limit helps keep spam down.`)
+      return
+    }
+
     await addReport({
       ...form,
       status: 'unverified',
@@ -30,6 +55,7 @@ export default function SubmitReport({ addReport, setView }) {
       lng: pin ? pin[1] : null,
       dateReported: new Date().toISOString().slice(0, 10)
     })
+    markSubmitted()
     setView('home')
   }
 
@@ -54,6 +80,22 @@ export default function SubmitReport({ addReport, setView }) {
 
       <div className="form-card">
         <form onSubmit={handleSubmit}>
+          <div
+            aria-hidden="true"
+            style={{ position: 'absolute', width: 1, height: 1, overflow: 'hidden', opacity: 0, pointerEvents: 'none' }}
+          >
+            <label htmlFor="website">Website</label>
+            <input
+              id="website"
+              name="website"
+              type="text"
+              tabIndex={-1}
+              autoComplete="off"
+              value={honeypot}
+              onChange={(e) => setHoneypot(e.target.value)}
+            />
+          </div>
+
           <div className="field">
             <label htmlFor="type">What are you reporting?</label>
             <select id="type" value={form.type} onChange={(e) => update('type', e.target.value)}>
@@ -103,6 +145,10 @@ export default function SubmitReport({ addReport, setView }) {
               required
             />
           </div>
+
+          {error && (
+            <p style={{ color: 'var(--red)', fontSize: 13, fontWeight: 600, margin: '0 0 12px' }}>{error}</p>
+          )}
 
           <button className="submit-btn" type="submit">
             <Send size={15} /> Submit for review

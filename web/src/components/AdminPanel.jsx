@@ -1,5 +1,5 @@
-import { useState } from 'react'
-import { LogOut, Trash2, ShieldCheck, Link2, Plus } from 'lucide-react'
+import { useEffect, useState } from 'react'
+import { LogOut, Trash2, ShieldCheck, Link2, Plus, Search } from 'lucide-react'
 import { getReportTitle } from '../lib/format.js'
 import {
   adminLogout,
@@ -8,7 +8,8 @@ import {
   setReplyFields,
   deleteReply,
   addSourceLink,
-  removeSourceLink
+  removeSourceLink,
+  getRecentSearchMisses
 } from '../lib/adminApi.js'
 
 const STATUS_OPTIONS = ['unverified', 'disputed', 'verified']
@@ -17,9 +18,20 @@ export default function AdminPanel({ reports, adminEmail }) {
   const [filter, setFilter] = useState('needs_review')
   const [busyId, setBusyId] = useState(null)
   const [sourceDrafts, setSourceDrafts] = useState({}) // reportId -> { label, url }
+  const [searchMisses, setSearchMisses] = useState(null) // null = not loaded yet
 
   const visible =
     filter === 'needs_review' ? reports.filter((r) => r.status !== 'verified' || r.replies?.length) : reports
+
+  useEffect(() => {
+    if (filter !== 'search_misses' || searchMisses !== null) return
+    getRecentSearchMisses()
+      .then(setSearchMisses)
+      .catch((err) => {
+        console.warn('Failed to load search misses:', err.message)
+        setSearchMisses([])
+      })
+  }, [filter, searchMisses])
 
   function updateDraft(reportId, field, value) {
     setSourceDrafts((d) => ({ ...d, [reportId]: { ...d[reportId], [field]: value } }))
@@ -115,8 +127,35 @@ export default function AdminPanel({ reports, adminEmail }) {
         <button className={`chip ${filter === 'all' ? 'active' : ''}`} onClick={() => setFilter('all')}>
           All reports ({reports.length})
         </button>
+        <button className={`chip ${filter === 'search_misses' ? 'active' : ''}`} onClick={() => setFilter('search_misses')}>
+          <Search size={12} /> Search misses
+        </button>
       </div>
 
+      {filter === 'search_misses' ? (
+        <div className="report-list">
+          {searchMisses === null ? (
+            <p style={{ color: 'var(--ink-soft)' }}>Loading...</p>
+          ) : searchMisses.length === 0 ? (
+            <div className="empty-state">
+              <p>No zero-result searches logged yet.</p>
+            </div>
+          ) : (
+            searchMisses.map((m) => (
+              <div
+                key={m.id}
+                className="detail-card"
+                style={{ padding: '12px 18px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12 }}
+              >
+                <span style={{ fontSize: 14, fontWeight: 600 }}>"{m.query}"</span>
+                <span style={{ fontSize: 12, color: 'var(--ink-faint)', whiteSpace: 'nowrap' }}>
+                  {new Date(m.at).toLocaleString()}
+                </span>
+              </div>
+            ))
+          )}
+        </div>
+      ) : (
       <div className="report-list">
         {visible.map((report) => (
           <div key={report.id} className="detail-card" style={{ padding: '18px 20px' }}>
@@ -266,6 +305,7 @@ export default function AdminPanel({ reports, adminEmail }) {
           </div>
         )}
       </div>
+      )}
     </div>
   )
 }

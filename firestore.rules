@@ -18,6 +18,23 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
+    // Shared by every collection below, so it lives at the top level rather
+    // than being duplicated per match block.
+    function isAdmin() {
+      // Two ways to qualify as a moderator:
+      //  1. A 'moderator' custom claim, granted via scripts/set-moderator.js
+      //     (the Admin SDK — this can't be self-granted from the client).
+      //  2. The hardcoded bootstrap email below, for the very first
+      //     moderator before any claim has been set up. Once every real
+      //     moderator has the custom claim, drop this allowlist entirely so
+      //     moderator identity lives in exactly one place.
+      return request.auth != null
+             && (request.auth.token.moderator == true
+                 || request.auth.token.email in [
+                   'goodluckmordi44@gmail.com'
+                 ]);
+    }
+
     match /reports/{reportId} {
 
       // Anyone can read reports — this is a public registry.
@@ -48,17 +65,20 @@ service cloud.firestore {
         return request.resource.data.diff(resource.data).affectedKeys().hasOnly(['replies'])
                && request.resource.data.replies.size() == resource.data.replies.size() + 1;
       }
+    }
 
-      function isAdmin() {
-        // Simplest approach for a single-moderator MVP: check the signed-in
-        // user's email against an allowlist. For multiple moderators, switch
-        // to a Firebase custom claim instead (set via the Admin SDK) so you
-        // aren't hardcoding emails into rules.
-        return request.auth != null
-               && request.auth.token.email in [
-                 'goodluckmordi44"gmail.com'
-               ];
-      }
+    // Fire-and-forget log of searches that returned zero results (see
+    // web/src/lib/reportsApi.js logSearchMiss). Purely an analytics signal
+    // for moderators deciding what to seed next — nobody but a moderator
+    // can read it, and the shape is locked down so it can't be abused to
+    // store arbitrary data under a public-write collection.
+    match /search_misses/{missId} {
+      allow create: if request.resource.data.keys().hasOnly(['query', 'at'])
+                    && request.resource.data.query is string
+                    && request.resource.data.query.size() <= 200
+                    && request.resource.data.at is string;
+      allow read: if isAdmin();
+      allow update, delete: if false;
     }
   }
 }

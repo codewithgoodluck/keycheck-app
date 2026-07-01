@@ -1,8 +1,9 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { Search, ShieldCheck, AlertTriangle, MapPin, FileSearch } from 'lucide-react'
 import ReportCard from './ReportCard.jsx'
 import StatsBar from './StatsBar.jsx'
 import { TYPE_LABELS } from '../lib/format.js'
+import { logSearchMiss } from '../lib/reportsApi.js'
 
 const STATUS_FILTERS = [
   { key: 'all', label: 'All reports', Icon: FileSearch },
@@ -19,7 +20,7 @@ const CATEGORY_FILTERS = [
   { key: 'estate', label: TYPE_LABELS.estate }
 ]
 
-export default function SearchHome({ reports, setView, savedIds, onToggleSave }) {
+export default function SearchHome({ reports, setView, savedIds, onToggleSave, hasMore, onLoadMore }) {
   const [query, setQuery] = useState('')
   const [submittedQuery, setSubmittedQuery] = useState('')
   const [statusFilter, setStatusFilter] = useState('all')
@@ -56,6 +57,12 @@ export default function SearchHome({ reports, setView, savedIds, onToggleSave })
     }
     return list
   }, [submittedQuery, statusFilter, categoryFilter, reports])
+
+  useEffect(() => {
+    if (submittedQuery.trim() && results.length === 0) {
+      logSearchMiss(submittedQuery)
+    }
+  }, [submittedQuery, results.length])
 
   function handleSearch(e) {
     e.preventDefault()
@@ -143,6 +150,11 @@ export default function SearchHome({ reports, setView, savedIds, onToggleSave })
               onToggleSave={onToggleSave}
             />
           ))}
+          {hasMore && (
+            <button className="chip" style={{ alignSelf: 'center', marginTop: 8 }} onClick={onLoadMore}>
+              Load more reports
+            </button>
+          )}
         </div>
       ) : (
         <div className="empty-state">

@@ -7,9 +7,10 @@ This repo has two parts that share one Firestore database:
 
 ```
 keycheck-app/
-  web/            React + Vite search/map/report web app
-  whatsapp-bot/   Node/Express webhook for WhatsApp report submission + search
-  scripts/        One-off Node utilities: Firestore seeding, EFCC monitor
+  web/              React + Vite search/map/report web app
+  whatsapp-bot/     Node/Express webhook for WhatsApp report submission + search
+  scripts/          One-off Node utilities: Firestore seeding, EFCC monitor, moderator claims
+  firestore-tests/  Automated tests for firestore.rules, run against the emulator
 ```
 
 ## Why this structure
@@ -42,6 +43,10 @@ npm run dev
 
 The app works with zero Firebase setup too — it falls back to the bundled
 seed data automatically (see "How live data works" below).
+
+Optionally set `VITE_WHATSAPP_NUMBER` in `.env` (digits only, with country
+code) to point the "report from your phone" link at your real WhatsApp
+Business number instead of the placeholder.
 
 ### 3. Push the seed data to Firestore
 
@@ -167,6 +172,35 @@ Saved/bookmarked reports intentionally stay in the browser's `localStorage`
 rather than Firestore, since there's no account system in this MVP — there's
 no "who" to attach a save to yet.
 
+To avoid ever pulling the entire collection as it grows, the web app caps
+the live query at 200 reports and offers a "Load more" button that bumps the
+cap by 200 at a time.
+
+**Sharing and profiles**: every report has a shareable link
+(`/?report=<id>`) via the share button on its detail page — opening that
+link directly now restores the report, including before Firestore has
+finished loading. Reports naming an agent/landlord/developer also link to a
+`/?profile=<name>` page aggregating every report filed under that exact
+name, useful for spotting repeat offenders.
+
+**Anti-spam**: the submit form has a honeypot field, a minimum fill-time
+check, and a one-submission-per-minute device-local cooldown
+(`web/src/lib/antispam.js`). None of this is a real security boundary
+(client-side only) — `firestore.rules` is what actually constrains what a
+submission can contain.
+
+**Search misses**: a search that returns zero results gets logged
+(query text + timestamp only) to a `search_misses` collection, visible in
+the admin panel's "Search misses" tab — a cheap signal for what to seed
+next.
+
+**Watchlist alerts**: if a newly-arrived report matches the area or exact
+name of something you've already saved, an in-app banner appears with a
+link to it. This only fires for reports that arrive after Firestore is
+already live (not on the initial load), and is in-app only — there's no
+push notification / email here, since that needs Firebase Cloud Messaging
+or an email provider configured, which this repo doesn't set up for you.
+
 ## The map
 
 The Map tab plots every report with coordinates using Leaflet and free
@@ -201,20 +235,45 @@ from the public nav on purpose. From there a signed-in moderator can:
   delete abusive ones, and mark a reply's **identity confirmed** once
   you've actually verified who submitted it
 
-**Setup:**
+**Setup (single moderator, bootstrap):**
 1. Firebase Console → Authentication → enable Email/Password sign-in, then
    add yourself as a user.
 2. Edit `firestore.rules` at the repo root — replace the placeholder email
-   with your real moderator email(s).
+   with your real moderator email.
 3. Deploy the rules: `firebase deploy --only firestore:rules` (requires
    `npm install -g firebase-tools` and `firebase login` first).
+
+**Adding more moderators:** don't add more emails to the `firestore.rules`
+allowlist — grant them the `moderator` custom claim instead, so moderator
+identity lives in one place (Firebase Auth), not two:
+
+```bash
+cd scripts
+npm install
+cp .env.example .env   # point FIREBASE_SERVICE_ACCOUNT_PATH at your key
+node set-moderator.js newmod@example.com            # grant
+node set-moderator.js newmod@example.com --revoke   # revoke
+```
+
+The affected person needs to sign out and back in for the claim to take
+effect. Once every moderator has the claim, you can delete the bootstrap
+email from `firestore.rules` entirely.
 
 **Read `firestore.rules` before you launch.** The admin panel's login
 screen is just a UI convenience — the rules file is what actually stops
 someone from calling the Firestore API directly and marking their own
-report "verified." These rules haven't been tested against a live project
-from this environment (no network access here to firebase.google.com);
-test them with the Firebase Emulator Suite or a dev project first.
+report "verified." `firestore-tests/` has automated tests for exactly this
+(anyone can read, only unverified+unupvoted creates, only admins can change
+status/delete, etc.) — run them against the emulator before trusting the
+rules in production:
+
+```bash
+cd firestore-tests
+npm install
+npm test   # starts the emulator, runs the tests, shuts it down
+```
+
+Requires a JDK (the emulator runs on Java) and the Firebase CLI.
 
 ## Reply identity signal
 

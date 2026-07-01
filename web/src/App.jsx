@@ -4,6 +4,7 @@ import SearchHome from './components/SearchHome.jsx'
 import ReportDetail from './components/ReportDetail.jsx'
 import SubmitReport from './components/SubmitReport.jsx'
 import SavedReports from './components/SavedReports.jsx'
+import AgentProfile from './components/AgentProfile.jsx'
 import MapView from './components/MapView.jsx'
 import FloatingReportButton from './components/FloatingReportButton.jsx'
 import AdminLogin from './components/AdminLogin.jsx'
@@ -12,6 +13,8 @@ import { seedReports } from './data/seedReports.js'
 import { getSavedIds, toggleSaved } from './lib/watchlist.js'
 import { subscribeToReports, addReportToFirestore, confirmReportInFirestore, addReplyToFirestore } from './lib/reportsApi.js'
 import { watchAdminAuth } from './lib/adminApi.js'
+import { getSeenIds, markSeen, areaOf } from './lib/notifications.js'
+import { Bell, X } from 'lucide-react'
 
 // MVP starts with in-memory seeded data so the app is demoable with zero
 // setup. The moment Firebase is configured (see src/lib/firebase.js), the
@@ -23,20 +26,74 @@ const initialReports = seedReports.map((r, i) => ({ ...r, id: String(i + 1).padS
 export default function App() {
   const [view, setViewRaw] = useState('home')
   const [activeReport, setActiveReport] = useState(null)
+  const [activeProfileName, setActiveProfileName] = useState(null)
+  const [pendingReportId, setPendingReportId] = useState(null)
   const [reports, setReports] = useState(initialReports)
+  const [reportLimit, setReportLimit] = useState(200)
+  const [hasMoreReports, setHasMoreReports] = useState(false)
   const [savedIds, setSavedIds] = useState([])
   const [usingFirestore, setUsingFirestore] = useState(false)
   const [adminUser, setAdminUser] = useState(undefined) // undefined = auth state not yet known
+  const [newMatches, setNewMatches] = useState([])
   const unsubscribeRef = useRef(null)
+  const savedIdsRef = useRef([])
+  const firestoreBaselineRef = useRef(false)
 
   const isAdminRoute =
     typeof window !== 'undefined' && new URLSearchParams(window.location.search).get('admin') === '1'
 
   useEffect(() => {
     setSavedIds(getSavedIds())
+  }, [])
 
+  useEffect(() => {
+    savedIdsRef.current = savedIds
+  }, [savedIds])
+
+  // Alerts a user to a newly-arrived report matching the area or name of
+  // something they've already saved. Only runs once Firestore is live and
+  // has already delivered one snapshot — otherwise the seed-data-to-live
+  // handoff (a completely different id namespace) would look like a burst
+  // of "new" reports that were actually already on the site.
+  useEffect(() => {
+    if (!usingFirestore || reports.length === 0) return
+
+    const seen = new Set(getSeenIds())
+    const freshReports = reports.filter((r) => !seen.has(r.id))
+
+    if (firestoreBaselineRef.current && freshReports.length > 0) {
+      const savedReports = reports.filter((r) => savedIdsRef.current.includes(r.id))
+      const watchedAreas = new Set(savedReports.map(areaOf).filter(Boolean))
+      const watchedAgents = new Set(savedReports.map((r) => r.agentName?.trim().toLowerCase()).filter(Boolean))
+
+      if (watchedAreas.size > 0 || watchedAgents.size > 0) {
+        const matches = freshReports.filter(
+          (r) => watchedAreas.has(areaOf(r)) || watchedAgents.has(r.agentName?.trim().toLowerCase())
+        )
+        if (matches.length > 0) {
+          setNewMatches((prev) => {
+            const byId = new Map(prev.map((r) => [r.id, r]))
+            matches.forEach((r) => byId.set(r.id, r))
+            return Array.from(byId.values()).slice(0, 5)
+          })
+        }
+      }
+    }
+
+    markSeen(reports.map((r) => r.id))
+    firestoreBaselineRef.current = true
+  }, [reports, usingFirestore])
+
+  function dismissMatch(id) {
+    setNewMatches((prev) => prev.filter((r) => r.id !== id))
+  }
+
+  // Re-subscribes with a bigger limit whenever reportLimit grows (see
+  // loadMoreReports below) instead of ever pulling the full collection.
+  useEffect(() => {
+    unsubscribeRef.current?.()
     unsubscribeRef.current = subscribeToReports(
-      (liveReports) => {
+      (liveReports, meta) => {
         // Once Firestore returns data, prefer it. If the collection is
         // genuinely empty (freshly created project, not seeded yet), keep
         // showing local seed data rather than an empty app.
@@ -44,22 +101,112 @@ export default function App() {
           setReports(liveReports)
           setUsingFirestore(true)
         }
+        setHasMoreReports(Boolean(meta?.hasMore))
       },
-      () => setUsingFirestore(false)
+      () => setUsingFirestore(false),
+      reportLimit
     )
 
     return () => unsubscribeRef.current?.()
-  }, [])
+  }, [reportLimit])
+
+  function loadMoreReports() {
+    setReportLimit((n) => n + 200)
+  }
 
   useEffect(() => {
     if (!isAdminRoute) return
     return watchAdminAuth((user) => setAdminUser(user))
   }, [isAdminRoute])
 
-  function setView(next, report) {
-    setActiveReport(report || null)
+  // Restore a shared/bookmarked link on first load (?report=<id> or
+  // ?profile=<name>). Report lookups have to wait for `reports` to actually
+  // contain that id (seed data resolves instantly, Firestore data arrives
+  // async), so this only records intent here — resolution happens below.
+  useEffect(() => {
+    if (isAdminRoute) return
+    const params = new URLSearchParams(window.location.search)
+    const reportId = params.get('report')
+    const profileName = params.get('profile')
+    if (reportId) {
+      setPendingReportId(reportId)
+      setViewRaw('detail')
+    } else if (profileName) {
+      setActiveProfileName(profileName)
+      setViewRaw('profile')
+    }
+  }, [isAdminRoute])
+
+  useEffect(() => {
+    if (!pendingReportId) return
+    const found = reports.find((r) => r.id === pendingReportId)
+    if (found) {
+      setActiveReport(found)
+      setPendingReportId(null)
+    } else if (usingFirestore) {
+      // Firestore has already returned its live snapshot and there's still
+      // no match — this is a genuinely missing/deleted report, not a race.
+      setPendingReportId(null)
+    }
+  }, [reports, usingFirestore, pendingReportId])
+
+  // Keeps the browser back/forward buttons working for deep links, since
+  // setView below pushes history entries for detail/profile views.
+  useEffect(() => {
+    function onPopState() {
+      if (isAdminRoute) return
+      const params = new URLSearchParams(window.location.search)
+      const reportId = params.get('report')
+      const profileName = params.get('profile')
+      if (reportId) {
+        const found = reports.find((r) => r.id === reportId)
+        setActiveReport(found || null)
+        setActiveProfileName(null)
+        setPendingReportId(found ? null : reportId)
+        setViewRaw('detail')
+      } else if (profileName) {
+        setActiveProfileName(profileName)
+        setActiveReport(null)
+        setPendingReportId(null)
+        setViewRaw('profile')
+      } else {
+        setActiveReport(null)
+        setActiveProfileName(null)
+        setPendingReportId(null)
+        setViewRaw('home')
+      }
+    }
+    window.addEventListener('popstate', onPopState)
+    return () => window.removeEventListener('popstate', onPopState)
+  }, [reports, isAdminRoute])
+
+  // `payload` is a report object for 'detail', an agent/landlord name string
+  // for 'profile', and unused for every other view.
+  function setView(next, payload) {
+    if (next === 'detail') {
+      setActiveReport(payload || null)
+      setActiveProfileName(null)
+    } else if (next === 'profile') {
+      setActiveProfileName(payload || null)
+      setActiveReport(null)
+    } else {
+      setActiveReport(null)
+      setActiveProfileName(null)
+    }
+    setPendingReportId(null)
     setViewRaw(next)
     window.scrollTo(0, 0)
+
+    if (isAdminRoute) return
+    const url = new URL(window.location.href)
+    if (next === 'detail' && payload) {
+      url.search = `?report=${encodeURIComponent(payload.id)}`
+    } else if (next === 'profile' && payload) {
+      url.search = `?profile=${encodeURIComponent(payload)}`
+    } else {
+      url.search = ''
+    }
+    window.history.pushState({}, '', url)
   }
 
   async function addReport(report) {
@@ -140,6 +287,20 @@ export default function App() {
 
   return (
     <div className="app">
+      {newMatches.length > 0 && (
+        <div className="watch-alerts">
+          {newMatches.map((r) => (
+            <div key={r.id} className="watch-alert">
+              <Bell size={15} />
+              <span>New report near <strong>{r.locationText.split(',')[0].trim()}</strong> matches something you saved.</span>
+              <button onClick={() => setView('detail', r)}>View</button>
+              <button className="dismiss" onClick={() => dismissMatch(r.id)} aria-label="Dismiss">
+                <X size={14} />
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
       <Header view={view} setView={setView} savedCount={savedIds.length} />
 
       {view === 'home' && (
@@ -148,10 +309,15 @@ export default function App() {
           setView={setView}
           savedIds={savedIds}
           onToggleSave={handleToggleSave}
+          hasMore={hasMoreReports}
+          onLoadMore={loadMoreReports}
         />
       )}
       {view === 'map' && <MapView reports={reports} setView={setView} />}
-      {view === 'detail' && (
+      {view === 'detail' && pendingReportId && (
+        <div style={{ padding: 60, textAlign: 'center', color: 'var(--ink-soft)' }}>Loading report...</div>
+      )}
+      {view === 'detail' && !pendingReportId && (
         <ReportDetail
           report={activeReport}
           setView={setView}
@@ -159,6 +325,15 @@ export default function App() {
           onToggleSave={handleToggleSave}
           onConfirm={handleConfirm}
           onAddReply={handleAddReply}
+        />
+      )}
+      {view === 'profile' && (
+        <AgentProfile
+          reports={reports}
+          name={activeProfileName}
+          setView={setView}
+          savedIds={savedIds}
+          onToggleSave={handleToggleSave}
         />
       )}
       {view === 'submit' && <SubmitReport addReport={addReport} setView={setView} />}
