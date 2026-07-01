@@ -1,4 +1,4 @@
-import { MapPin, Clock, Users, Bookmark } from 'lucide-react'
+import { MapPin, Clock, Users, Bookmark, MessageSquare } from 'lucide-react'
 import { StampIcon, resolveStampKey } from './Stamp.jsx'
 import { timeAgo } from '../lib/time.js'
 import { getReportTitle } from '../lib/format.js'
@@ -39,6 +39,11 @@ export default function ReportCard({ report, onClick, saved, onToggleSave }) {
           {report.upvotes > 0 && (
             <span>
               <Users /> {report.upvotes} confirmed
+            </span>
+          )}
+          {report.replies?.length > 0 && (
+            <span>
+              <MessageSquare /> {report.replies.length} comment{report.replies.length === 1 ? '' : 's'}
             </span>
           )}
         </div>

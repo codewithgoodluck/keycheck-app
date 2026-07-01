@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import Header from './components/Header.jsx'
+import BottomNav from './components/BottomNav.jsx'
 import SearchHome from './components/SearchHome.jsx'
 import ReportDetail from './components/ReportDetail.jsx'
 import SubmitReport from './components/SubmitReport.jsx'
@@ -9,6 +10,7 @@ import MapView from './components/MapView.jsx'
 import FloatingReportButton from './components/FloatingReportButton.jsx'
 import AdminLogin from './components/AdminLogin.jsx'
 import AdminPanel from './components/AdminPanel.jsx'
+import ToastStack from './components/ToastStack.jsx'
 import { seedReports } from './data/seedReports.js'
 import { getSavedIds, toggleSaved } from './lib/watchlist.js'
 import { subscribeToReports, addReportToFirestore, confirmReportInFirestore, addReplyToFirestore } from './lib/reportsApi.js'
@@ -313,12 +315,14 @@ export default function App() {
         ) : (
           <AdminLogin />
         )}
+        <ToastStack />
       </div>
     )
   }
 
   return (
     <div className="app">
+      <ToastStack />
       {newMatches.length > 0 && (
         <div className="watch-alerts">
           {newMatches.map((r) => (
@@ -385,6 +389,7 @@ export default function App() {
       )}
 
       {view !== 'submit' && <FloatingReportButton onClick={() => setView('submit')} />}
+      <BottomNav view={view} setView={setView} savedCount={savedIds.length} />
     </div>
   )
 }

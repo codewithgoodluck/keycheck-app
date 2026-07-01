@@ -1,11 +1,14 @@
-import { useEffect, useMemo, useState } from 'react'
-import { Search, ShieldCheck, AlertTriangle, MapPin, FileSearch, ShieldPlus, Eye, EyeOff, BellRing } from 'lucide-react'
+import { useEffect, useMemo, useRef, useState } from 'react'
+import { Search, ShieldCheck, AlertTriangle, MapPin, FileSearch, ShieldPlus, Eye, EyeOff, BellRing, TrendingUp, Clock3, Users } from 'lucide-react'
 import ReportCard from './ReportCard.jsx'
 import StatsBar from './StatsBar.jsx'
+import TrendingCard from './TrendingCard.jsx'
+import StatusLegend from './StatusLegend.jsx'
 import { TYPE_LABELS } from '../lib/format.js'
 import { logSearchMiss } from '../lib/reportsApi.js'
 import { addWatch, removeWatch, isWatching } from '../lib/watches.js'
 import { enablePushNotifications, syncWatchedTermsIfSubscribed, getStoredPushToken } from '../lib/push.js'
+import { trendingScore, sortByTrending } from '../lib/trending.js'
 
 const KIND_FILTERS = [
   { key: 'all', label: 'Everything', Icon: FileSearch },
@@ -35,9 +38,13 @@ export default function SearchHome({ reports, setView, savedIds, onToggleSave, h
   const [statusFilter, setStatusFilter] = useState('all')
   const [categoryFilter, setCategoryFilter] = useState('all')
   const [watching, setWatching] = useState(false)
+  const [sortMode, setSortMode] = useState('newest')
   const [pushEnabled, setPushEnabled] = useState(() => Boolean(getStoredPushToken()))
   const [pushBusy, setPushBusy] = useState(false)
   const [pushError, setPushError] = useState('')
+  const [showSuggestions, setShowSuggestions] = useState(false)
+  const [activeIndex, setActiveIndex] = useState(-1)
+  const blurTimer = useRef(null)
 
   useEffect(() => {
     setWatching(isWatching(submittedQuery))
@@ -80,6 +87,34 @@ export default function SearchHome({ reports, setView, savedIds, onToggleSave, h
       .map(([area]) => area)
   }, [reports])
 
+  const trendingReports = useMemo(() => sortByTrending(reports).slice(0, 5), [reports])
+
+  const { locationOptions, nameOptions } = useMemo(() => {
+    const locations = new Map()
+    const names = new Map()
+    reports.forEach((r) => {
+      const area = r.locationText?.split(',')[0].trim()
+      if (area) locations.set(area.toLowerCase(), area)
+      const name = r.agentName?.trim()
+      if (name) names.set(name.toLowerCase(), name)
+    })
+    return { locationOptions: [...locations.values()], nameOptions: [...names.values()] }
+  }, [reports])
+
+  const suggestions = useMemo(() => {
+    const q = query.trim().toLowerCase()
+    if (q.length < 2) return []
+    const matchLocations = locationOptions
+      .filter((v) => v.toLowerCase().includes(q))
+      .slice(0, 5)
+      .map((value) => ({ type: 'location', value }))
+    const matchNames = nameOptions
+      .filter((v) => v.toLowerCase().includes(q))
+      .slice(0, 5)
+      .map((value) => ({ type: 'name', value }))
+    return [...matchLocations, ...matchNames]
+  }, [query, locationOptions, nameOptions])
+
   const results = useMemo(() => {
     let list = reports
     if (submittedQuery.trim()) {
@@ -102,8 +137,11 @@ export default function SearchHome({ reports, setView, savedIds, onToggleSave, h
     if (categoryFilter !== 'all') {
       list = list.filter((r) => r.type === categoryFilter)
     }
+    if (sortMode === 'trending') {
+      list = [...list].sort((a, b) => trendingScore(b) - trendingScore(a))
+    }
     return list
-  }, [submittedQuery, kindFilter, statusFilter, categoryFilter, reports])
+  }, [submittedQuery, kindFilter, statusFilter, categoryFilter, sortMode, reports])
 
   useEffect(() => {
     if (submittedQuery.trim() && results.length === 0) {
@@ -119,6 +157,35 @@ export default function SearchHome({ reports, setView, savedIds, onToggleSave, h
   function handleChipClick(area) {
     setQuery(area)
     setSubmittedQuery(area)
+    setShowSuggestions(false)
+  }
+
+  function selectSuggestion(item) {
+    if (!item) return
+    setShowSuggestions(false)
+    setActiveIndex(-1)
+    if (item.type === 'location') {
+      handleChipClick(item.value)
+    } else {
+      setQuery(item.value)
+      setView('profile', item.value)
+    }
+  }
+
+  function handleInputKeyDown(e) {
+    if (!showSuggestions || suggestions.length === 0) return
+    if (e.key === 'ArrowDown') {
+      e.preventDefault()
+      setActiveIndex((i) => (i + 1) % suggestions.length)
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault()
+      setActiveIndex((i) => (i <= 0 ? suggestions.length - 1 : i - 1))
+    } else if (e.key === 'Enter' && activeIndex >= 0) {
+      e.preventDefault()
+      selectSuggestion(suggestions[activeIndex])
+    } else if (e.key === 'Escape') {
+      setShowSuggestions(false)
+    }
   }
 
   return (
@@ -133,16 +200,89 @@ export default function SearchHome({ reports, setView, savedIds, onToggleSave, h
           reported a problem — or vouched for a clean transaction. Free, and you don't need
           an account to search.
         </p>
-        <form className="search-bar" onSubmit={handleSearch}>
-          <Search size={18} />
-          <input
-            type="text"
-            placeholder="Search a location or agent name, e.g. 'Lekki Phase 2'"
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-          />
-          <button type="submit">Search</button>
-        </form>
+        <div className="search-wrap">
+          <form
+            className="search-bar"
+            onSubmit={(e) => {
+              handleSearch(e)
+              setShowSuggestions(false)
+            }}
+          >
+            <Search size={18} />
+            <input
+              type="text"
+              placeholder="Search a location or agent name, e.g. 'Lekki Phase 2'"
+              value={query}
+              onChange={(e) => {
+                setQuery(e.target.value)
+                setShowSuggestions(true)
+                setActiveIndex(-1)
+              }}
+              onFocus={() => setShowSuggestions(true)}
+              onBlur={() => {
+                blurTimer.current = setTimeout(() => setShowSuggestions(false), 120)
+              }}
+              onKeyDown={handleInputKeyDown}
+              role="combobox"
+              aria-expanded={showSuggestions && suggestions.length > 0}
+              aria-autocomplete="list"
+            />
+            <button type="submit">Search</button>
+          </form>
+
+          {showSuggestions && suggestions.length > 0 && (
+            <div className="search-suggestions" role="listbox">
+              {suggestions.some((s) => s.type === 'location') && (
+                <p className="search-suggestions-label">Locations</p>
+              )}
+              {suggestions
+                .filter((s) => s.type === 'location')
+                .map((item) => {
+                  const index = suggestions.indexOf(item)
+                  return (
+                    <button
+                      key={`loc-${item.value}`}
+                      type="button"
+                      role="option"
+                      aria-selected={index === activeIndex}
+                      className={index === activeIndex ? 'active' : ''}
+                      onMouseDown={(e) => {
+                        e.preventDefault()
+                        clearTimeout(blurTimer.current)
+                        selectSuggestion(item)
+                      }}
+                    >
+                      <MapPin size={14} /> {item.value}
+                    </button>
+                  )
+                })}
+              {suggestions.some((s) => s.type === 'name') && (
+                <p className="search-suggestions-label">People &amp; companies</p>
+              )}
+              {suggestions
+                .filter((s) => s.type === 'name')
+                .map((item) => {
+                  const index = suggestions.indexOf(item)
+                  return (
+                    <button
+                      key={`name-${item.value}`}
+                      type="button"
+                      role="option"
+                      aria-selected={index === activeIndex}
+                      className={index === activeIndex ? 'active' : ''}
+                      onMouseDown={(e) => {
+                        e.preventDefault()
+                        clearTimeout(blurTimer.current)
+                        selectSuggestion(item)
+                      }}
+                    >
+                      <Users size={14} /> {item.value}
+                    </button>
+                  )
+                })}
+            </div>
+          )}
+        </div>
 
         {trendingLocations.length > 0 && (
           <div className="chip-row">
@@ -156,6 +296,20 @@ export default function SearchHome({ reports, setView, savedIds, onToggleSave, h
       </section>
 
       <StatsBar reports={reports} />
+      <StatusLegend />
+
+      {trendingReports.length > 0 && (
+        <div className="trending-section">
+          <p className="trending-section-label">
+            <TrendingUp size={13} /> Trending now
+          </p>
+          <div className="trending-strip">
+            {trendingReports.map((r) => (
+              <TrendingCard key={r.id} report={r} onClick={() => setView('detail', r)} />
+            ))}
+          </div>
+        </div>
+      )}
 
       <div className="chip-row" style={{ marginTop: 0, marginBottom: 4 }}>
         {KIND_FILTERS.map(({ key, label, Icon }) => (
@@ -198,6 +352,14 @@ export default function SearchHome({ reports, setView, savedIds, onToggleSave, h
       <div className="results-meta">
         <span>{results.length} report{results.length === 1 ? '' : 's'}</span>
         {submittedQuery && <span>Showing results for "{submittedQuery}"</span>}
+        <span className="sort-toggle">
+          <button className={sortMode === 'newest' ? 'active' : ''} onClick={() => setSortMode('newest')}>
+            <Clock3 size={12} /> Newest
+          </button>
+          <button className={sortMode === 'trending' ? 'active' : ''} onClick={() => setSortMode('trending')}>
+            <TrendingUp size={12} /> Trending
+          </button>
+        </span>
       </div>
 
       {submittedQuery.trim() && (

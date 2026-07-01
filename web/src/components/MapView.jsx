@@ -5,11 +5,17 @@ import { getReportTitle } from '../lib/format.js'
 import { StampInline } from './Stamp.jsx'
 import { addWatch, removeWatch, isWatching } from '../lib/watches.js'
 import { syncWatchedTermsIfSubscribed } from '../lib/push.js'
+import { resolveStampKey } from './Stamp.jsx'
+import StatusLegend from './StatusLegend.jsx'
 
+// Kept in sync with index.css's --green/--red/--gold/--teal tokens —
+// Leaflet's pathOptions need raw JS color strings, so these can't be CSS
+// custom properties directly.
 const STATUS_COLOR = {
-  verified: '#1f6e43',
-  disputed: '#d6453d',
-  unverified: '#b9882c'
+  verified: '#16a34a',
+  disputed: '#ef4444',
+  unverified: '#eaa50d',
+  clean: '#0d9488'
 }
 
 // Default view centered on Nigeria so the map is useful even before any
@@ -151,8 +157,8 @@ export default function MapView({ reports, setView }) {
               center={[r.lat, r.lng]}
               radius={9}
               pathOptions={{
-                color: STATUS_COLOR[r.status] || STATUS_COLOR.unverified,
-                fillColor: STATUS_COLOR[r.status] || STATUS_COLOR.unverified,
+                color: STATUS_COLOR[resolveStampKey(r.status, r.kind)],
+                fillColor: STATUS_COLOR[resolveStampKey(r.status, r.kind)],
                 fillOpacity: 0.65,
                 weight: 2
               }}
@@ -209,19 +215,8 @@ export default function MapView({ reports, setView }) {
         </MapContainer>
       </div>
 
-      <div className="chip-row" style={{ marginTop: 16 }}>
-        <span className="chip" style={{ cursor: 'default' }}>
-          <span style={{ width: 10, height: 10, borderRadius: '50%', background: STATUS_COLOR.verified, display: 'inline-block' }} />
-          Verified
-        </span>
-        <span className="chip" style={{ cursor: 'default' }}>
-          <span style={{ width: 10, height: 10, borderRadius: '50%', background: STATUS_COLOR.disputed, display: 'inline-block' }} />
-          Disputed
-        </span>
-        <span className="chip" style={{ cursor: 'default' }}>
-          <span style={{ width: 10, height: 10, borderRadius: '50%', background: STATUS_COLOR.unverified, display: 'inline-block' }} />
-          Unverified
-        </span>
+      <div style={{ marginTop: 16 }}>
+        <StatusLegend />
       </div>
     </div>
   )

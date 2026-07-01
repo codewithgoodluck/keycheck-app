@@ -40,7 +40,7 @@ export default function AdminLogin() {
         >
           <ShieldCheck size={20} />
         </span>
-        <h1 style={{ fontFamily: 'var(--font-display)', fontSize: 22, margin: '0 0 6px' }}>Moderator sign-in</h1>
+        <h1 style={{ fontWeight: 800, letterSpacing: '-0.02em', fontSize: 22, margin: '0 0 6px' }}>Moderator sign-in</h1>
         <p style={{ color: 'var(--ink-soft)', fontSize: 13.5, margin: 0 }}>
           This panel manages report and reply status. Create a moderator account in the
           Firebase Console under Authentication first.

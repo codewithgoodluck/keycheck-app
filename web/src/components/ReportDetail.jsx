@@ -3,11 +3,10 @@ import { ArrowLeft, Share2, Bookmark, Users, MapPin, FileText, Link2, ShieldQues
 import { StampInline } from './Stamp.jsx'
 import { hasConfirmed, markConfirmed, getConfirmedIds } from '../lib/confirms.js'
 import { getReportTitle } from '../lib/format.js'
+import { showToast } from '../lib/toast.js'
 
 export default function ReportDetail({ report, setView, saved, onToggleSave, onConfirm, onAddReply }) {
   const [confirmed, setConfirmed] = useState(() => (report ? hasConfirmed(report.id) : false))
-  const [justConfirmedCount, setJustConfirmedCount] = useState(null)
-  const [copied, setCopied] = useState(false)
   const [showReplyForm, setShowReplyForm] = useState(false)
   const [replyRole, setReplyRole] = useState('agent')
   const [replyText, setReplyText] = useState('')
@@ -29,7 +28,8 @@ export default function ReportDetail({ report, setView, saved, onToggleSave, onC
     if (confirmed) return
     markConfirmed(report.id)
     setConfirmed(true)
-    setJustConfirmedCount(getConfirmedIds().length)
+    const count = getConfirmedIds().length
+    showToast(`Thanks — you've confirmed ${count} report${count === 1 ? '' : 's'}, helping warn others.`, 'success')
     onConfirm(report.id)
   }
 
@@ -58,8 +58,7 @@ export default function ReportDetail({ report, setView, saved, onToggleSave, onC
       }
     } else {
       await navigator.clipboard.writeText(url)
-      setCopied(true)
-      setTimeout(() => setCopied(false), 2000)
+      showToast('Link copied to clipboard', 'success')
     }
   }
 
@@ -108,12 +107,6 @@ export default function ReportDetail({ report, setView, saved, onToggleSave, onC
             {confirmed ? 'Confirmed' : 'I had this too'}
           </button>
         </div>
-
-        {justConfirmedCount !== null && (
-          <p style={{ margin: '12px 26px 0', fontSize: 13, fontWeight: 600, color: 'var(--green)' }}>
-            Thanks — you've confirmed {justConfirmedCount} report{justConfirmedCount === 1 ? '' : 's'}, helping warn others.
-          </p>
-        )}
 
         <div className="detail-section">
           <h4><MapPin /> Location</h4>
@@ -269,12 +262,6 @@ export default function ReportDetail({ report, setView, saved, onToggleSave, onC
           )}
         </div>
       </div>
-
-      {copied && (
-        <p style={{ marginTop: 12, fontSize: 13, color: 'var(--green)', fontWeight: 600 }}>
-          Link copied to clipboard
-        </p>
-      )}
     </>
   )
 }

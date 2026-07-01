@@ -108,7 +108,7 @@ export default function AdminPanel({ reports, adminEmail }) {
     <div style={{ padding: '28px 0 60px' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 20 }}>
         <div>
-          <h1 style={{ fontFamily: 'var(--font-display)', fontSize: 26, margin: '0 0 4px' }}>Moderation panel</h1>
+          <h1 style={{ fontWeight: 800, letterSpacing: '-0.02em', fontSize: 26, margin: '0 0 4px' }}>Moderation panel</h1>
           <p style={{ color: 'var(--ink-soft)', fontSize: 13.5, margin: 0 }}>Signed in as {adminEmail}</p>
         </div>
         <button
@@ -162,7 +162,7 @@ export default function AdminPanel({ reports, adminEmail }) {
             <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12, alignItems: 'flex-start' }}>
               <div>
                 <p className="card-id">#{report.id}</p>
-                <h3 style={{ fontFamily: 'var(--font-display)', fontSize: 16, margin: '4px 0 8px' }}>
+                <h3 style={{ fontWeight: 700, letterSpacing: '-0.01em', fontSize: 16, margin: '4px 0 8px' }}>
                   {getReportTitle(report)}
                 </h3>
               </div>
