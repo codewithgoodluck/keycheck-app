@@ -1,0 +1,22 @@
+services:
+  - type: web
+    name: keycheck-whatsapp-bot
+    runtime: docker
+    dockerfilePath: ./whatsapp-bot/Dockerfile
+    dockerContext: ./whatsapp-bot
+    plan: free
+    healthCheckPath: /health
+    envVars:
+      - key: WHATSAPP_TOKEN
+        sync: false
+      - key: WHATSAPP_PHONE_NUMBER_ID
+        sync: false
+      - key: WHATSAPP_VERIFY_TOKEN
+        sync: false
+      - key: FIREBASE_STORAGE_BUCKET
+        sync: false
+      - key: APP_LINK
+        sync: false
+      # Paste the full service account JSON key as one line — see whatsapp-bot/.env.example.
+      - key: FIREBASE_SERVICE_ACCOUNT_JSON
+        sync: false

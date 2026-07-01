@@ -1,0 +1,64 @@
+rules_version = '2';
+
+// Deploy with: firebase deploy --only firestore:rules
+// (requires the Firebase CLI: npm install -g firebase-tools, then firebase login)
+//
+// IMPORTANT: these rules are the actual security boundary. The admin panel's
+// "sign in required" UI is just a convenience — anyone can call the Firestore
+// API directly from a browser console, so these rules are what actually stops
+// an unauthenticated person from marking their own report "verified" or
+// deleting someone else's.
+//
+// These rules have NOT been tested against a live Firebase project from this
+// environment (no network access to firebase.google.com here). Test them
+// with the Firebase Emulator Suite (`firebase emulators:start`) or in a dev
+// project before relying on them in production:
+//   https://firebase.google.com/docs/rules/emulator-setup
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    match /reports/{reportId} {
+
+      // Anyone can read reports — this is a public registry.
+      allow read: if true;
+
+      // Anyone can submit a new report, but only with safe defaults:
+      // status must start "unverified" and upvotes must start at 0, so a
+      // submitter can't mark their own report verified or pre-inflate it.
+      allow create: if request.resource.data.status == 'unverified'
+                    && request.resource.data.upvotes == 0;
+
+      // Public updates are allowed ONLY for the two actions regular users
+      // take: confirming ("I had this too") and adding a reply. Both are
+      // restricted to changing just those fields — nothing else.
+      allow update: if isOnlyConfirming() || isOnlyAddingReply();
+
+      // Status changes, deleting a report, and editing existing replies
+      // (e.g. marking identityVerified) are admin-only.
+      allow update: if isAdmin();
+      allow delete: if isAdmin();
+
+      function isOnlyConfirming() {
+        return request.resource.data.diff(resource.data).affectedKeys().hasOnly(['upvotes'])
+               && request.resource.data.upvotes == resource.data.upvotes + 1;
+      }
+
+      function isOnlyAddingReply() {
+        return request.resource.data.diff(resource.data).affectedKeys().hasOnly(['replies'])
+               && request.resource.data.replies.size() == resource.data.replies.size() + 1;
+      }
+
+      function isAdmin() {
+        // Simplest approach for a single-moderator MVP: check the signed-in
+        // user's email against an allowlist. For multiple moderators, switch
+        // to a Firebase custom claim instead (set via the Admin SDK) so you
+        // aren't hardcoding emails into rules.
+        return request.auth != null
+               && request.auth.token.email in [
+                 'goodluckmordi44"gmail.com'
+               ];
+      }
+    }
+  }
+}

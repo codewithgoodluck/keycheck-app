@@ -1,0 +1,28 @@
+# Dependencies
+node_modules/
+
+# Secrets — never commit these
+.env
+.env.*
+!.env.example
+serviceAccountKey.json
+*serviceAccountKey*.json
+
+# Build outputs
+dist/
+build/
+
+# Script-generated files (not secrets, just noise)
+scripts/seen-urls.json
+scripts/pending-review.json
+scripts/link-check-results.json
+
+# OS/editor cruft
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# Logs
+*.log
+npm-debug.log*
