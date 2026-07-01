@@ -1,8 +1,10 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { MapContainer, TileLayer, CircleMarker, Popup, useMap } from 'react-leaflet'
-import { Search, LocateFixed, Navigation } from 'lucide-react'
+import { Search, LocateFixed, Navigation, Eye, EyeOff } from 'lucide-react'
 import { getReportTitle } from '../lib/format.js'
 import { StampInline } from './Stamp.jsx'
+import { addWatch, removeWatch, isWatching } from '../lib/watches.js'
+import { syncWatchedTermsIfSubscribed } from '../lib/push.js'
 
 const STATUS_COLOR = {
   verified: '#1f6e43',
@@ -25,6 +27,23 @@ export default function MapView({ reports, setView }) {
   const [query, setQuery] = useState('')
   const [flyTarget, setFlyTarget] = useState(null)
   const [locating, setLocating] = useState(false)
+  const [watching, setWatching] = useState(false)
+
+  useEffect(() => {
+    setWatching(isWatching(query))
+  }, [query])
+
+  function toggleWatch() {
+    if (!query.trim()) return
+    if (watching) {
+      removeWatch(query)
+      setWatching(false)
+    } else {
+      addWatch(query)
+      setWatching(true)
+    }
+    syncWatchedTermsIfSubscribed()
+  }
 
   const geotagged = useMemo(() => reports.filter((r) => r.lat && r.lng), [reports])
 
@@ -79,6 +98,12 @@ export default function MapView({ reports, setView }) {
         />
         <button type="submit">Go</button>
       </form>
+
+      {query.trim() && (
+        <button className={`chip ${watching ? 'active' : ''}`} style={{ marginBottom: 14 }} onClick={toggleWatch}>
+          {watching ? <EyeOff /> : <Eye />} {watching ? 'Stop watching this area' : 'Watch this area'}
+        </button>
+      )}
 
       <div
         style={{

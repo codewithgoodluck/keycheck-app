@@ -1,15 +1,16 @@
 import { MapPin, Clock, Users, Bookmark } from 'lucide-react'
-import { StampIcon } from './Stamp.jsx'
+import { StampIcon, resolveStampKey } from './Stamp.jsx'
 import { timeAgo } from '../lib/time.js'
 import { getReportTitle } from '../lib/format.js'
 
 export default function ReportCard({ report, onClick, saved, onToggleSave }) {
   const title = getReportTitle(report)
+  const stampKey = resolveStampKey(report.status, report.kind)
 
   return (
     <div className="report-card" onClick={onClick}>
-      <div className={`card-icon ${report.status}`}>
-        <StampIcon status={report.status} size={20} />
+      <div className={`card-icon ${stampKey}`}>
+        <StampIcon status={report.status} kind={report.kind} size={20} />
       </div>
       <div className="card-body">
         <div className="card-top-row">

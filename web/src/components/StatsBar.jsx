@@ -1,11 +1,13 @@
 export default function StatsBar({ reports }) {
-  const total = reports.length
+  const flags = reports.filter((r) => r.kind !== 'endorsement').length
+  const clean = reports.filter((r) => r.kind === 'endorsement').length
   const verified = reports.filter((r) => r.status === 'verified').length
   const locations = new Set(reports.map((r) => r.locationText.split(',')[0].trim())).size
   const confirmations = reports.reduce((sum, r) => sum + (r.upvotes || 0), 0)
 
   const stats = [
-    { num: total, label: 'Total reports' },
+    { num: flags, label: 'Flagged reports' },
+    { num: clean, label: 'Clean records' },
     { num: verified, label: 'Court-verified' },
     { num: locations, label: 'Areas covered' },
     { num: confirmations, label: 'Community confirmations' }

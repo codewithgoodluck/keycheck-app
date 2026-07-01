@@ -1,9 +1,17 @@
 import { useEffect, useMemo, useState } from 'react'
-import { Search, ShieldCheck, AlertTriangle, MapPin, FileSearch } from 'lucide-react'
+import { Search, ShieldCheck, AlertTriangle, MapPin, FileSearch, ShieldPlus, Eye, EyeOff, BellRing } from 'lucide-react'
 import ReportCard from './ReportCard.jsx'
 import StatsBar from './StatsBar.jsx'
 import { TYPE_LABELS } from '../lib/format.js'
 import { logSearchMiss } from '../lib/reportsApi.js'
+import { addWatch, removeWatch, isWatching } from '../lib/watches.js'
+import { enablePushNotifications, syncWatchedTermsIfSubscribed, getStoredPushToken } from '../lib/push.js'
+
+const KIND_FILTERS = [
+  { key: 'all', label: 'Everything', Icon: FileSearch },
+  { key: 'flag', label: 'Flags only', Icon: AlertTriangle },
+  { key: 'endorsement', label: 'Clean records', Icon: ShieldPlus }
+]
 
 const STATUS_FILTERS = [
   { key: 'all', label: 'All reports', Icon: FileSearch },
@@ -23,8 +31,42 @@ const CATEGORY_FILTERS = [
 export default function SearchHome({ reports, setView, savedIds, onToggleSave, hasMore, onLoadMore }) {
   const [query, setQuery] = useState('')
   const [submittedQuery, setSubmittedQuery] = useState('')
+  const [kindFilter, setKindFilter] = useState('all')
   const [statusFilter, setStatusFilter] = useState('all')
   const [categoryFilter, setCategoryFilter] = useState('all')
+  const [watching, setWatching] = useState(false)
+  const [pushEnabled, setPushEnabled] = useState(() => Boolean(getStoredPushToken()))
+  const [pushBusy, setPushBusy] = useState(false)
+  const [pushError, setPushError] = useState('')
+
+  useEffect(() => {
+    setWatching(isWatching(submittedQuery))
+  }, [submittedQuery])
+
+  function toggleWatch() {
+    if (!submittedQuery.trim()) return
+    if (watching) {
+      removeWatch(submittedQuery)
+      setWatching(false)
+    } else {
+      addWatch(submittedQuery)
+      setWatching(true)
+    }
+    syncWatchedTermsIfSubscribed()
+  }
+
+  async function handleEnablePush() {
+    setPushError('')
+    setPushBusy(true)
+    try {
+      await enablePushNotifications()
+      setPushEnabled(true)
+    } catch (err) {
+      setPushError(err.message)
+    } finally {
+      setPushBusy(false)
+    }
+  }
 
   const trendingLocations = useMemo(() => {
     const counts = {}
@@ -49,14 +91,19 @@ export default function SearchHome({ reports, setView, savedIds, onToggleSave, h
           r.description?.toLowerCase().includes(q)
       )
     }
-    if (statusFilter !== 'all') {
+    if (kindFilter === 'flag') {
+      list = list.filter((r) => r.kind !== 'endorsement')
+    } else if (kindFilter === 'endorsement') {
+      list = list.filter((r) => r.kind === 'endorsement')
+    }
+    if (kindFilter !== 'endorsement' && statusFilter !== 'all') {
       list = list.filter((r) => r.status === statusFilter)
     }
     if (categoryFilter !== 'all') {
       list = list.filter((r) => r.type === categoryFilter)
     }
     return list
-  }, [submittedQuery, statusFilter, categoryFilter, reports])
+  }, [submittedQuery, kindFilter, statusFilter, categoryFilter, reports])
 
   useEffect(() => {
     if (submittedQuery.trim() && results.length === 0) {
@@ -83,8 +130,8 @@ export default function SearchHome({ reports, setView, savedIds, onToggleSave, h
         <h1>Check before you buy or rent. Warn others after.</h1>
         <p>
           Search a location, agent, landlord, or developer name to see whether others have
-          reported a land dispute, rental scam, landlord fraud, or estate/developer problem.
-          Free, and you don't need an account to search.
+          reported a problem — or vouched for a clean transaction. Free, and you don't need
+          an account to search.
         </p>
         <form className="search-bar" onSubmit={handleSearch}>
           <Search size={18} />
@@ -111,16 +158,30 @@ export default function SearchHome({ reports, setView, savedIds, onToggleSave, h
       <StatsBar reports={reports} />
 
       <div className="chip-row" style={{ marginTop: 0, marginBottom: 4 }}>
-        {STATUS_FILTERS.map(({ key, label, Icon }) => (
+        {KIND_FILTERS.map(({ key, label, Icon }) => (
           <button
             key={key}
-            className={`chip ${statusFilter === key ? 'active' : ''}`}
-            onClick={() => setStatusFilter(key)}
+            className={`chip ${kindFilter === key ? 'active' : ''}`}
+            onClick={() => setKindFilter(key)}
           >
             <Icon /> {label}
           </button>
         ))}
       </div>
+
+      {kindFilter !== 'endorsement' && (
+        <div className="chip-row" style={{ marginTop: 0, marginBottom: 4 }}>
+          {STATUS_FILTERS.map(({ key, label, Icon }) => (
+            <button
+              key={key}
+              className={`chip ${statusFilter === key ? 'active' : ''}`}
+              onClick={() => setStatusFilter(key)}
+            >
+              <Icon /> {label}
+            </button>
+          ))}
+        </div>
+      )}
 
       <div className="chip-row" style={{ marginTop: 0, marginBottom: 4 }}>
         {CATEGORY_FILTERS.map(({ key, label }) => (
@@ -138,6 +199,27 @@ export default function SearchHome({ reports, setView, savedIds, onToggleSave, h
         <span>{results.length} report{results.length === 1 ? '' : 's'}</span>
         {submittedQuery && <span>Showing results for "{submittedQuery}"</span>}
       </div>
+
+      {submittedQuery.trim() && (
+        <div className="chip-row" style={{ marginTop: 0, marginBottom: 14 }}>
+          <button className={`chip ${watching ? 'active' : ''}`} onClick={toggleWatch}>
+            {watching ? <EyeOff /> : <Eye />} {watching ? 'Stop watching this area' : 'Watch this area'}
+          </button>
+          {watching && !pushEnabled && (
+            <button className="chip" onClick={handleEnablePush} disabled={pushBusy}>
+              <BellRing /> {pushBusy ? 'Requesting...' : 'Also notify me on this device'}
+            </button>
+          )}
+          {watching && pushEnabled && (
+            <span className="chip" style={{ cursor: 'default' }}>
+              <BellRing /> Notifications on
+            </span>
+          )}
+        </div>
+      )}
+      {pushError && (
+        <p style={{ color: 'var(--red)', fontSize: 12.5, fontWeight: 600, margin: '-8px 0 14px' }}>{pushError}</p>
+      )}
 
       {results.length > 0 ? (
         <div className="report-list">

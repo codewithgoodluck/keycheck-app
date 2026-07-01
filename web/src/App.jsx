@@ -14,6 +14,8 @@ import { getSavedIds, toggleSaved } from './lib/watchlist.js'
 import { subscribeToReports, addReportToFirestore, confirmReportInFirestore, addReplyToFirestore } from './lib/reportsApi.js'
 import { watchAdminAuth } from './lib/adminApi.js'
 import { getSeenIds, markSeen, areaOf } from './lib/notifications.js'
+import { getWatchedTerms } from './lib/watches.js'
+import { getStoredPushToken, onForegroundPushMessage } from './lib/push.js'
 import { Bell, X } from 'lucide-react'
 
 // MVP starts with in-memory seeded data so the app is demoable with zero
@@ -35,6 +37,7 @@ export default function App() {
   const [usingFirestore, setUsingFirestore] = useState(false)
   const [adminUser, setAdminUser] = useState(undefined) // undefined = auth state not yet known
   const [newMatches, setNewMatches] = useState([])
+  const [pushMessage, setPushMessage] = useState(null)
   const unsubscribeRef = useRef(null)
   const savedIdsRef = useRef([])
   const firestoreBaselineRef = useRef(false)
@@ -50,11 +53,28 @@ export default function App() {
     savedIdsRef.current = savedIds
   }, [savedIds])
 
-  // Alerts a user to a newly-arrived report matching the area or name of
-  // something they've already saved. Only runs once Firestore is live and
-  // has already delivered one snapshot — otherwise the seed-data-to-live
-  // handoff (a completely different id namespace) would look like a burst
-  // of "new" reports that were actually already on the site.
+  // Foreground-only push handling (see lib/push.js — this is groundwork,
+  // nothing sends a real push yet). Only subscribes if this device already
+  // has a stored token, i.e. has previously opted in via a "notify me"
+  // button somewhere.
+  useEffect(() => {
+    if (!getStoredPushToken()) return
+    let unsubscribe = () => {}
+    onForegroundPushMessage((payload) => {
+      setPushMessage(payload?.notification?.body || payload?.notification?.title || 'New alert')
+    }).then((unsub) => {
+      unsubscribe = unsub
+    })
+    return () => unsubscribe()
+  }, [])
+
+  // Alerts a user to a newly-arrived report matching the area/name of
+  // something they've already saved, OR a freeform area/name they're
+  // explicitly watching (lib/watches.js — no existing report required to
+  // anchor it to). Only runs once Firestore is live and has already
+  // delivered one snapshot — otherwise the seed-data-to-live handoff (a
+  // completely different id namespace) would look like a burst of "new"
+  // reports that were actually already on the site.
   useEffect(() => {
     if (!usingFirestore || reports.length === 0) return
 
@@ -65,11 +85,16 @@ export default function App() {
       const savedReports = reports.filter((r) => savedIdsRef.current.includes(r.id))
       const watchedAreas = new Set(savedReports.map(areaOf).filter(Boolean))
       const watchedAgents = new Set(savedReports.map((r) => r.agentName?.trim().toLowerCase()).filter(Boolean))
+      const watchedTerms = getWatchedTerms()
 
-      if (watchedAreas.size > 0 || watchedAgents.size > 0) {
-        const matches = freshReports.filter(
-          (r) => watchedAreas.has(areaOf(r)) || watchedAgents.has(r.agentName?.trim().toLowerCase())
-        )
+      if (watchedAreas.size > 0 || watchedAgents.size > 0 || watchedTerms.length > 0) {
+        const matches = freshReports.filter((r) => {
+          const agent = r.agentName?.trim().toLowerCase() || ''
+          if (watchedAreas.has(areaOf(r)) || watchedAgents.has(agent)) return true
+          if (watchedTerms.length === 0) return false
+          const loc = r.locationText?.toLowerCase() || ''
+          return watchedTerms.some((term) => loc.includes(term) || agent.includes(term))
+        })
         if (matches.length > 0) {
           setNewMatches((prev) => {
             const byId = new Map(prev.map((r) => [r.id, r]))
@@ -220,7 +245,9 @@ export default function App() {
       }
     }
     const id = String(reports.length + 1).padStart(4, '0')
-    setReports((r) => [{ ...report, id }, ...r])
+    const saved = { ...report, id }
+    setReports((r) => [saved, ...r])
+    return saved
   }
 
   function handleToggleSave(id) {
@@ -299,6 +326,17 @@ export default function App() {
               </button>
             </div>
           ))}
+        </div>
+      )}
+      {pushMessage && (
+        <div className="watch-alerts">
+          <div className="watch-alert">
+            <Bell size={15} />
+            <span>{pushMessage}</span>
+            <button className="dismiss" onClick={() => setPushMessage(null)} aria-label="Dismiss">
+              <X size={14} />
+            </button>
+          </div>
         </div>
       )}
       <Header view={view} setView={setView} savedCount={savedIds.length} />

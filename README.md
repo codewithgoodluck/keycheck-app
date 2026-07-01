@@ -194,12 +194,45 @@ submission can contain.
 the admin panel's "Search misses" tab — a cheap signal for what to seed
 next.
 
-**Watchlist alerts**: if a newly-arrived report matches the area or exact
-name of something you've already saved, an in-app banner appears with a
-link to it. This only fires for reports that arrive after Firestore is
-already live (not on the initial load), and is in-app only — there's no
-push notification / email here, since that needs Firebase Cloud Messaging
-or an email provider configured, which this repo doesn't set up for you.
+**Two-sided directory**: reports carry a `kind` field — `'flag'` (the
+default, a problem report) or `'endorsement'` (a vouch for a clean
+transaction, submitted via the same form under "Vouch for a clean
+transaction"). Endorsements get a distinct green "Clean record" badge
+instead of the verified/disputed/unverified stamp, can be filtered
+separately on the search page, and are broken out from flags on an agent's
+profile page (`/?profile=<name>`) so a repeat offender and a track record
+of clean deals are both visible at a glance.
+
+**Watching**: two ways to get alerted to new activity —
+- *Saved reports* (`web/src/lib/watchlist.js`) — bookmark a specific
+  existing report.
+- *Watched areas/names* (`web/src/lib/watches.js`) — watch a search term
+  directly via "Watch this area" on the search or map page, with nothing
+  needing to exist yet. Manage both from the "Saved & watching" page.
+
+Either way, a newly-arrived matching report triggers an in-app banner
+(`web/src/App.jsx`'s new-report-matching effect) — this only fires for
+reports that arrive after Firestore is already live, not on initial load.
+
+**Push notifications are groundwork only, not fully wired up.** Clicking
+"Also notify me on this device" next to a watch (`web/src/lib/push.js`)
+requests browser notification permission, gets an FCM token, and stores it
+in a `push_subscriptions` Firestore collection alongside the watched terms
+— but **nothing currently sends a push**. Something server-side still
+needs to notice a new report and call FCM: either a Firebase Cloud
+Function (requires upgrading to the Blaze/pay-as-you-go plan) or extending
+`whatsapp-bot` with a Firestore listener (no extra cost, but only works
+once that bot is actually deployed). Neither is set up in this repo yet —
+until one is, watches still work as in-app-only alerts, push is purely
+additive on top. Requires `VITE_FIREBASE_VAPID_KEY` in `.env` (see
+`.env.example`); without it, the "notify me" button shows an error instead
+of silently failing.
+
+**Contributor recognition**: after submitting a report/vouch or confirming
+one, a brief message shows how many you've personally contributed
+(`web/src/lib/contributions.js` for submissions, the existing
+`web/src/lib/confirms.js` for confirmations) — device-local, no accounts
+needed.
 
 ## The map
 

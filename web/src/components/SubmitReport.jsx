@@ -1,7 +1,8 @@
 import { useRef, useState } from 'react'
-import { MessageCircle, Send } from 'lucide-react'
+import { MessageCircle, Send, ShieldCheck, ShieldAlert } from 'lucide-react'
 import LocationPicker from './LocationPicker.jsx'
 import { msUntilNextSubmit, markSubmitted } from '../lib/antispam.js'
+import { addMySubmittedReportId, getMySubmittedReportIds } from '../lib/contributions.js'
 
 const WHATSAPP_NUMBER = import.meta.env.VITE_WHATSAPP_NUMBER || '2349000000000' // replace with your real WhatsApp Business number
 
@@ -11,7 +12,31 @@ const WHATSAPP_NUMBER = import.meta.env.VITE_WHATSAPP_NUMBER || '2349000000000' 
 // seconds, so MIN_FILL_MS catches instant scripted submissions too.
 const MIN_FILL_MS = 3000
 
+const COPY = {
+  flag: {
+    heading: 'Report a problem',
+    subtitle: 'Describe what happened. Your report is reviewed before it appears publicly, and you can stay anonymous.',
+    descriptionLabel: 'What happened',
+    descriptionPlaceholder: 'Briefly describe the dispute, double-sale, or fraud you experienced or know about.',
+    submitLabel: 'Submit for review',
+    disclaimer:
+      'Reports are marked "unverified" until reviewed and require supporting evidence before they\'re marked "verified." Naming someone publicly carries legal weight, please only report what you can support.',
+    confirmationLabel: (n) => `Report submitted — you've now helped submit ${n} report${n === 1 ? '' : 's'}.`
+  },
+  endorsement: {
+    heading: 'Vouch for a clean transaction',
+    subtitle: 'Had a good experience? Say so. A track record of clean transactions is just as useful as a warning.',
+    descriptionLabel: 'What happened',
+    descriptionPlaceholder: 'Describe your positive experience — what you bought/rented, roughly when, and any details others would find reassuring.',
+    submitLabel: 'Submit vouch',
+    disclaimer:
+      'Vouches are marked "unverified" until reviewed, same as reports — this keeps the standard consistent in both directions.',
+    confirmationLabel: (n) => `Vouch submitted — you've now helped submit ${n} report${n === 1 ? '' : 's'}.`
+  }
+}
+
 export default function SubmitReport({ addReport, setView }) {
+  const [kind, setKind] = useState('flag')
   const [form, setForm] = useState({
     type: 'land',
     locationText: '',
@@ -21,7 +46,10 @@ export default function SubmitReport({ addReport, setView }) {
   const [pin, setPin] = useState(null)
   const [honeypot, setHoneypot] = useState('')
   const [error, setError] = useState('')
+  const [submittedCount, setSubmittedCount] = useState(null)
   const mountedAt = useRef(Date.now())
+
+  const copy = COPY[kind]
 
   function update(field, value) {
     setForm((f) => ({ ...f, [field]: value }))
@@ -45,8 +73,9 @@ export default function SubmitReport({ addReport, setView }) {
       return
     }
 
-    await addReport({
+    const saved = await addReport({
       ...form,
+      kind,
       status: 'unverified',
       source: 'web_submission',
       evidenceUrls: [],
@@ -56,16 +85,35 @@ export default function SubmitReport({ addReport, setView }) {
       dateReported: new Date().toISOString().slice(0, 10)
     })
     markSubmitted()
-    setView('home')
+    if (saved?.id) addMySubmittedReportId(saved.id)
+    setSubmittedCount(getMySubmittedReportIds().length)
+  }
+
+  if (submittedCount !== null) {
+    return (
+      <div className="form-wrap">
+        <div className="empty-state">
+          {kind === 'flag' ? <ShieldAlert size={28} /> : <ShieldCheck size={28} />}
+          <p>{copy.confirmationLabel(submittedCount)}</p>
+          <button onClick={() => setView('home')}>Back to search</button>
+        </div>
+      </div>
+    )
   }
 
   return (
     <div className="form-wrap">
-      <h1>Report a problem</h1>
-      <p className="subtitle">
-        Describe what happened. Your report is reviewed before it appears
-        publicly, and you can stay anonymous.
-      </p>
+      <h1>{copy.heading}</h1>
+      <p className="subtitle">{copy.subtitle}</p>
+
+      <div className="chip-row" style={{ marginBottom: 20 }}>
+        <button type="button" className={`chip ${kind === 'flag' ? 'active' : ''}`} onClick={() => setKind('flag')}>
+          <ShieldAlert /> Report a problem
+        </button>
+        <button type="button" className={`chip ${kind === 'endorsement' ? 'active' : ''}`} onClick={() => setKind('endorsement')}>
+          <ShieldCheck /> Vouch for a clean transaction
+        </button>
+      </div>
 
       <div className="whatsapp-note">
         <MessageCircle size={18} />
@@ -97,7 +145,7 @@ export default function SubmitReport({ addReport, setView }) {
           </div>
 
           <div className="field">
-            <label htmlFor="type">What are you reporting?</label>
+            <label htmlFor="type">{kind === 'flag' ? 'What are you reporting?' : 'Who or what is this about?'}</label>
             <select id="type" value={form.type} onChange={(e) => update('type', e.target.value)}>
               <option value="land">A specific plot of land</option>
               <option value="agent">A land sales agent</option>
@@ -136,10 +184,10 @@ export default function SubmitReport({ addReport, setView }) {
           </div>
 
           <div className="field">
-            <label htmlFor="description">What happened</label>
+            <label htmlFor="description">{copy.descriptionLabel}</label>
             <textarea
               id="description"
-              placeholder="Briefly describe the dispute, double-sale, or fraud you experienced or know about."
+              placeholder={copy.descriptionPlaceholder}
               value={form.description}
               onChange={(e) => update('description', e.target.value)}
               required
@@ -151,15 +199,10 @@ export default function SubmitReport({ addReport, setView }) {
           )}
 
           <button className="submit-btn" type="submit">
-            <Send size={15} /> Submit for review
+            <Send size={15} /> {copy.submitLabel}
           </button>
 
-          <p className="disclaimer">
-            Reports are marked "unverified" until reviewed and require
-            supporting evidence before they're marked "verified." Naming
-            someone publicly carries legal weight, please only report what
-            you can support.
-          </p>
+          <p className="disclaimer">{copy.disclaimer}</p>
         </form>
       </div>
     </div>

@@ -1,11 +1,12 @@
 import { useState } from 'react'
 import { ArrowLeft, Share2, Bookmark, Users, MapPin, FileText, Link2, ShieldQuestion, Send, MessageSquareReply } from 'lucide-react'
 import { StampInline } from './Stamp.jsx'
-import { hasConfirmed, markConfirmed } from '../lib/confirms.js'
+import { hasConfirmed, markConfirmed, getConfirmedIds } from '../lib/confirms.js'
 import { getReportTitle } from '../lib/format.js'
 
 export default function ReportDetail({ report, setView, saved, onToggleSave, onConfirm, onAddReply }) {
   const [confirmed, setConfirmed] = useState(() => (report ? hasConfirmed(report.id) : false))
+  const [justConfirmedCount, setJustConfirmedCount] = useState(null)
   const [copied, setCopied] = useState(false)
   const [showReplyForm, setShowReplyForm] = useState(false)
   const [replyRole, setReplyRole] = useState('agent')
@@ -28,6 +29,7 @@ export default function ReportDetail({ report, setView, saved, onToggleSave, onC
     if (confirmed) return
     markConfirmed(report.id)
     setConfirmed(true)
+    setJustConfirmedCount(getConfirmedIds().length)
     onConfirm(report.id)
   }
 
@@ -106,6 +108,12 @@ export default function ReportDetail({ report, setView, saved, onToggleSave, onC
             {confirmed ? 'Confirmed' : 'I had this too'}
           </button>
         </div>
+
+        {justConfirmedCount !== null && (
+          <p style={{ margin: '12px 26px 0', fontSize: 13, fontWeight: 600, color: 'var(--green)' }}>
+            Thanks — you've confirmed {justConfirmedCount} report{justConfirmedCount === 1 ? '' : 's'}, helping warn others.
+          </p>
+        )}
 
         <div className="detail-section">
           <h4><MapPin /> Location</h4>

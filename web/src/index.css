@@ -233,9 +233,13 @@ button { font-family: inherit; }
 
 .stats-bar {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(5, 1fr);
   gap: 12px;
   margin: 28px 0;
+}
+
+@media (max-width: 780px) {
+  .stats-bar { grid-template-columns: repeat(3, 1fr); }
 }
 
 .stat-card {
@@ -309,7 +313,8 @@ button { font-family: inherit; }
   flex-shrink: 0;
 }
 
-.report-card .card-icon.verified { background: var(--green-soft); color: var(--green); }
+.report-card .card-icon.verified,
+.report-card .card-icon.clean { background: var(--green-soft); color: var(--green); }
 .report-card .card-icon.disputed { background: var(--red-soft); color: var(--red); }
 .report-card .card-icon.unverified { background: var(--gold-soft); color: var(--gold); }
 
@@ -388,7 +393,8 @@ button { font-family: inherit; }
 }
 
 .stamp-inline svg { width: 13px; height: 13px; }
-.stamp-inline.verified { color: var(--green); background: var(--green-soft); }
+.stamp-inline.verified,
+.stamp-inline.clean { color: var(--green); background: var(--green-soft); }
 .stamp-inline.disputed { color: var(--red); background: var(--red-soft); }
 .stamp-inline.unverified { color: var(--gold); background: var(--gold-soft); }
 

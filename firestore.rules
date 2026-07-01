@@ -80,5 +80,21 @@ service cloud.firestore {
       allow read: if isAdmin();
       allow update, delete: if false;
     }
+
+    // FCM push token registry (see web/src/lib/push.js). Groundwork only —
+    // nothing currently reads this to actually send a push; a future
+    // Cloud Function or the whatsapp-bot service would use the Admin SDK
+    // (which bypasses these rules) to query it. Not publicly readable:
+    // listing every token would hand anyone a way to spam devices once a
+    // real sender exists. Document ID is the token itself, so create and
+    // update use the same shape check.
+    match /push_subscriptions/{token} {
+      allow create, update: if request.resource.data.keys().hasOnly(['token', 'watchedTerms', 'createdAt', 'updatedAt'])
+                            && request.resource.data.token == token
+                            && request.resource.data.watchedTerms is list
+                            && request.resource.data.watchedTerms.size() <= 20;
+      allow read: if isAdmin();
+      allow delete: if false;
+    }
   }
 }
