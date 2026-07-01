@@ -62,8 +62,14 @@ service cloud.firestore {
       }
 
       function isOnlyAddingReply() {
+        // resource.data.get('replies', []) rather than resource.data.replies:
+        // reports created via the web form or the seed script never
+        // initialize a `replies` field (it's added lazily by the first
+        // reply's arrayUnion write), so a direct .replies.size() access
+        // errors out on that first reply attempt — silently denying the
+        // write and making it look like replies just don't work.
         return request.resource.data.diff(resource.data).affectedKeys().hasOnly(['replies'])
-               && request.resource.data.replies.size() == resource.data.replies.size() + 1;
+               && request.resource.data.replies.size() == resource.data.get('replies', []).size() + 1;
       }
     }
 

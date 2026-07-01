@@ -27,7 +27,7 @@ const initialReports = seedReports.map((r, i) => ({ ...r, id: String(i + 1).padS
 
 export default function App() {
   const [view, setViewRaw] = useState('home')
-  const [activeReport, setActiveReport] = useState(null)
+  const [activeReportId, setActiveReportId] = useState(null)
   const [activeProfileName, setActiveProfileName] = useState(null)
   const [pendingReportId, setPendingReportId] = useState(null)
   const [reports, setReports] = useState(initialReports)
@@ -154,6 +154,7 @@ export default function App() {
     const reportId = params.get('report')
     const profileName = params.get('profile')
     if (reportId) {
+      setActiveReportId(reportId)
       setPendingReportId(reportId)
       setViewRaw('detail')
     } else if (profileName) {
@@ -166,7 +167,6 @@ export default function App() {
     if (!pendingReportId) return
     const found = reports.find((r) => r.id === pendingReportId)
     if (found) {
-      setActiveReport(found)
       setPendingReportId(null)
     } else if (usingFirestore) {
       // Firestore has already returned its live snapshot and there's still
@@ -185,17 +185,17 @@ export default function App() {
       const profileName = params.get('profile')
       if (reportId) {
         const found = reports.find((r) => r.id === reportId)
-        setActiveReport(found || null)
+        setActiveReportId(reportId)
         setActiveProfileName(null)
         setPendingReportId(found ? null : reportId)
         setViewRaw('detail')
       } else if (profileName) {
         setActiveProfileName(profileName)
-        setActiveReport(null)
+        setActiveReportId(null)
         setPendingReportId(null)
         setViewRaw('profile')
       } else {
-        setActiveReport(null)
+        setActiveReportId(null)
         setActiveProfileName(null)
         setPendingReportId(null)
         setViewRaw('home')
@@ -206,16 +206,19 @@ export default function App() {
   }, [reports, isAdminRoute])
 
   // `payload` is a report object for 'detail', an agent/landlord name string
-  // for 'profile', and unused for every other view.
+  // for 'profile', and unused for every other view. `activeReport` itself
+  // is derived below (from reports + activeReportId) rather than stored
+  // directly, so it always reflects live data — a confirm or reply that
+  // updates `reports` shows up immediately without needing to renavigate.
   function setView(next, payload) {
     if (next === 'detail') {
-      setActiveReport(payload || null)
+      setActiveReportId(payload?.id || null)
       setActiveProfileName(null)
     } else if (next === 'profile') {
       setActiveProfileName(payload || null)
-      setActiveReport(null)
+      setActiveReportId(null)
     } else {
-      setActiveReport(null)
+      setActiveReportId(null)
       setActiveProfileName(null)
     }
     setPendingReportId(null)
@@ -260,14 +263,14 @@ export default function App() {
     if (usingFirestore) {
       try {
         await confirmReportInFirestore(id)
-        // onSnapshot listener will reflect the new count automatically.
+        // onSnapshot listener will update `reports`, and activeReport
+        // (derived below) picks up the change automatically.
         return
       } catch (err) {
         console.warn('Firestore confirm failed, updating locally instead:', err.message)
       }
     }
     setReports((rs) => rs.map((r) => (r.id === id ? { ...r, upvotes: (r.upvotes || 0) + 1 } : r)))
-    setActiveReport((r) => (r && r.id === id ? { ...r, upvotes: (r.upvotes || 0) + 1 } : r))
   }
 
   async function handleAddReply(reportId, reply) {
@@ -283,7 +286,8 @@ export default function App() {
     if (usingFirestore) {
       try {
         saved = await addReplyToFirestore(reportId, reply)
-        // onSnapshot listener will reflect the new reply automatically.
+        // onSnapshot listener will update `reports`, and activeReport
+        // (derived below) picks up the change automatically.
         return saved
       } catch (err) {
         console.warn('Firestore reply failed, saving locally instead:', err.message)
@@ -293,9 +297,10 @@ export default function App() {
     const appendReply = (r) =>
       r.id === reportId ? { ...r, replies: [...(r.replies || []), saved] } : r
     setReports((rs) => rs.map(appendReply))
-    setActiveReport((r) => (r && r.id === reportId ? appendReply(r) : r))
     return saved
   }
+
+  const activeReport = reports.find((r) => r.id === activeReportId) || null
 
   if (isAdminRoute) {
     if (adminUser === undefined) {
