@@ -79,7 +79,7 @@ export default function SavedReports({ reports, savedIds, setView, onToggleSave,
       </div>
 
       {savedListings.length > 0 ? (
-        <div className="report-list">
+        <div className="listing-grid">
           {savedListings.map((l) => (
             <ListingCard
               key={l.id}

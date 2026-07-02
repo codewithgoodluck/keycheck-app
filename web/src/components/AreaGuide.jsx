@@ -51,7 +51,7 @@ export default function AreaGuide({ reports, listings, name, setView, savedIds, 
       {matchingListings.length > 0 && (
         <>
           <div className="results-meta"><span><Home size={13} style={{ verticalAlign: -2, marginRight: 4 }} /> Active listings</span></div>
-          <div className="report-list" style={{ marginBottom: 24 }}>
+          <div className="listing-grid" style={{ marginBottom: 24 }}>
             {matchingListings.map((l) => (
               <ListingCard key={l.id} listing={l} onClick={() => setView('listing-detail', l)} />
             ))}

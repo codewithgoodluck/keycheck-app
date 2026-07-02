@@ -104,7 +104,7 @@ export default function ListingDetail({ listing, listings, setView }) {
   const isExpired = getEffectiveStatus(listing) === 'expired'
 
   return (
-    <>
+    <div className="theme-market">
       <button className="detail-back" onClick={() => setView('listings')}>
         <ArrowLeft size={15} /> Back to listings
       </button>
@@ -258,6 +258,6 @@ export default function ListingDetail({ listing, listings, setView }) {
           </button>
         )}
       </div>
-    </>
+    </div>
   )
 }

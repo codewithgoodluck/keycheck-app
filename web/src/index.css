@@ -29,6 +29,19 @@
   --shadow-lg: 0 20px 48px -16px rgba(21, 33, 26, 0.28);
   --radius: 20px;
   --radius-sm: 12px;
+
+  /* Market/browsing-side palette — warmer and more saturated than the
+     fintech-style status colors above on purpose (see .theme-market
+     below). Those stay reserved for fraud-report status everywhere else;
+     a listing card is a place someone might want to live, not a
+     compliance record, so it gets its own warmer identity closer to
+     Jiji/Airbnb than a verification tool. */
+  --coral: #e2673f;
+  --coral-deep: #c14f2b;
+  --coral-soft: #fbe4d8;
+  --cream: #fbf3e7;
+  --cream-deep: #f3e4cf;
+  --font-display: 'Quicksand', var(--font-body);
 }
 
 * { box-sizing: border-box; }
@@ -1208,3 +1221,165 @@ button { font-family: inherit; }
 .toast-success svg:first-child { color: var(--green); }
 .toast-error svg:first-child { color: #ff8a80; }
 .toast-default svg:first-child { color: var(--gold); }
+
+/* ==========================================================================
+   Market / listings-browsing theme
+   Applied via .theme-market on ListingsBrowse.jsx, Market.jsx, and
+   ListingDetail.jsx only — the actual browsing surfaces. Fraud reports,
+   due diligence, and the admin panel intentionally keep the neutral
+   fintech-status palette above; this warmer, rounder, photo-forward
+   treatment is specifically for the "browse a place to live" experience,
+   closer to Jiji/Airbnb than a compliance tool.
+   ========================================================================== */
+
+.theme-market .hero {
+  background: linear-gradient(180deg, var(--cream) 0%, var(--cream-deep) 100%);
+  margin: 0 -20px 28px;
+  padding: 36px 20px 32px;
+  border-radius: 0 0 32px 32px;
+}
+
+.theme-market .hero .eyebrow {
+  font-family: var(--font-display);
+  font-weight: 700;
+  text-transform: none;
+  letter-spacing: 0;
+  color: var(--coral-deep);
+  background: var(--coral-soft);
+}
+
+.theme-market .hero h1,
+.theme-market .detail-header h1,
+.theme-market h1 {
+  font-family: var(--font-display);
+  font-weight: 700;
+}
+
+.theme-market .search-bar { border-radius: 999px; }
+.theme-market .search-bar:focus-within { border-color: var(--coral); }
+.theme-market .search-bar button { background: var(--coral); border-radius: 999px; }
+.theme-market .search-bar button:hover { background: var(--coral-deep); }
+
+.theme-market .chip.active { background: var(--coral); color: #fff; border-color: var(--coral); }
+.theme-market .chip:hover { border-color: var(--coral); color: var(--coral-deep); }
+
+.theme-market .submit-btn { background: var(--coral); border-radius: 999px; }
+.theme-market .submit-btn:hover { background: var(--coral-deep); }
+
+.theme-market .icon-btn.saved { color: var(--coral-deep); border-color: var(--coral); background: var(--coral-soft); }
+
+.theme-market .detail-card { border-radius: 28px; }
+
+/* ---------- Listing grid + photo-forward card ---------- */
+
+.listing-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 20px;
+}
+
+.listing-card {
+  display: flex;
+  flex-direction: column;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 24px;
+  overflow: hidden;
+  cursor: pointer;
+  box-shadow: var(--shadow-sm);
+  transition: box-shadow 0.18s ease, transform 0.18s ease;
+}
+
+.listing-card:hover { box-shadow: var(--shadow-md); transform: translateY(-3px); }
+
+.listing-card-photo {
+  position: relative;
+  aspect-ratio: 4 / 3;
+  background: var(--cream-deep);
+  color: var(--ink-faint);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.listing-card-photo img { width: 100%; height: 100%; object-fit: cover; display: block; }
+
+.listing-card-price-tag {
+  position: absolute;
+  left: 12px;
+  bottom: 12px;
+  background: rgba(255, 255, 255, 0.94);
+  color: var(--ink);
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 14px;
+  padding: 6px 12px;
+  border-radius: 999px;
+  box-shadow: var(--shadow-sm);
+}
+
+.listing-card-photo-actions {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  display: flex;
+  gap: 6px;
+}
+
+.listing-card-icon-btn {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(255, 255, 255, 0.92);
+  color: var(--ink-soft);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: var(--shadow-sm);
+  transition: color 0.15s ease;
+}
+
+.listing-card-icon-btn.active { color: var(--coral-deep); }
+.listing-card-icon-btn.active svg { fill: var(--coral-deep); }
+
+.listing-card-body { padding: 14px 16px 16px; }
+
+.listing-card-body h3 {
+  font-family: var(--font-display);
+  font-size: 15.5px;
+  font-weight: 700;
+  margin: 0 0 4px;
+  color: var(--ink);
+}
+
+.listing-card-desc {
+  font-size: 13px;
+  color: var(--ink-soft);
+  margin: 0 0 8px;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.listing-card-meta {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+  color: var(--ink-faint);
+  margin: 0 0 10px;
+}
+
+.listing-card-badges { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+
+.listing-card-rating {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--coral-deep);
+}

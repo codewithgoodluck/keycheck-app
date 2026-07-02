@@ -63,7 +63,7 @@ export default function ListingsBrowse({ listings, setView, hasMore, onLoadMore,
   }
 
   return (
-    <>
+    <div className="theme-market">
       <section className="hero">
         <p className="eyebrow">
           <Home size={13} /> Verified listings
@@ -137,24 +137,26 @@ export default function ListingsBrowse({ listings, setView, hasMore, onLoadMore,
       )}
 
       {results.length > 0 ? (
-        <div className="report-list">
-          {results.map((l) => (
-            <ListingCard
-              key={l.id}
-              listing={l}
-              onClick={() => setView('listing-detail', l)}
-              comparing={compareIds.includes(l.id)}
-              onToggleCompare={handleToggleCompare}
-              saved={savedIds.includes(l.id)}
-              onToggleSave={handleToggleSave}
-            />
-          ))}
+        <>
+          <div className="listing-grid">
+            {results.map((l) => (
+              <ListingCard
+                key={l.id}
+                listing={l}
+                onClick={() => setView('listing-detail', l)}
+                comparing={compareIds.includes(l.id)}
+                onToggleCompare={handleToggleCompare}
+                saved={savedIds.includes(l.id)}
+                onToggleSave={handleToggleSave}
+              />
+            ))}
+          </div>
           {hasMore && (
-            <button className="chip" style={{ alignSelf: 'center', marginTop: 8 }} onClick={onLoadMore}>
+            <button className="chip" style={{ display: 'flex', margin: '18px auto 0' }} onClick={onLoadMore}>
               Load more listings
             </button>
           )}
-        </div>
+        </>
       ) : (
         <div className="empty-state">
           <FileSearch size={28} />
@@ -162,6 +164,6 @@ export default function ListingsBrowse({ listings, setView, hasMore, onLoadMore,
           <button onClick={() => setView('submit-listing')}>List a property</button>
         </div>
       )}
-    </>
+    </div>
   )
 }

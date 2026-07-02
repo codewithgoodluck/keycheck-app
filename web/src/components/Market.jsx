@@ -119,7 +119,7 @@ export default function Market({ listings, setView }) {
   }
 
   return (
-    <>
+    <div className="theme-market">
       <section className="hero">
         <p className="eyebrow">
           <Compass size={13} /> Market
@@ -242,7 +242,7 @@ export default function Market({ listings, setView }) {
           )}
 
           {results.length > 0 ? (
-            <div className="report-list">
+            <div className="listing-grid">
               {results.map((l) => (
                 <ListingCard
                   key={l.id}
@@ -265,6 +265,6 @@ export default function Market({ listings, setView }) {
           )}
         </>
       )}
-    </>
+    </div>
   )
 }
