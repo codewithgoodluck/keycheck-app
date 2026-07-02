@@ -23,7 +23,7 @@ import { subscribeToReports, addReportToFirestore, confirmReportInFirestore, add
 import { subscribeToListings } from './lib/listingsApi.js'
 import { watchAdminAuth } from './lib/adminApi.js'
 import { watchListerAuth } from './lib/listerAuth.js'
-import { getSeenIds, markSeen, areaOf } from './lib/notifications.js'
+import { getSeenIds, markSeen, getSeenListingIds, markListingsSeen, areaOf } from './lib/notifications.js'
 import { getWatchedTerms } from './lib/watches.js'
 import { getStoredPushToken, onForegroundPushMessage } from './lib/push.js'
 import { Bell, X } from 'lucide-react'
@@ -62,6 +62,7 @@ export default function App() {
   const [listerUser, setListerUser] = useState(undefined) // undefined = auth state not yet known
   const [activeListingId, setActiveListingId] = useState(null)
   const listingsUnsubscribeRef = useRef(null)
+  const listingsBaselineRef = useRef(false)
 
   const isAdminRoute =
     typeof window !== 'undefined' && new URLSearchParams(window.location.search).get('admin') === '1'
@@ -118,9 +119,9 @@ export default function App() {
         })
         if (matches.length > 0) {
           setNewMatches((prev) => {
-            const byId = new Map(prev.map((r) => [r.id, r]))
-            matches.forEach((r) => byId.set(r.id, r))
-            return Array.from(byId.values()).slice(0, 5)
+            const byKey = new Map(prev.map((m) => [`${m.kind}:${m.id}`, m]))
+            matches.forEach((r) => byKey.set(`report:${r.id}`, { ...r, kind: 'report' }))
+            return Array.from(byKey.values()).slice(0, 5)
           })
         }
       }
@@ -130,8 +131,41 @@ export default function App() {
     firestoreBaselineRef.current = true
   }, [reports, usingFirestore])
 
-  function dismissMatch(id) {
-    setNewMatches((prev) => prev.filter((r) => r.id !== id))
+  // Same idea as the report-matching effect above, applied to listings —
+  // its own baseline ref since reports and listings hit their Firestore
+  // baseline independently. Only the freeform watched-terms list applies
+  // here (no "watched agent" equivalent — that's specific to fraud
+  // reports' saved-report pattern, and there's no "saved listings"
+  // concept in this app), matched against locationText only.
+  useEffect(() => {
+    if (listings.length === 0) return
+
+    const seen = new Set(getSeenListingIds())
+    const freshListings = listings.filter((l) => !seen.has(l.id))
+
+    if (listingsBaselineRef.current && freshListings.length > 0) {
+      const watchedTerms = getWatchedTerms()
+      if (watchedTerms.length > 0) {
+        const matches = freshListings.filter((l) => {
+          const loc = l.locationText?.toLowerCase() || ''
+          return watchedTerms.some((term) => loc.includes(term))
+        })
+        if (matches.length > 0) {
+          setNewMatches((prev) => {
+            const byKey = new Map(prev.map((m) => [`${m.kind}:${m.id}`, m]))
+            matches.forEach((l) => byKey.set(`listing:${l.id}`, { ...l, kind: 'listing' }))
+            return Array.from(byKey.values()).slice(0, 5)
+          })
+        }
+      }
+    }
+
+    markListingsSeen(listings.map((l) => l.id))
+    listingsBaselineRef.current = true
+  }, [listings])
+
+  function dismissMatch(kind, id) {
+    setNewMatches((prev) => prev.filter((m) => !(m.kind === kind && m.id === id)))
   }
 
   // Re-subscribes with a bigger limit whenever reportLimit grows (see
@@ -373,12 +407,15 @@ export default function App() {
       <ToastStack />
       {newMatches.length > 0 && (
         <div className="watch-alerts">
-          {newMatches.map((r) => (
-            <div key={r.id} className="watch-alert">
+          {newMatches.map((m) => (
+            <div key={`${m.kind}:${m.id}`} className="watch-alert">
               <Bell size={15} />
-              <span>New report near <strong>{r.locationText.split(',')[0].trim()}</strong> matches something you saved.</span>
-              <button onClick={() => setView('detail', r)}>View</button>
-              <button className="dismiss" onClick={() => dismissMatch(r.id)} aria-label="Dismiss">
+              <span>
+                New {m.kind === 'listing' ? 'listing' : 'report'} near{' '}
+                <strong>{m.locationText.split(',')[0].trim()}</strong> matches something you're watching.
+              </span>
+              <button onClick={() => setView(m.kind === 'listing' ? 'listing-detail' : 'detail', m)}>View</button>
+              <button className="dismiss" onClick={() => dismissMatch(m.kind, m.id)} aria-label="Dismiss">
                 <X size={14} />
               </button>
             </div>

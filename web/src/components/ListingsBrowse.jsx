@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react'
 import { Search, FileSearch, Home, Plus } from 'lucide-react'
 import ListingCard from './ListingCard.jsx'
+import WatchAreaControls from './WatchAreaControls.jsx'
 import { TYPE_LABELS } from '../lib/format.js'
 import { NIGERIAN_STATES } from '../data/verificationRules.js'
 import { getEffectiveStatus } from '../lib/listingsApi.js'
@@ -15,9 +16,10 @@ const CATEGORY_FILTERS = [
 ]
 
 // Structurally mirrors SearchHome.jsx (search bar, filter chips,
-// client-side filtering over an already-subscribed array) but deliberately
-// slimmer for this first slice — no autocomplete, trending, or watch/push,
-// those stay report-specific until listings prove out the core loop.
+// client-side filtering over an already-subscribed array) — still no
+// autocomplete/trending, those stay report-specific, but watch/push now
+// reuses WatchAreaControls (see App.jsx's parallel listings-matching
+// effect for the other half of this feature).
 export default function ListingsBrowse({ listings, setView, hasMore, onLoadMore, listerUser }) {
   const [query, setQuery] = useState('')
   const [submittedQuery, setSubmittedQuery] = useState('')
@@ -106,6 +108,8 @@ export default function ListingsBrowse({ listings, setView, hasMore, onLoadMore,
         <span>{results.length} listing{results.length === 1 ? '' : 's'}</span>
         {submittedQuery && <span>Showing results for "{submittedQuery}"</span>}
       </div>
+
+      <WatchAreaControls term={submittedQuery} />
 
       {results.length > 0 ? (
         <div className="report-list">

@@ -1,13 +1,12 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { Search, ShieldCheck, AlertTriangle, MapPin, FileSearch, ShieldPlus, Eye, EyeOff, BellRing, TrendingUp, Clock3, Users } from 'lucide-react'
+import { Search, ShieldCheck, AlertTriangle, MapPin, FileSearch, ShieldPlus, TrendingUp, Clock3, Users } from 'lucide-react'
 import ReportCard from './ReportCard.jsx'
 import StatsBar from './StatsBar.jsx'
 import TrendingCard from './TrendingCard.jsx'
 import StatusLegend from './StatusLegend.jsx'
+import WatchAreaControls from './WatchAreaControls.jsx'
 import { TYPE_LABELS } from '../lib/format.js'
 import { logSearchMiss } from '../lib/reportsApi.js'
-import { addWatch, removeWatch, isWatching } from '../lib/watches.js'
-import { enablePushNotifications, syncWatchedTermsIfSubscribed, getStoredPushToken } from '../lib/push.js'
 import { trendingScore, sortByTrending } from '../lib/trending.js'
 
 const KIND_FILTERS = [
@@ -37,43 +36,10 @@ export default function SearchHome({ reports, setView, savedIds, onToggleSave, h
   const [kindFilter, setKindFilter] = useState('all')
   const [statusFilter, setStatusFilter] = useState('all')
   const [categoryFilter, setCategoryFilter] = useState('all')
-  const [watching, setWatching] = useState(false)
   const [sortMode, setSortMode] = useState('newest')
-  const [pushEnabled, setPushEnabled] = useState(() => Boolean(getStoredPushToken()))
-  const [pushBusy, setPushBusy] = useState(false)
-  const [pushError, setPushError] = useState('')
   const [showSuggestions, setShowSuggestions] = useState(false)
   const [activeIndex, setActiveIndex] = useState(-1)
   const blurTimer = useRef(null)
-
-  useEffect(() => {
-    setWatching(isWatching(submittedQuery))
-  }, [submittedQuery])
-
-  function toggleWatch() {
-    if (!submittedQuery.trim()) return
-    if (watching) {
-      removeWatch(submittedQuery)
-      setWatching(false)
-    } else {
-      addWatch(submittedQuery)
-      setWatching(true)
-    }
-    syncWatchedTermsIfSubscribed()
-  }
-
-  async function handleEnablePush() {
-    setPushError('')
-    setPushBusy(true)
-    try {
-      await enablePushNotifications()
-      setPushEnabled(true)
-    } catch (err) {
-      setPushError(err.message)
-    } finally {
-      setPushBusy(false)
-    }
-  }
 
   const trendingLocations = useMemo(() => {
     const counts = {}
@@ -362,26 +328,7 @@ export default function SearchHome({ reports, setView, savedIds, onToggleSave, h
         </span>
       </div>
 
-      {submittedQuery.trim() && (
-        <div className="chip-row" style={{ marginTop: 0, marginBottom: 14 }}>
-          <button className={`chip ${watching ? 'active' : ''}`} onClick={toggleWatch}>
-            {watching ? <EyeOff /> : <Eye />} {watching ? 'Stop watching this area' : 'Watch this area'}
-          </button>
-          {watching && !pushEnabled && (
-            <button className="chip" onClick={handleEnablePush} disabled={pushBusy}>
-              <BellRing /> {pushBusy ? 'Requesting...' : 'Also notify me on this device'}
-            </button>
-          )}
-          {watching && pushEnabled && (
-            <span className="chip" style={{ cursor: 'default' }}>
-              <BellRing /> Notifications on
-            </span>
-          )}
-        </div>
-      )}
-      {pushError && (
-        <p style={{ color: 'var(--red)', fontSize: 12.5, fontWeight: 600, margin: '-8px 0 14px' }}>{pushError}</p>
-      )}
+      <WatchAreaControls term={submittedQuery} />
 
       {results.length > 0 ? (
         <div className="report-list">
