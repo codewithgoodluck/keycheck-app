@@ -96,7 +96,10 @@ export default function SubmitListing({ listerUser, setView }) {
       })
       setSubmitted(true)
     } catch (err) {
-      setError('Failed to submit listing: ' + err.message)
+      const hint = err.message.toLowerCase().includes('permission')
+        ? " If you're signed in as a KeyCheck moderator/admin account, that account can't submit through this public form by design — use the admin panel's Listings tab instead, or sign out here and create a separate lister account."
+        : ''
+      setError('Failed to submit listing: ' + err.message + hint)
     } finally {
       setSubmitting(false)
     }
