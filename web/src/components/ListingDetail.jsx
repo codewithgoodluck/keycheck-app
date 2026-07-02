@@ -1,7 +1,8 @@
-import { ArrowLeft, MapPin, FileText, MessageCircle, Home } from 'lucide-react'
+import { ArrowLeft, MapPin, FileText, MessageCircle, Home, Clock } from 'lucide-react'
 import { TYPE_LABELS } from '../lib/format.js'
 import VerificationBadge from './VerificationBadge.jsx'
 import FeeComplianceNote from './FeeComplianceNote.jsx'
+import { getEffectiveStatus } from '../lib/listingsApi.js'
 
 // Mirrors ReportDetail.jsx's overall shape, deliberately slimmer — no
 // confirm/reply/dispute flows, those are report-specific. Contact stays a
@@ -17,12 +18,23 @@ export default function ListingDetail({ listing, setView }) {
   }
 
   const waNumber = (listing.listerPhone || '').replace(/[^0-9]/g, '')
+  const isExpired = getEffectiveStatus(listing) === 'expired'
 
   return (
     <>
       <button className="detail-back" onClick={() => setView('listings')}>
         <ArrowLeft size={15} /> Back to listings
       </button>
+
+      {isExpired && (
+        <div className="fact-box" style={{ marginBottom: 16, background: 'var(--red-soft)' }}>
+          <Clock size={18} color="var(--red)" />
+          <div>
+            <strong>This listing has expired.</strong> It's no longer being actively promoted by the
+            lister — the details below may be out of date. Contact the lister to confirm availability.
+          </div>
+        </div>
+      )}
 
       <div className="detail-card">
         <div className="detail-header">

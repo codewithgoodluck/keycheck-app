@@ -1,12 +1,12 @@
 import { useEffect, useState } from 'react'
-import { LogOut, Plus, ShieldCheck, ShieldAlert, Clock, ShieldX } from 'lucide-react'
+import { LogOut, Plus, ShieldCheck, ShieldAlert, Clock, ShieldX, RefreshCw } from 'lucide-react'
 import { TYPE_LABELS } from '../lib/format.js'
-import { getMyListings, updateListingLifecycle } from '../lib/listingsApi.js'
+import { getMyListings, updateListingLifecycle, renewListing, getEffectiveStatus } from '../lib/listingsApi.js'
 import { listerSignOut } from '../lib/listerAuth.js'
 import VerificationBadge from './VerificationBadge.jsx'
 import FeeComplianceNote from './FeeComplianceNote.jsx'
 
-const STATUS_ICON = { active: ShieldCheck, pending: Clock, rejected: ShieldX, blocked: ShieldAlert }
+const STATUS_ICON = { active: ShieldCheck, pending: Clock, rejected: ShieldX, blocked: ShieldAlert, expired: ShieldX }
 const LIFECYCLE_OPTIONS = ['active', 'under_offer', 'let', 'sold', 'expired']
 
 export default function MyListings({ listerUser, setView }) {
@@ -34,6 +34,18 @@ export default function MyListings({ listerUser, setView }) {
       refresh()
     } catch (err) {
       alert('Failed to update listing: ' + err.message)
+    } finally {
+      setBusyId(null)
+    }
+  }
+
+  async function handleRenew(id) {
+    setBusyId(id)
+    try {
+      await renewListing(id)
+      refresh()
+    } catch (err) {
+      alert('Failed to renew listing: ' + err.message)
     } finally {
       setBusyId(null)
     }
@@ -79,7 +91,8 @@ export default function MyListings({ listerUser, setView }) {
           </div>
         ) : (
           listings.map((listing) => {
-            const Icon = STATUS_ICON[listing.status] || Clock
+            const effectiveStatus = getEffectiveStatus(listing)
+            const Icon = STATUS_ICON[effectiveStatus] || Clock
             return (
               <div key={listing.id} className="detail-card" style={{ padding: '16px 20px' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12, alignItems: 'flex-start', marginBottom: 8 }}>
@@ -91,10 +104,14 @@ export default function MyListings({ listerUser, setView }) {
                   </div>
                   <span
                     className={`stamp-inline ${
-                      listing.status === 'active' ? 'verified' : listing.status === 'rejected' || listing.status === 'blocked' ? 'disputed' : 'unverified'
+                      effectiveStatus === 'active'
+                        ? 'verified'
+                        : effectiveStatus === 'rejected' || effectiveStatus === 'blocked' || effectiveStatus === 'expired'
+                        ? 'disputed'
+                        : 'unverified'
                     }`}
                   >
-                    <Icon /> {listing.status.replace('_', ' ')}
+                    <Icon /> {effectiveStatus.replace('_', ' ')}
                   </span>
                 </div>
                 {listing.blockedReason && (
@@ -110,11 +127,22 @@ export default function MyListings({ listerUser, setView }) {
                   />
                 </div>
 
+                {effectiveStatus === 'expired' && (
+                  <button
+                    className="chip active"
+                    style={{ marginTop: 12 }}
+                    onClick={() => handleRenew(listing.id)}
+                    disabled={busyId === listing.id}
+                  >
+                    <RefreshCw size={13} /> {busyId === listing.id ? 'Renewing...' : 'Renew (30 more days)'}
+                  </button>
+                )}
+
                 {['active', 'under_offer', 'let', 'sold', 'expired'].includes(listing.status) && (
                   <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginTop: 12 }}>
                     <label style={{ fontSize: 12, fontWeight: 700, color: 'var(--ink-soft)' }}>Availability</label>
                     <select
-                      value={listing.status}
+                      value={effectiveStatus}
                       onChange={(e) => handleLifecycleChange(listing.id, e.target.value)}
                       disabled={busyId === listing.id}
                       style={{ border: '1.5px solid var(--line)', borderRadius: 8, padding: '6px 10px', fontSize: 13, background: 'var(--paper)' }}

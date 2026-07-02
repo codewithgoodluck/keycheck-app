@@ -2,11 +2,11 @@ import { useEffect, useState } from 'react'
 import { Plus, ShieldAlert, ShieldCheck, ShieldX, Clock, UserCheck } from 'lucide-react'
 import { TYPE_LABELS } from '../lib/format.js'
 import { NIGERIAN_STATES, DUAL_REP_LABELS } from '../data/verificationRules.js'
-import { createListing, listListings, activateListing, rejectListing } from '../lib/listingsApi.js'
+import { createListing, listListings, activateListing, rejectListing, getEffectiveStatus } from '../lib/listingsApi.js'
 import VerificationBadge from './VerificationBadge.jsx'
 import FeeComplianceNote from './FeeComplianceNote.jsx'
 
-const STATUS_ICON = { active: ShieldCheck, pending: Clock, blocked: ShieldAlert, rejected: ShieldX }
+const STATUS_ICON = { active: ShieldCheck, pending: Clock, blocked: ShieldAlert, rejected: ShieldX, expired: ShieldX }
 
 const EMPTY_FORM = {
   type: 'house_agent',
@@ -213,7 +213,8 @@ export default function AdminListings() {
           </div>
         ) : (
           listings.map((listing) => {
-            const Icon = STATUS_ICON[listing.status] || Clock
+            const effectiveStatus = getEffectiveStatus(listing)
+            const Icon = STATUS_ICON[effectiveStatus] || Clock
             return (
               <div key={listing.id} className="detail-card" style={{ padding: '16px 20px' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12, alignItems: 'flex-start', marginBottom: 8 }}>
@@ -232,10 +233,14 @@ export default function AdminListings() {
                   </div>
                   <span
                     className={`stamp-inline ${
-                      listing.status === 'active' ? 'verified' : listing.status === 'blocked' || listing.status === 'rejected' ? 'disputed' : 'unverified'
+                      effectiveStatus === 'active'
+                        ? 'verified'
+                        : effectiveStatus === 'blocked' || effectiveStatus === 'rejected' || effectiveStatus === 'expired'
+                        ? 'disputed'
+                        : 'unverified'
                     }`}
                   >
-                    <Icon /> {listing.status}
+                    <Icon /> {effectiveStatus}
                   </span>
                 </div>
                 {listing.blockedReason && (

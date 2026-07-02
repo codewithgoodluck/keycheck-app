@@ -5,6 +5,11 @@ import { ref, uploadBytes, getDownloadURL } from 'firebase/storage'
 const LISTINGS = 'listings'
 const REPORTS = 'reports'
 const LIFECYCLE_STATUSES = ['under_offer', 'let', 'sold', 'expired', 'active']
+const DEFAULT_LISTING_DURATION_DAYS = 30
+
+function daysFromNow(days) {
+  return new Date(Date.now() + days * 24 * 60 * 60 * 1000).toISOString()
+}
 
 // Same exact-match convention AgentProfile.jsx already uses for reports —
 // names are free text, so this is a literal match, not fuzzy dedup.
@@ -72,7 +77,10 @@ export async function uploadListingPhoto(file) {
 // Moderator activation — the real enforcement point for the
 // auto-block-flagged-agents rule (see createListingAsLister's comment).
 // Refuses to activate (and instead rejects) if the lister name now
-// matches a disputed/verified fraud report.
+// matches a disputed/verified fraud report. Also starts the lazy-expiry
+// clock (see isPastExpiry/getEffectiveStatus below) — there's no
+// scheduled job to flip status automatically, so expiry is computed at
+// read time against this timestamp instead.
 export async function activateListing(listingId, listerName) {
   const flagged = await checkAgentFlagged(listerName)
   if (flagged) {
@@ -82,7 +90,11 @@ export async function activateListing(listingId, listerName) {
     })
     return { activated: false }
   }
-  await updateDoc(doc(db, LISTINGS, listingId), { status: 'active', blockedReason: null })
+  await updateDoc(doc(db, LISTINGS, listingId), {
+    status: 'active',
+    blockedReason: null,
+    expiresAt: daysFromNow(DEFAULT_LISTING_DURATION_DAYS)
+  })
   return { activated: true }
 }
 
@@ -96,12 +108,43 @@ export async function updateListingStatus(listingId, status) {
 
 // Lister-callable subset — their own listing's availability, not the
 // pending->active transition (that's moderator-only, enforced in
-// firestore.rules' isOwnerAllowedListingUpdate()).
+// firestore.rules' isOwnerAllowedListingUpdate()). Moving (back) into
+// 'active' always refreshes expiresAt to a fresh 30-day window —
+// otherwise a listing activated 25 days ago, marked under_offer, then
+// switched back to active a week later would immediately read as
+// "expired" again despite the lister just having reactivated it.
 export async function updateListingLifecycle(listingId, status) {
   if (!LIFECYCLE_STATUSES.includes(status)) {
     throw new Error(`Invalid lifecycle status: ${status}`)
   }
-  await updateDoc(doc(db, LISTINGS, listingId), { status })
+  const payload = { status }
+  if (status === 'active') {
+    payload.expiresAt = daysFromNow(DEFAULT_LISTING_DURATION_DAYS)
+  }
+  await updateDoc(doc(db, LISTINGS, listingId), payload)
+}
+
+// Semantic alias for the "Renew" action in the UI — reviving an
+// auto-expired listing and reactivating a manually under_offer/sold one
+// are the same underlying operation (see updateListingLifecycle above),
+// but a lister thinks of them differently, so the UI gets a distinct
+// button/label even though the code path is shared.
+export async function renewListing(listingId) {
+  await updateListingLifecycle(listingId, 'active')
+}
+
+// Pure, no Firestore dependency — used everywhere a listing's status is
+// displayed or filtered, instead of the raw stored `status` field, since
+// there's no scheduled job to flip status to 'expired' automatically
+// (see activateListing's comment). The stored status stays 'active'
+// forever past expiresAt; these compute what that actually means right now.
+export function isPastExpiry(listing) {
+  return Boolean(listing.expiresAt) && new Date(listing.expiresAt) < new Date()
+}
+
+export function getEffectiveStatus(listing) {
+  if (listing.status === 'active' && isPastExpiry(listing)) return 'expired'
+  return listing.status
 }
 
 // One-off fetch (not realtime), same pattern as adminApi.js's

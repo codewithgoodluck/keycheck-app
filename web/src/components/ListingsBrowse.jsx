@@ -3,6 +3,7 @@ import { Search, FileSearch, Home, Plus } from 'lucide-react'
 import ListingCard from './ListingCard.jsx'
 import { TYPE_LABELS } from '../lib/format.js'
 import { NIGERIAN_STATES } from '../data/verificationRules.js'
+import { getEffectiveStatus } from '../lib/listingsApi.js'
 
 const CATEGORY_FILTERS = [
   { key: 'all', label: 'All categories' },
@@ -24,7 +25,11 @@ export default function ListingsBrowse({ listings, setView, hasMore, onLoadMore,
   const [stateFilter, setStateFilter] = useState('all')
 
   const results = useMemo(() => {
-    let list = listings
+    // Query already fetches status == 'active' server-side, but there's
+    // no scheduled job to flip status to 'expired' at the 30-day mark —
+    // filter that out here (see lib/listingsApi.js's getEffectiveStatus)
+    // rather than needing a composite index on expiresAt.
+    let list = listings.filter((l) => getEffectiveStatus(l) !== 'expired')
     if (submittedQuery.trim()) {
       const q = submittedQuery.toLowerCase()
       list = list.filter((l) => l.locationText?.toLowerCase().includes(q) || l.description?.toLowerCase().includes(q))

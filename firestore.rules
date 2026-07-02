@@ -145,9 +145,12 @@ service cloud.firestore {
       // Admins can do anything (activate, reject, edit, delete — same
       // trust boundary as reports). A lister can only edit their own
       // listing, and only within safe transitions: editing content while
-      // still pending, or moving an already-active listing between their
-      // own availability states — never self-approving to 'active' from
-      // 'pending', never reassigning listerId to someone else.
+      // still pending, or moving freely among the five post-approval
+      // lifecycle states (active/under_offer/let/sold/expired) in either
+      // direction — e.g. "Renew" needs expired -> active, which a
+      // one-directional rule would reject. Never self-approving to
+      // 'active' from 'pending', never entering/leaving 'rejected', never
+      // reassigning listerId to someone else.
       allow update: if isAdmin()
                     || (request.auth != null
                         && request.auth.uid == resource.data.listerId
@@ -161,8 +164,8 @@ service cloud.firestore {
         return request.resource.data.listerId == resource.data.listerId
                && (
                  (resource.data.status == 'pending' && request.resource.data.status == 'pending')
-                 || (resource.data.status == 'active'
-                     && request.resource.data.status in ['under_offer', 'let', 'sold', 'expired', 'active'])
+                 || (resource.data.status in ['active', 'under_offer', 'let', 'sold', 'expired']
+                     && request.resource.data.status in ['active', 'under_offer', 'let', 'sold', 'expired'])
                );
       }
     }
