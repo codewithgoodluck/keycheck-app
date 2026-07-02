@@ -1,20 +1,24 @@
 import { useEffect, useState } from 'react'
 import { Plus, ShieldAlert, ShieldCheck, ShieldX, Clock, UserCheck } from 'lucide-react'
 import { TYPE_LABELS } from '../lib/format.js'
-import { NIGERIAN_STATES } from '../data/verificationRules.js'
+import { NIGERIAN_STATES, DUAL_REP_LABELS } from '../data/verificationRules.js'
 import { createListing, listListings, activateListing, rejectListing } from '../lib/listingsApi.js'
 import VerificationBadge from './VerificationBadge.jsx'
+import FeeComplianceNote from './FeeComplianceNote.jsx'
 
 const STATUS_ICON = { active: ShieldCheck, pending: Clock, blocked: ShieldAlert, rejected: ShieldX }
 
 const EMPTY_FORM = {
   type: 'house_agent',
+  transactionType: 'rent',
   state: 'Lagos',
   locationText: '',
   price: '',
   description: '',
   listerName: '',
-  lasreraNumber: ''
+  lasreraNumber: '',
+  agencyFeePercent: '',
+  dualRepresentation: 'seller_only'
 }
 
 // Admin-only for Milestone 1 — no lister-account system exists yet (see
@@ -46,12 +50,19 @@ export default function AdminListings() {
   async function handleCreate(e) {
     e.preventDefault()
     setError('')
-    if (!form.locationText.trim() || !form.description.trim() || !form.listerName.trim() || !form.price) return
+    if (
+      !form.locationText.trim() ||
+      !form.description.trim() ||
+      !form.listerName.trim() ||
+      !form.price ||
+      form.agencyFeePercent === ''
+    ) return
     setSubmitting(true)
     try {
       await createListing({
         ...form,
         price: Number(form.price),
+        agencyFeePercent: Number(form.agencyFeePercent),
         lasreraNumber: form.lasreraNumber.trim() || null
       })
       setForm(EMPTY_FORM)
@@ -102,6 +113,17 @@ export default function AdminListings() {
             </select>
           </div>
           <div className="field">
+            <label htmlFor="listing-transactionType">For sale or for rent?</label>
+            <select
+              id="listing-transactionType"
+              value={form.transactionType}
+              onChange={(e) => update('transactionType', e.target.value)}
+            >
+              <option value="rent">For rent</option>
+              <option value="sale">For sale</option>
+            </select>
+          </div>
+          <div className="field">
             <label htmlFor="listing-state">State</label>
             <select id="listing-state" value={form.state} onChange={(e) => update('state', e.target.value)}>
               {NIGERIAN_STATES.map((s) => (
@@ -124,6 +146,28 @@ export default function AdminListings() {
           <div className="field">
             <label htmlFor="listing-price">Price (₦)</label>
             <input id="listing-price" type="number" min="0" value={form.price} onChange={(e) => update('price', e.target.value)} required />
+          </div>
+          <div className="field">
+            <label htmlFor="listing-agencyFee">Agency fee (% of {form.transactionType === 'rent' ? 'total rent' : 'sale price'})</label>
+            <input
+              id="listing-agencyFee"
+              type="number"
+              min="0"
+              step="0.1"
+              value={form.agencyFeePercent}
+              onChange={(e) => update('agencyFeePercent', e.target.value)}
+              required
+            />
+          </div>
+          <div className="field">
+            <label htmlFor="listing-dualRep">Represents</label>
+            <select id="listing-dualRep" value={form.dualRepresentation} onChange={(e) => update('dualRepresentation', e.target.value)}>
+              {Object.entries(DUAL_REP_LABELS).map(([key, label]) => (
+                <option key={key} value={key}>
+                  {label}
+                </option>
+              ))}
+            </select>
           </div>
           <div className="field">
             <label htmlFor="listing-description">Description</label>
@@ -198,6 +242,14 @@ export default function AdminListings() {
                   <p style={{ fontSize: 12.5, color: 'var(--red)', margin: '0 0 8px' }}>{listing.blockedReason}</p>
                 )}
                 <VerificationBadge state={listing.state} lasreraNumber={listing.lasreraNumber} />
+                <div style={{ marginTop: 8 }}>
+                  <FeeComplianceNote
+                    state={listing.state}
+                    transactionType={listing.transactionType}
+                    agencyFeePercent={listing.agencyFeePercent}
+                    dualRepresentation={listing.dualRepresentation}
+                  />
+                </div>
                 {listing.status === 'pending' && (
                   <div style={{ display: 'flex', gap: 8, marginTop: 10 }}>
                     <button className="chip" onClick={() => handleActivate(listing)}>

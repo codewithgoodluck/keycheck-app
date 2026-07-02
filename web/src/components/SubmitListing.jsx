@@ -1,18 +1,22 @@
 import { useRef, useState } from 'react'
 import { Send, Paperclip, X } from 'lucide-react'
 import { TYPE_LABELS } from '../lib/format.js'
-import { NIGERIAN_STATES } from '../data/verificationRules.js'
+import { NIGERIAN_STATES, DUAL_REP_LABELS } from '../data/verificationRules.js'
 import { createListingAsLister, uploadListingPhoto } from '../lib/listingsApi.js'
+import FeeCapFactBox from './FeeCapFactBox.jsx'
 
 const EMPTY_FORM = {
   type: 'house_agent',
+  transactionType: 'rent',
   state: 'Lagos',
   locationText: '',
   price: '',
   description: '',
   listerName: '',
   listerPhone: '',
-  lasreraNumber: ''
+  lasreraNumber: '',
+  agencyFeePercent: '',
+  dualRepresentation: 'seller_only'
 }
 
 // Public self-service submission — adapted from AdminListings.jsx's form
@@ -54,7 +58,14 @@ export default function SubmitListing({ listerUser, setView }) {
       setError('Please sign in first.')
       return
     }
-    if (!form.locationText.trim() || !form.description.trim() || !form.listerName.trim() || !form.listerPhone.trim() || !form.price) {
+    if (
+      !form.locationText.trim() ||
+      !form.description.trim() ||
+      !form.listerName.trim() ||
+      !form.listerPhone.trim() ||
+      !form.price ||
+      form.agencyFeePercent === ''
+    ) {
       return
     }
 
@@ -74,6 +85,7 @@ export default function SubmitListing({ listerUser, setView }) {
       await createListingAsLister(listerUser.uid, form.listerPhone.trim(), {
         ...form,
         price: Number(form.price),
+        agencyFeePercent: Number(form.agencyFeePercent),
         lasreraNumber: form.lasreraNumber.trim() || null,
         photoUrl
       })
@@ -123,6 +135,13 @@ export default function SubmitListing({ listerUser, setView }) {
             </select>
           </div>
           <div className="field">
+            <label htmlFor="sl-transactionType">For sale or for rent?</label>
+            <select id="sl-transactionType" value={form.transactionType} onChange={(e) => update('transactionType', e.target.value)}>
+              <option value="rent">For rent</option>
+              <option value="sale">For sale</option>
+            </select>
+          </div>
+          <div className="field">
             <label htmlFor="sl-state">State</label>
             <select id="sl-state" value={form.state} onChange={(e) => update('state', e.target.value)}>
               {NIGERIAN_STATES.map((s) => (
@@ -147,6 +166,38 @@ export default function SubmitListing({ listerUser, setView }) {
             <label htmlFor="sl-price">Price (₦)</label>
             <input id="sl-price" type="number" min="0" value={form.price} onChange={(e) => update('price', e.target.value)} required />
           </div>
+
+          {form.state === 'Lagos' && (
+            <div style={{ marginBottom: 16 }}>
+              <FeeCapFactBox />
+            </div>
+          )}
+
+          <div className="field">
+            <label htmlFor="sl-agencyFee">Agency fee (% of {form.transactionType === 'rent' ? 'total rent' : 'sale price'})</label>
+            <input
+              id="sl-agencyFee"
+              type="number"
+              min="0"
+              step="0.1"
+              value={form.agencyFeePercent}
+              onChange={(e) => update('agencyFeePercent', e.target.value)}
+              required
+            />
+            <p className="field-hint">Enter 0 if no agent is involved.</p>
+          </div>
+
+          <div className="field">
+            <label htmlFor="sl-dualRep">Who do you represent in this transaction?</label>
+            <select id="sl-dualRep" value={form.dualRepresentation} onChange={(e) => update('dualRepresentation', e.target.value)}>
+              {Object.entries(DUAL_REP_LABELS).map(([key, label]) => (
+                <option key={key} value={key}>
+                  {label}
+                </option>
+              ))}
+            </select>
+          </div>
+
           <div className="field">
             <label htmlFor="sl-description">Description</label>
             <textarea id="sl-description" value={form.description} onChange={(e) => update('description', e.target.value)} required />

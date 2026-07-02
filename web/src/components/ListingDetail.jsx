@@ -1,6 +1,7 @@
 import { ArrowLeft, MapPin, FileText, MessageCircle, Home } from 'lucide-react'
 import { TYPE_LABELS } from '../lib/format.js'
 import VerificationBadge from './VerificationBadge.jsx'
+import FeeComplianceNote from './FeeComplianceNote.jsx'
 
 // Mirrors ReportDetail.jsx's overall shape, deliberately slimmer — no
 // confirm/reply/dispute flows, those are report-specific. Contact stays a
@@ -52,6 +53,14 @@ export default function ListingDetail({ listing, setView }) {
         <div className="detail-section">
           <h4><Home /> Verification</h4>
           <VerificationBadge state={listing.state} lasreraNumber={listing.lasreraNumber} />
+          <div style={{ marginTop: 10 }}>
+            <FeeComplianceNote
+              state={listing.state}
+              transactionType={listing.transactionType}
+              agencyFeePercent={listing.agencyFeePercent}
+              dualRepresentation={listing.dualRepresentation}
+            />
+          </div>
         </div>
 
         {waNumber && (

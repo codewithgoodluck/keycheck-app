@@ -4,6 +4,7 @@ import { TYPE_LABELS } from '../lib/format.js'
 import { getMyListings, updateListingLifecycle } from '../lib/listingsApi.js'
 import { listerSignOut } from '../lib/listerAuth.js'
 import VerificationBadge from './VerificationBadge.jsx'
+import FeeComplianceNote from './FeeComplianceNote.jsx'
 
 const STATUS_ICON = { active: ShieldCheck, pending: Clock, rejected: ShieldX, blocked: ShieldAlert }
 const LIFECYCLE_OPTIONS = ['active', 'under_offer', 'let', 'sold', 'expired']
@@ -100,6 +101,14 @@ export default function MyListings({ listerUser, setView }) {
                   <p style={{ fontSize: 12.5, color: 'var(--red)', margin: '0 0 8px' }}>{listing.blockedReason}</p>
                 )}
                 <VerificationBadge state={listing.state} lasreraNumber={listing.lasreraNumber} />
+                <div style={{ marginTop: 8 }}>
+                  <FeeComplianceNote
+                    state={listing.state}
+                    transactionType={listing.transactionType}
+                    agencyFeePercent={listing.agencyFeePercent}
+                    dualRepresentation={listing.dualRepresentation}
+                  />
+                </div>
 
                 {['active', 'under_offer', 'let', 'sold', 'expired'].includes(listing.status) && (
                   <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginTop: 12 }}>

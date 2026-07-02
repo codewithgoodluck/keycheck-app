@@ -591,6 +591,27 @@ button { font-family: inherit; }
 .verification-badge-backed { color: var(--teal); background: var(--teal-soft); font-weight: 700; }
 .verification-badge-unbacked { color: var(--ink-faint); background: var(--paper); border: 1px dashed var(--line); }
 
+/* ---------- Fee compliance note (listings) ---------- */
+/* A different claim from .verification-badge (a specific fee number vs.
+   registry backing), so it gets its own plain-text treatment rather than
+   another pill — keeps the visual hierarchy from implying they're the
+   same kind of claim. */
+
+.fee-note {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.4;
+}
+
+.fee-note svg { width: 13px; height: 13px; flex-shrink: 0; }
+
+.fee-note-warning { color: var(--red); }
+.fee-note-ok { color: var(--green); }
+.fee-note-neutral { color: var(--ink-faint); font-weight: 500; }
+
 /* ---------- Empty state ---------- */
 
 .empty-state {
