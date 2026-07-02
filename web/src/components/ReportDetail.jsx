@@ -4,6 +4,8 @@ import { StampInline } from './Stamp.jsx'
 import { hasConfirmed, markConfirmed, getConfirmedIds } from '../lib/confirms.js'
 import { getReportTitle } from '../lib/format.js'
 import { showToast } from '../lib/toast.js'
+import VerifyAgentNudge from './VerifyAgentNudge.jsx'
+import FeeCapFactBox from './FeeCapFactBox.jsx'
 
 export default function ReportDetail({ report, setView, saved, onToggleSave, onConfirm, onAddReply }) {
   const [confirmed, setConfirmed] = useState(() => (report ? hasConfirmed(report.id) : false))
@@ -23,6 +25,9 @@ export default function ReportDetail({ report, setView, saved, onToggleSave, onC
   }
 
   const title = getReportTitle(report)
+  const isRentalType = report.type === 'house_agent' || report.type === 'landlord'
+  const isLagos = report.locationText?.toLowerCase().includes('lagos')
+  const showRentalNudge = isRentalType && isLagos
 
   function handleConfirm() {
     if (confirmed) return
@@ -67,6 +72,14 @@ export default function ReportDetail({ report, setView, saved, onToggleSave, onC
       <button className="detail-back" onClick={() => setView('home')}>
         <ArrowLeft size={15} /> Back to search
       </button>
+
+      {showRentalNudge && (
+        <div style={{ marginBottom: 16 }}>
+          <VerifyAgentNudge />
+          <div style={{ height: 10 }} />
+          <FeeCapFactBox />
+        </div>
+      )}
 
       <div className="detail-card">
         <div className="detail-header">

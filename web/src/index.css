@@ -798,6 +798,133 @@ button { font-family: inherit; }
 .whatsapp-note strong { color: var(--ink); }
 .whatsapp-note a { color: var(--green); font-weight: 600; }
 
+/* ---------- Fact box / nudge (VerifyAgentNudge, FeeCapFactBox) ---------- */
+
+.fact-box {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  border-radius: var(--radius-sm);
+  background: var(--teal-soft);
+  padding: 14px 16px;
+  font-size: 13px;
+  color: var(--ink-soft);
+  line-height: 1.55;
+}
+
+.fact-box svg { color: var(--teal); flex-shrink: 0; margin-top: 1px; }
+.fact-box strong { color: var(--ink); }
+.fact-box a { color: var(--teal); font-weight: 600; display: inline-flex; align-items: center; gap: 4px; }
+.fact-box > div > div { margin-top: 8px; }
+
+/* ---------- Due diligence checklist ---------- */
+
+.diligence-category-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+}
+
+@media (max-width: 540px) {
+  .diligence-category-grid { grid-template-columns: 1fr; }
+}
+
+.diligence-category-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 10px;
+  border: 1.5px solid var(--line);
+  background: var(--paper);
+  border-radius: var(--radius-sm);
+  padding: 16px;
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--ink);
+  cursor: pointer;
+  text-align: left;
+  transition: all 0.15s ease;
+}
+
+.diligence-category-btn:hover { border-color: var(--ink); background: var(--surface); }
+.diligence-category-btn svg { color: var(--teal); }
+
+.checklist { display: flex; flex-direction: column; gap: 4px; }
+
+.checklist-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 12px 4px;
+  border-bottom: 1px solid var(--line);
+  cursor: pointer;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.checklist-item:last-child { border-bottom: none; }
+.checklist-item input { margin-top: 3px; width: 16px; height: 16px; accent-color: var(--green); flex-shrink: 0; }
+.checklist-item a { color: var(--teal); font-weight: 600; white-space: nowrap; }
+
+.lagos-only-tag {
+  display: inline-block;
+  margin-left: 6px;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--gold);
+  background: var(--gold-soft);
+  padding: 2px 7px;
+  border-radius: 999px;
+  vertical-align: middle;
+}
+
+/* ---------- Risk quiz ---------- */
+
+.quiz-questions { display: flex; flex-direction: column; gap: 18px; margin-bottom: 20px; }
+
+.quiz-question p { margin: 0 0 8px; font-size: 14.5px; font-weight: 600; }
+
+.quiz-answers { display: flex; gap: 8px; }
+
+.quiz-answers button {
+  border: 1.5px solid var(--line);
+  background: var(--paper);
+  color: var(--ink-soft);
+  font-size: 13px;
+  font-weight: 600;
+  padding: 8px 20px;
+  border-radius: 999px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.quiz-answers button.active { background: var(--ink); color: var(--paper); border-color: var(--ink); }
+
+.quiz-result { text-align: center; padding: 32px 24px; }
+.quiz-result svg { margin-bottom: 10px; }
+.quiz-result h3 { margin: 0 0 6px; font-size: 20px; font-weight: 800; }
+.quiz-result p { color: var(--ink-soft); font-size: 14px; line-height: 1.55; margin: 0 0 10px; }
+
+.quiz-result button {
+  margin-top: 10px;
+  font-size: 13.5px;
+  font-weight: 600;
+  background: var(--ink);
+  color: var(--paper);
+  border: none;
+  padding: 12px 22px;
+  border-radius: 999px;
+  cursor: pointer;
+}
+
+.quiz-result button:hover { background: var(--green); }
+
+.quiz-result-low svg { color: var(--green); }
+.quiz-result-medium svg { color: var(--gold); }
+.quiz-result-high svg { color: var(--red); }
+
 .watch-alerts { display: flex; flex-direction: column; }
 
 .watch-alert {

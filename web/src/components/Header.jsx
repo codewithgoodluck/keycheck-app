@@ -1,4 +1,4 @@
-import { Search, FilePlus2, Bookmark, ShieldCheck, Map } from 'lucide-react'
+import { Search, FilePlus2, Bookmark, ShieldCheck, Map, ClipboardCheck } from 'lucide-react'
 
 export default function Header({ view, setView, savedCount }) {
   return (
@@ -17,6 +17,10 @@ export default function Header({ view, setView, savedCount }) {
         <button className={view === 'map' ? 'active' : ''} onClick={() => setView('map')}>
           <Map size={15} />
           <span className="label">Map</span>
+        </button>
+        <button className={view === 'diligence' ? 'active' : ''} onClick={() => setView('diligence')}>
+          <ClipboardCheck size={15} />
+          <span className="label">Check</span>
         </button>
         <button className={view === 'saved' ? 'active' : ''} onClick={() => setView('saved')}>
           <Bookmark size={15} />

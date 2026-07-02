@@ -11,6 +11,7 @@ import FloatingReportButton from './components/FloatingReportButton.jsx'
 import AdminLogin from './components/AdminLogin.jsx'
 import AdminPanel from './components/AdminPanel.jsx'
 import ToastStack from './components/ToastStack.jsx'
+import DueDiligence from './components/DueDiligence.jsx'
 import { seedReports } from './data/seedReports.js'
 import { getSavedIds, toggleSaved } from './lib/watchlist.js'
 import { subscribeToReports, addReportToFirestore, confirmReportInFirestore, addReplyToFirestore } from './lib/reportsApi.js'
@@ -383,6 +384,7 @@ export default function App() {
           onToggleSave={handleToggleSave}
         />
       )}
+      {view === 'diligence' && <DueDiligence />}
       {view === 'submit' && <SubmitReport addReport={addReport} setView={setView} />}
       {view === 'saved' && (
         <SavedReports reports={reports} savedIds={savedIds} setView={setView} onToggleSave={handleToggleSave} />

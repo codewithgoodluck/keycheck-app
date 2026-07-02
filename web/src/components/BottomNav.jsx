@@ -1,4 +1,4 @@
-import { Search, FilePlus2, Bookmark, Map } from 'lucide-react'
+import { Search, FilePlus2, Bookmark, Map, ClipboardCheck } from 'lucide-react'
 
 // Mirrors Header.jsx's nav items, but this is a genuinely different
 // layout (icon-over-label tab bar, not a horizontal pill) so it's a
@@ -16,6 +16,10 @@ export default function BottomNav({ view, setView, savedCount }) {
       <button className={view === 'map' ? 'active' : ''} onClick={() => setView('map')}>
         <Map size={19} />
         <span>Map</span>
+      </button>
+      <button className={view === 'diligence' ? 'active' : ''} onClick={() => setView('diligence')}>
+        <ClipboardCheck size={19} />
+        <span>Check</span>
       </button>
       <button className={view === 'saved' ? 'active' : ''} onClick={() => setView('saved')}>
         <Bookmark size={19} />
