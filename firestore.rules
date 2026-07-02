@@ -170,6 +170,30 @@ service cloud.firestore {
       }
     }
 
+    // Lightweight inquiry leads (see web/src/components/InquiryForm.jsx)
+    // — the "in-app messaging" alternative: a one-off contact form, not a
+    // conversation, so no buyer account is needed. Contains a buyer's
+    // personal contact info, so — like evidence/ in Storage — this is
+    // never publicly readable, only by the owning lister or an admin.
+    match /inquiries/{inquiryId} {
+      allow create: if request.resource.data.keys().hasOnly(
+                         ['listingId', 'listerId', 'listingLocationText', 'buyerName', 'buyerContact', 'message', 'createdAt', 'read']
+                       )
+                    && request.resource.data.listingId is string
+                    && request.resource.data.listerId is string
+                    && request.resource.data.buyerName is string && request.resource.data.buyerName.size() <= 100
+                    && request.resource.data.buyerContact is string && request.resource.data.buyerContact.size() <= 100
+                    && request.resource.data.message is string && request.resource.data.message.size() <= 1000
+                    && request.resource.data.read == false;
+
+      allow read: if isAdmin() || (request.auth != null && request.auth.uid == resource.data.listerId);
+
+      allow update: if (isAdmin() || (request.auth != null && request.auth.uid == resource.data.listerId))
+                    && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['read']);
+
+      allow delete: if isAdmin() || (request.auth != null && request.auth.uid == resource.data.listerId);
+    }
+
     // FCM push token registry (see web/src/lib/push.js). Groundwork only —
     // nothing currently reads this to actually send a push; a future
     // Cloud Function or the whatsapp-bot service would use the Admin SDK

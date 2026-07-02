@@ -3,10 +3,12 @@ import { TYPE_LABELS } from '../lib/format.js'
 import VerificationBadge from './VerificationBadge.jsx'
 import FeeComplianceNote from './FeeComplianceNote.jsx'
 import { getEffectiveStatus } from '../lib/listingsApi.js'
+import InquiryForm from './InquiryForm.jsx'
 
 // Mirrors ReportDetail.jsx's overall shape, deliberately slimmer — no
-// confirm/reply/dispute flows, those are report-specific. Contact stays a
-// WhatsApp deep link for this slice, no in-app messaging yet.
+// confirm/reply/dispute flows, those are report-specific. Contact is
+// WhatsApp plus the lightweight InquiryForm below, shown side by side —
+// a choice, not one replacing the other.
 export default function ListingDetail({ listing, setView }) {
   if (!listing) {
     return (
@@ -81,11 +83,15 @@ export default function ListingDetail({ listing, setView }) {
             target="_blank"
             rel="noreferrer"
             className="submit-btn"
-            style={{ textDecoration: 'none', display: 'inline-flex' }}
+            style={{ textDecoration: 'none', display: 'inline-flex', marginBottom: 20 }}
           >
             <MessageCircle size={15} /> Contact {listing.listerName || 'lister'} on WhatsApp
           </a>
         )}
+      </div>
+
+      <div style={{ marginTop: 16 }}>
+        <InquiryForm listing={listing} />
       </div>
     </>
   )

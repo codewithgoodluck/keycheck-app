@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react'
-import { LogOut, Plus, ShieldCheck, ShieldAlert, Clock, ShieldX, RefreshCw } from 'lucide-react'
+import { LogOut, Plus, ShieldCheck, ShieldAlert, Clock, ShieldX, RefreshCw, MessageSquare, ChevronDown, ChevronUp } from 'lucide-react'
 import { TYPE_LABELS } from '../lib/format.js'
 import { getMyListings, updateListingLifecycle, renewListing, getEffectiveStatus } from '../lib/listingsApi.js'
+import { getInquiriesForListing, markInquiryRead } from '../lib/inquiriesApi.js'
 import { listerSignOut } from '../lib/listerAuth.js'
 import VerificationBadge from './VerificationBadge.jsx'
 import FeeComplianceNote from './FeeComplianceNote.jsx'
@@ -12,6 +13,8 @@ const LIFECYCLE_OPTIONS = ['active', 'under_offer', 'let', 'sold', 'expired']
 export default function MyListings({ listerUser, setView }) {
   const [listings, setListings] = useState(null)
   const [busyId, setBusyId] = useState(null)
+  const [expandedId, setExpandedId] = useState(null)
+  const [inquiries, setInquiries] = useState(null)
 
   useEffect(() => {
     if (!listerUser) return
@@ -48,6 +51,33 @@ export default function MyListings({ listerUser, setView }) {
       alert('Failed to renew listing: ' + err.message)
     } finally {
       setBusyId(null)
+    }
+  }
+
+  // Fetched on demand when a card's inquiries are expanded, not eagerly
+  // for every listing on page load (see the plan this was built from).
+  async function toggleInquiries(listingId) {
+    if (expandedId === listingId) {
+      setExpandedId(null)
+      setInquiries(null)
+      return
+    }
+    setExpandedId(listingId)
+    setInquiries(null)
+    try {
+      setInquiries(await getInquiriesForListing(listingId, listerUser.uid))
+    } catch (err) {
+      console.warn('Failed to load inquiries:', err.message)
+      setInquiries([])
+    }
+  }
+
+  async function handleMarkRead(inquiryId) {
+    try {
+      await markInquiryRead(inquiryId)
+      setInquiries((list) => list.map((i) => (i.id === inquiryId ? { ...i, read: true } : i)))
+    } catch (err) {
+      console.warn('Failed to mark inquiry read:', err.message)
     }
   }
 
@@ -153,6 +183,48 @@ export default function MyListings({ listerUser, setView }) {
                         </option>
                       ))}
                     </select>
+                  </div>
+                )}
+
+                <button className="chip" style={{ marginTop: 12 }} onClick={() => toggleInquiries(listing.id)}>
+                  <MessageSquare size={13} /> Inquiries
+                  {expandedId === listing.id ? <ChevronUp size={13} /> : <ChevronDown size={13} />}
+                </button>
+
+                {expandedId === listing.id && (
+                  <div style={{ marginTop: 10, display: 'flex', flexDirection: 'column', gap: 8 }}>
+                    {inquiries === null ? (
+                      <p style={{ color: 'var(--ink-soft)', fontSize: 13 }}>Loading...</p>
+                    ) : inquiries.length === 0 ? (
+                      <p style={{ color: 'var(--ink-soft)', fontSize: 13 }}>No inquiries yet.</p>
+                    ) : (
+                      inquiries.map((inquiry) => (
+                        <div
+                          key={inquiry.id}
+                          style={{
+                            border: '1px solid var(--line)',
+                            borderRadius: 'var(--radius-sm)',
+                            padding: '10px 14px',
+                            background: inquiry.read ? 'transparent' : 'var(--teal-soft)'
+                          }}
+                        >
+                          <p style={{ margin: '0 0 4px', fontSize: 13, fontWeight: 700 }}>
+                            {inquiry.buyerName} · {inquiry.buyerContact}
+                          </p>
+                          <p style={{ margin: '0 0 8px', fontSize: 13, color: 'var(--ink-soft)', lineHeight: 1.5 }}>{inquiry.message}</p>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                            <span style={{ fontSize: 11.5, color: 'var(--ink-faint)' }}>
+                              {new Date(inquiry.createdAt).toLocaleString()}
+                            </span>
+                            {!inquiry.read && (
+                              <button className="chip" style={{ fontSize: 11.5 }} onClick={() => handleMarkRead(inquiry.id)}>
+                                Mark read
+                              </button>
+                            )}
+                          </div>
+                        </div>
+                      ))
+                    )}
                   </div>
                 )}
               </div>
