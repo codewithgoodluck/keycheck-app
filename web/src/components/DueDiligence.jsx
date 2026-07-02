@@ -1,11 +1,12 @@
 import { useState } from 'react'
-import { Landmark, Users, Home, Building2, Building, ExternalLink, ShieldQuestion, BookOpen } from 'lucide-react'
+import { Landmark, Users, Home, Building2, Building, ExternalLink, ShieldQuestion, BookOpen, ListOrdered } from 'lucide-react'
 import { CHECKLISTS } from '../data/checklists.js'
 import { getChecked, toggleChecked } from '../lib/checklistProgress.js'
 import FeeCapFactBox from './FeeCapFactBox.jsx'
 import VerifyAgentNudge from './VerifyAgentNudge.jsx'
 import RiskQuiz from './RiskQuiz.jsx'
 import FraudSchemes from './FraudSchemes.jsx'
+import TransactionGuide from './TransactionGuide.jsx'
 
 const CATEGORIES = [
   { key: 'land', label: 'Buying land', Icon: Landmark },
@@ -17,7 +18,7 @@ const CATEGORIES = [
 
 export default function DueDiligence() {
   const [category, setCategory] = useState(null)
-  const [mode, setMode] = useState('checklist') // 'checklist' | 'quiz'
+  const [mode, setMode] = useState('checklist') // 'checklist' | 'quiz' | 'guide'
   const [checked, setChecked] = useState([])
   const [showSchemes, setShowSchemes] = useState(false)
 
@@ -79,6 +80,9 @@ export default function DueDiligence() {
             <button className={`chip ${mode === 'checklist' ? 'active' : ''}`} onClick={() => setMode('checklist')}>
               Checklist
             </button>
+            <button className={`chip ${mode === 'guide' ? 'active' : ''}`} onClick={() => setMode('guide')}>
+              <ListOrdered size={13} /> Step-by-step guide
+            </button>
             <button className={`chip ${mode === 'quiz' ? 'active' : ''}`} onClick={() => setMode('quiz')}>
               <ShieldQuestion size={13} /> Risk quiz
             </button>
@@ -120,6 +124,8 @@ export default function DueDiligence() {
                 ))}
               </div>
             </div>
+          ) : mode === 'guide' ? (
+            <TransactionGuide category={category} checked={checked} onToggle={handleToggle} />
           ) : (
             <RiskQuiz />
           )}
