@@ -6,6 +6,7 @@ import FeeComplianceNote from './FeeComplianceNote.jsx'
 import MarketPriceIndicator from './MarketPriceIndicator.jsx'
 import { getEffectiveStatus, logListingView } from '../lib/listingsApi.js'
 import { getCompareIds, isComparing, toggleCompare, MAX_COMPARE } from '../lib/compareList.js'
+import { areaOf } from '../lib/notifications.js'
 import InquiryForm from './InquiryForm.jsx'
 
 const SIZE_TYPES = ['land', 'estate']
@@ -93,6 +94,13 @@ export default function ListingDetail({ listing, listings, setView }) {
         <div className="detail-section">
           <h4><MapPin /> Location</h4>
           <p>{listing.locationText}, {listing.state}</p>
+          <button
+            className="chip"
+            style={{ marginTop: 8 }}
+            onClick={() => setView('area-guide', areaOf(listing))}
+          >
+            See other activity in {listing.locationText?.split(',')[0].trim()}
+          </button>
         </div>
 
         <div className="detail-section">

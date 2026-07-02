@@ -4,6 +4,7 @@ import { StampInline } from './Stamp.jsx'
 import { hasConfirmed, markConfirmed, getConfirmedIds } from '../lib/confirms.js'
 import { getReportTitle } from '../lib/format.js'
 import { showToast } from '../lib/toast.js'
+import { areaOf } from '../lib/notifications.js'
 import VerifyAgentNudge from './VerifyAgentNudge.jsx'
 import FeeCapFactBox from './FeeCapFactBox.jsx'
 
@@ -136,6 +137,13 @@ export default function ReportDetail({ report, setView, saved, onToggleSave, onC
         <div className="detail-section">
           <h4><MapPin /> Location</h4>
           <p>{report.locationText}</p>
+          <button
+            className="chip"
+            style={{ marginTop: 8 }}
+            onClick={() => setView('area-guide', areaOf(report))}
+          >
+            See other activity in {report.locationText?.split(',')[0].trim()}
+          </button>
         </div>
 
         <div className="detail-section">

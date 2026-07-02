@@ -18,6 +18,7 @@ import SubmitListing from './components/SubmitListing.jsx'
 import MyListings from './components/MyListings.jsx'
 import ListerAuth from './components/ListerAuth.jsx'
 import CompareListings from './components/CompareListings.jsx'
+import AreaGuide from './components/AreaGuide.jsx'
 import { seedReports } from './data/seedReports.js'
 import { getSavedIds, toggleSaved } from './lib/watchlist.js'
 import { subscribeToReports, addReportToFirestore, confirmReportInFirestore, addReplyToFirestore } from './lib/reportsApi.js'
@@ -40,6 +41,7 @@ export default function App() {
   const [view, setViewRaw] = useState('home')
   const [activeReportId, setActiveReportId] = useState(null)
   const [activeProfileName, setActiveProfileName] = useState(null)
+  const [activeAreaName, setActiveAreaName] = useState(null)
   const [pendingReportId, setPendingReportId] = useState(null)
   const [reports, setReports] = useState(initialReports)
   const [reportLimit, setReportLimit] = useState(200)
@@ -227,15 +229,17 @@ export default function App() {
     return watchListerAuth((user) => setListerUser(user))
   }, [isAdminRoute])
 
-  // Restore a shared/bookmarked link on first load (?report=<id> or
-  // ?profile=<name>). Report lookups have to wait for `reports` to actually
-  // contain that id (seed data resolves instantly, Firestore data arrives
-  // async), so this only records intent here — resolution happens below.
+  // Restore a shared/bookmarked link on first load (?report=<id>,
+  // ?profile=<name>, or ?area=<name>). Report lookups have to wait for
+  // `reports` to actually contain that id (seed data resolves instantly,
+  // Firestore data arrives async), so this only records intent here —
+  // resolution happens below.
   useEffect(() => {
     if (isAdminRoute) return
     const params = new URLSearchParams(window.location.search)
     const reportId = params.get('report')
     const profileName = params.get('profile')
+    const areaName = params.get('area')
     if (reportId) {
       setActiveReportId(reportId)
       setPendingReportId(reportId)
@@ -243,6 +247,9 @@ export default function App() {
     } else if (profileName) {
       setActiveProfileName(profileName)
       setViewRaw('profile')
+    } else if (areaName) {
+      setActiveAreaName(areaName)
+      setViewRaw('area-guide')
     }
   }, [isAdminRoute])
 
@@ -266,20 +273,30 @@ export default function App() {
       const params = new URLSearchParams(window.location.search)
       const reportId = params.get('report')
       const profileName = params.get('profile')
+      const areaName = params.get('area')
       if (reportId) {
         const found = reports.find((r) => r.id === reportId)
         setActiveReportId(reportId)
         setActiveProfileName(null)
+        setActiveAreaName(null)
         setPendingReportId(found ? null : reportId)
         setViewRaw('detail')
       } else if (profileName) {
         setActiveProfileName(profileName)
         setActiveReportId(null)
+        setActiveAreaName(null)
         setPendingReportId(null)
         setViewRaw('profile')
+      } else if (areaName) {
+        setActiveAreaName(areaName)
+        setActiveReportId(null)
+        setActiveProfileName(null)
+        setPendingReportId(null)
+        setViewRaw('area-guide')
       } else {
         setActiveReportId(null)
         setActiveProfileName(null)
+        setActiveAreaName(null)
         setPendingReportId(null)
         setViewRaw('home')
       }
@@ -304,6 +321,7 @@ export default function App() {
       setActiveReportId(null)
       setActiveProfileName(null)
     }
+    setActiveAreaName(next === 'area-guide' ? payload || null : null)
     setActiveListingId(next === 'listing-detail' ? payload?.id || null : null)
     setPendingReportId(null)
     setViewRaw(next)
@@ -315,6 +333,8 @@ export default function App() {
       url.search = `?report=${encodeURIComponent(payload.id)}`
     } else if (next === 'profile' && payload) {
       url.search = `?profile=${encodeURIComponent(payload)}`
+    } else if (next === 'area-guide' && payload) {
+      url.search = `?area=${encodeURIComponent(payload)}`
     } else {
       url.search = ''
     }
@@ -464,6 +484,16 @@ export default function App() {
         <AgentProfile
           reports={reports}
           name={activeProfileName}
+          setView={setView}
+          savedIds={savedIds}
+          onToggleSave={handleToggleSave}
+        />
+      )}
+      {view === 'area-guide' && (
+        <AreaGuide
+          reports={reports}
+          listings={listings}
+          name={activeAreaName}
           setView={setView}
           savedIds={savedIds}
           onToggleSave={handleToggleSave}
