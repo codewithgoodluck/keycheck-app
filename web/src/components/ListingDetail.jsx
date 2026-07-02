@@ -3,14 +3,17 @@ import { ArrowLeft, MapPin, FileText, MessageCircle, Home, Clock } from 'lucide-
 import { TYPE_LABELS } from '../lib/format.js'
 import VerificationBadge from './VerificationBadge.jsx'
 import FeeComplianceNote from './FeeComplianceNote.jsx'
+import MarketPriceIndicator from './MarketPriceIndicator.jsx'
 import { getEffectiveStatus, logListingView } from '../lib/listingsApi.js'
 import InquiryForm from './InquiryForm.jsx'
+
+const SIZE_TYPES = ['land', 'estate']
 
 // Mirrors ReportDetail.jsx's overall shape, deliberately slimmer — no
 // confirm/reply/dispute flows, those are report-specific. Contact is
 // WhatsApp plus the lightweight InquiryForm below, shown side by side —
 // a choice, not one replacing the other.
-export default function ListingDetail({ listing, setView }) {
+export default function ListingDetail({ listing, listings, setView }) {
   // Hooks must run unconditionally (before the early return below), so
   // the "no listing" guard lives inside the effect body instead.
   useEffect(() => {
@@ -84,6 +87,13 @@ export default function ListingDetail({ listing, setView }) {
             />
           </div>
         </div>
+
+        {SIZE_TYPES.includes(listing.type) && listing.sizeSqm > 0 && (
+          <div className="detail-section">
+            <h4><FileText /> Market price indicator</h4>
+            <MarketPriceIndicator listing={listing} listings={listings} />
+          </div>
+        )}
 
         {waNumber && (
           <a

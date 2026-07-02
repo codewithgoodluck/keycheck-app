@@ -11,6 +11,7 @@ const EMPTY_FORM = {
   state: 'Lagos',
   locationText: '',
   price: '',
+  sizeSqm: '',
   description: '',
   listerName: '',
   listerPhone: '',
@@ -18,6 +19,8 @@ const EMPTY_FORM = {
   agencyFeePercent: '',
   dualRepresentation: 'seller_only'
 }
+
+const SIZE_TYPES = ['land', 'estate']
 
 // Public self-service submission — adapted from AdminListings.jsx's form
 // fields, plus a photo upload and a listerPhone field for the WhatsApp
@@ -64,7 +67,8 @@ export default function SubmitListing({ listerUser, setView }) {
       !form.listerName.trim() ||
       !form.listerPhone.trim() ||
       !form.price ||
-      form.agencyFeePercent === ''
+      form.agencyFeePercent === '' ||
+      (SIZE_TYPES.includes(form.type) && !form.sizeSqm)
     ) {
       return
     }
@@ -85,6 +89,7 @@ export default function SubmitListing({ listerUser, setView }) {
       await createListingAsLister(listerUser.uid, form.listerPhone.trim(), {
         ...form,
         price: Number(form.price),
+        sizeSqm: SIZE_TYPES.includes(form.type) ? Number(form.sizeSqm) : null,
         agencyFeePercent: Number(form.agencyFeePercent),
         lasreraNumber: form.lasreraNumber.trim() || null,
         photoUrl
@@ -166,6 +171,21 @@ export default function SubmitListing({ listerUser, setView }) {
             <label htmlFor="sl-price">Price (₦)</label>
             <input id="sl-price" type="number" min="0" value={form.price} onChange={(e) => update('price', e.target.value)} required />
           </div>
+
+          {SIZE_TYPES.includes(form.type) && (
+            <div className="field">
+              <label htmlFor="sl-sizeSqm">Size (square meters)</label>
+              <input
+                id="sl-sizeSqm"
+                type="number"
+                min="0"
+                value={form.sizeSqm}
+                onChange={(e) => update('sizeSqm', e.target.value)}
+                required
+              />
+              <p className="field-hint">Used to show a price-per-sqm comparison against similar listings.</p>
+            </div>
+          )}
 
           {form.state === 'Lagos' && (
             <div style={{ marginBottom: 16 }}>

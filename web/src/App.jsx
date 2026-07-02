@@ -483,7 +483,7 @@ export default function App() {
           listerUser={listerUser}
         />
       )}
-      {view === 'listing-detail' && <ListingDetail listing={activeListing} setView={setView} />}
+      {view === 'listing-detail' && <ListingDetail listing={activeListing} listings={listings} setView={setView} />}
       {view === 'submit-listing' && <SubmitListing listerUser={listerUser} setView={setView} />}
       {view === 'my-listings' && <MyListings listerUser={listerUser} setView={setView} />}
       {view === 'lister-auth' && <ListerAuth setView={setView} />}

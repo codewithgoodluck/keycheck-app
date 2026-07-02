@@ -15,12 +15,15 @@ const EMPTY_FORM = {
   state: 'Lagos',
   locationText: '',
   price: '',
+  sizeSqm: '',
   description: '',
   listerName: '',
   lasreraNumber: '',
   agencyFeePercent: '',
   dualRepresentation: 'seller_only'
 }
+
+const SIZE_TYPES = ['land', 'estate']
 
 // Admin-only for Milestone 1 — no lister-account system exists yet (see
 // the plan this was built from). This is deliberately a moderator tool,
@@ -82,13 +85,15 @@ export default function AdminListings() {
       !form.description.trim() ||
       !form.listerName.trim() ||
       !form.price ||
-      form.agencyFeePercent === ''
+      form.agencyFeePercent === '' ||
+      (SIZE_TYPES.includes(form.type) && !form.sizeSqm)
     ) return
     setSubmitting(true)
     try {
       await createListing({
         ...form,
         price: Number(form.price),
+        sizeSqm: SIZE_TYPES.includes(form.type) ? Number(form.sizeSqm) : null,
         agencyFeePercent: Number(form.agencyFeePercent),
         lasreraNumber: form.lasreraNumber.trim() || null
       })
@@ -174,6 +179,19 @@ export default function AdminListings() {
             <label htmlFor="listing-price">Price (₦)</label>
             <input id="listing-price" type="number" min="0" value={form.price} onChange={(e) => update('price', e.target.value)} required />
           </div>
+          {SIZE_TYPES.includes(form.type) && (
+            <div className="field">
+              <label htmlFor="listing-sizeSqm">Size (square meters)</label>
+              <input
+                id="listing-sizeSqm"
+                type="number"
+                min="0"
+                value={form.sizeSqm}
+                onChange={(e) => update('sizeSqm', e.target.value)}
+                required
+              />
+            </div>
+          )}
           <div className="field">
             <label htmlFor="listing-agencyFee">Agency fee (% of {form.transactionType === 'rent' ? 'total rent' : 'sale price'})</label>
             <input
