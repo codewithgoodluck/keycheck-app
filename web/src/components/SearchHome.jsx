@@ -43,11 +43,18 @@ export default function SearchHome({ reports, listings = [], setView, savedIds, 
   const trendingStripRef = useRef(null)
 
   // Real photos from active listings, not stock imagery — the banner
-  // shows an actual property already on the platform. Falls back to the
-  // plain gradient hero (no image) when nothing's been listed with a
-  // photo yet, rather than showing a broken/empty background.
+  // shows an actual property already on the platform. Gated to
+  // moderator-checked listings (lasreraVerified/cacVerified — see
+  // AdminListings.jsx's "mark as checked" actions), not just any active
+  // listing: nothing curates a photo for "suitable as the whole site's
+  // banner" specifically, so this at least limits it to listings a
+  // moderator has actually looked at, rather than anything a lister
+  // uploaded going straight onto the homepage unmoderated. Falls back to
+  // the plain gradient hero (no image) when nothing qualifies yet.
   const heroPhoto = useMemo(() => {
-    const withPhoto = listings.find((l) => l.status === 'active' && (l.photoUrls?.[0] || l.photoUrl))
+    const withPhoto = listings.find(
+      (l) => l.status === 'active' && (l.lasreraVerified || l.cacVerified) && (l.photoUrls?.[0] || l.photoUrl)
+    )
     return withPhoto ? withPhoto.photoUrls?.[0] || withPhoto.photoUrl : null
   }, [listings])
 
