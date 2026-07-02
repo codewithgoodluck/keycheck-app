@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
-import { ArrowLeft, MapPin, FileText, MessageCircle, Home, Clock, GitCompare, Share2, Bookmark, Flag } from 'lucide-react'
+import { ArrowLeft, MapPin, FileText, MessageCircle, Phone, Home, Clock, GitCompare, Share2, Bookmark, Flag, Users, ListChecks } from 'lucide-react'
 import { getPropertyTypeLabel } from '../data/propertyTypes.js'
+import { AMENITY_GROUPS } from '../data/listingFacts.js'
 import VerificationBadge from './VerificationBadge.jsx'
 import TrustSignals from './TrustSignals.jsx'
 import FeeComplianceNote from './FeeComplianceNote.jsx'
@@ -9,11 +10,23 @@ import { getEffectiveStatus, logListingView } from '../lib/listingsApi.js'
 import { getCompareIds, isComparing, toggleCompare, MAX_COMPARE } from '../lib/compareList.js'
 import { isListingSaved, toggleSavedListing } from '../lib/listingWatchlist.js'
 import { flagListing, FLAG_REASON_LABELS } from '../lib/listingFlagsApi.js'
+import { addRecentlyViewed } from '../lib/recentlyViewed.js'
 import { areaOf } from '../lib/notifications.js'
+import { timeAgo } from '../lib/time.js'
 import { showToast } from '../lib/toast.js'
 import InquiryForm from './InquiryForm.jsx'
 
 const SIZE_TYPES = ['land', 'estate']
+const NON_LAND_TYPES = ['house', 'apartment', 'commercial', 'estate']
+
+function FactItem({ label, value }) {
+  return (
+    <div style={{ background: 'var(--paper)', borderRadius: 10, padding: '10px 12px' }}>
+      <p style={{ fontSize: 11, color: 'var(--ink-faint)', margin: '0 0 2px' }}>{label}</p>
+      <p style={{ fontSize: 14, fontWeight: 700, margin: 0 }}>{value}</p>
+    </div>
+  )
+}
 
 // Mirrors ReportDetail.jsx's overall shape, deliberately slimmer — no
 // confirm/reply/dispute flows, those are report-specific. Contact is
@@ -25,6 +38,12 @@ export default function ListingDetail({ listing, listings, setView }) {
   useEffect(() => {
     if (!listing) return
     logListingView(listing.id, listing.listerId)
+    addRecentlyViewed(listing.id)
+  }, [listing?.id])
+
+  const [activePhoto, setActivePhoto] = useState(0)
+  useEffect(() => {
+    setActivePhoto(0)
   }, [listing?.id])
 
   const [comparing, setComparing] = useState(false)
@@ -102,6 +121,8 @@ export default function ListingDetail({ listing, listings, setView }) {
 
   const waNumber = (listing.listerPhone || '').replace(/[^0-9]/g, '')
   const isExpired = getEffectiveStatus(listing) === 'expired'
+  const photos = listing.photoUrls?.length > 0 ? listing.photoUrls : listing.photoUrl ? [listing.photoUrl] : []
+  const waMessage = `Hi, I'm interested in your listing: ${getPropertyTypeLabel(listing.type)} in ${listing.locationText} — is it still available?`
 
   return (
     <div className="theme-market">
@@ -148,15 +169,59 @@ export default function ListingDetail({ listing, listings, setView }) {
           </div>
         </div>
 
-        {listing.photoUrl && (
-          <div style={{ borderRadius: 'var(--radius-sm)', overflow: 'hidden', marginBottom: 16 }}>
-            <img src={listing.photoUrl} alt="" style={{ width: '100%', maxHeight: 320, objectFit: 'cover', display: 'block' }} />
+        {photos.length > 0 && (
+          <div style={{ marginBottom: 16 }}>
+            <div style={{ position: 'relative', borderRadius: 'var(--radius-sm)', overflow: 'hidden' }}>
+              <img src={photos[activePhoto]} alt="" style={{ width: '100%', maxHeight: 360, objectFit: 'cover', display: 'block' }} />
+              {photos.length > 1 && (
+                <span
+                  style={{
+                    position: 'absolute',
+                    right: 10,
+                    bottom: 10,
+                    background: 'rgba(0,0,0,0.65)',
+                    color: '#fff',
+                    fontSize: 12,
+                    fontWeight: 600,
+                    padding: '4px 10px',
+                    borderRadius: 999
+                  }}
+                >
+                  {activePhoto + 1}/{photos.length}
+                </span>
+              )}
+            </div>
+            {photos.length > 1 && (
+              <div style={{ display: 'flex', gap: 8, marginTop: 8, overflowX: 'auto' }}>
+                {photos.map((url, i) => (
+                  <img
+                    key={i}
+                    src={url}
+                    alt=""
+                    onClick={() => setActivePhoto(i)}
+                    style={{
+                      width: 64,
+                      height: 64,
+                      objectFit: 'cover',
+                      borderRadius: 10,
+                      cursor: 'pointer',
+                      flexShrink: 0,
+                      border: i === activePhoto ? '2px solid var(--coral)' : '2px solid transparent',
+                      opacity: i === activePhoto ? 1 : 0.75
+                    }}
+                  />
+                ))}
+              </div>
+            )}
           </div>
         )}
 
         <div className="detail-section">
           <h4><MapPin /> Location</h4>
           <p>{listing.locationText}, {listing.state}</p>
+          <p style={{ fontSize: 12, color: 'var(--ink-faint)', margin: '4px 0 0', display: 'flex', alignItems: 'center', gap: 4 }}>
+            <Clock size={12} /> Listed {timeAgo(listing.createdAt)}
+          </p>
           <button
             className="chip"
             style={{ marginTop: 8 }}
@@ -171,6 +236,47 @@ export default function ListingDetail({ listing, listings, setView }) {
           <p>{listing.description}</p>
         </div>
 
+        {(NON_LAND_TYPES.includes(listing.type) || SIZE_TYPES.includes(listing.type)) && (
+          <div className="detail-section">
+            <h4><ListChecks /> Facts &amp; specifications</h4>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(140px, 1fr))', gap: 10 }}>
+              {listing.bedrooms > 0 && <FactItem label="Bedrooms" value={listing.bedrooms} />}
+              {listing.bathrooms > 0 && <FactItem label="Bathrooms" value={listing.bathrooms} />}
+              {listing.parkingSpaces > 0 && <FactItem label="Parking" value={listing.parkingSpaces} />}
+              {SIZE_TYPES.includes(listing.type) && listing.sizeSqm > 0 && <FactItem label="Size" value={`${listing.sizeSqm} m²`} />}
+              {SIZE_TYPES.includes(listing.type) && listing.sizeSqm > 0 && (
+                <FactItem label="Price / m²" value={`₦${Math.round(listing.price / listing.sizeSqm).toLocaleString()}`} />
+              )}
+              {listing.serviceCharge > 0 && <FactItem label="Service charge / yr" value={`₦${Number(listing.serviceCharge).toLocaleString()}`} />}
+              <FactItem label="For" value={listing.transactionType === 'rent' ? 'Rent' : 'Sale'} />
+            </div>
+          </div>
+        )}
+
+        {listing.amenities?.length > 0 && (
+          <div className="detail-section">
+            <h4><ListChecks /> Features</h4>
+            {AMENITY_GROUPS.map((group) => {
+              const present = group.options.filter((o) => listing.amenities.includes(o))
+              if (present.length === 0) return null
+              return (
+                <div key={group.key} style={{ marginBottom: 10 }}>
+                  <p style={{ fontSize: 11.5, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.04em', color: 'var(--ink-faint)', margin: '0 0 6px' }}>
+                    {group.label}
+                  </p>
+                  <div className="chip-row" style={{ marginTop: 0 }}>
+                    {present.map((o) => (
+                      <span key={o} className="chip" style={{ cursor: 'default' }}>
+                        {o}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+        )}
+
         <div className="detail-section">
           <h4><Home /> Verification</h4>
           <VerificationBadge state={listing.state} lasreraNumber={listing.lasreraNumber} lasreraVerified={listing.lasreraVerified} />
@@ -178,6 +284,9 @@ export default function ListingDetail({ listing, listings, setView }) {
             cacNumber={listing.cacNumber}
             cacVerified={listing.cacVerified}
             professionalIndemnityInsurance={listing.professionalIndemnityInsurance}
+            titleDocumentType={listing.titleDocumentType}
+            titleDocumentVerified={listing.titleDocumentVerified}
+            encumbranceFreeDeclared={listing.encumbranceFreeDeclared}
           />
           <div style={{ marginTop: 10 }}>
             <FeeComplianceNote
@@ -196,16 +305,38 @@ export default function ListingDetail({ listing, listings, setView }) {
           </div>
         )}
 
+        {listing.listerName && (
+          <div className="detail-section">
+            <h4><Users /> Listed by</h4>
+            <p>
+              {listing.listerName}
+              {listing.listerType === 'agency' && (
+                <span className="chip" style={{ marginLeft: 8, cursor: 'default', fontSize: 11 }}>
+                  Agency
+                </span>
+              )}
+            </p>
+            <button className="chip" style={{ marginTop: 4 }} onClick={() => setView('profile', listing.listerName)}>
+              View {listing.listerName}'s KeyCheck profile
+            </button>
+          </div>
+        )}
+
         {waNumber && (
-          <a
-            href={`https://wa.me/${waNumber}`}
-            target="_blank"
-            rel="noreferrer"
-            className="submit-btn"
-            style={{ textDecoration: 'none', display: 'inline-flex', marginBottom: 20 }}
-          >
-            <MessageCircle size={15} /> Contact {listing.listerName || 'lister'} on WhatsApp
-          </a>
+          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 20 }}>
+            <a
+              href={`https://wa.me/${waNumber}?text=${encodeURIComponent(waMessage)}`}
+              target="_blank"
+              rel="noreferrer"
+              className="submit-btn"
+              style={{ textDecoration: 'none', display: 'inline-flex' }}
+            >
+              <MessageCircle size={15} /> WhatsApp {listing.listerName || 'lister'}
+            </a>
+            <a href={`tel:${waNumber}`} className="chip" style={{ textDecoration: 'none', fontSize: 13.5, padding: '10px 18px' }}>
+              <Phone size={14} /> Call
+            </a>
+          </div>
         )}
       </div>
 

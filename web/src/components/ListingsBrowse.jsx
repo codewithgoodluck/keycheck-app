@@ -1,12 +1,13 @@
-import { useMemo, useState } from 'react'
-import { Search, FileSearch, Home, Plus, GitCompare, Users } from 'lucide-react'
+import { useEffect, useMemo, useState } from 'react'
+import { Search, FileSearch, Home, Plus, GitCompare, Users, History, X } from 'lucide-react'
 import ListingCard from './ListingCard.jsx'
 import WatchAreaControls from './WatchAreaControls.jsx'
-import { PROPERTY_TYPE_LABELS } from '../data/propertyTypes.js'
+import { PROPERTY_TYPE_LABELS, getPropertyTypeLabel } from '../data/propertyTypes.js'
 import { NIGERIAN_STATES } from '../data/verificationRules.js'
 import { getEffectiveStatus } from '../lib/listingsApi.js'
 import { getCompareIds, toggleCompare, MAX_COMPARE } from '../lib/compareList.js'
 import { getSavedListingIds, toggleSavedListing } from '../lib/listingWatchlist.js'
+import { getRecentlyViewedIds, clearRecentlyViewed } from '../lib/recentlyViewed.js'
 
 const CATEGORY_FILTERS = [
   { key: 'all', label: 'All categories' },
@@ -25,6 +26,21 @@ export default function ListingsBrowse({ listings, setView, hasMore, onLoadMore,
   const [stateFilter, setStateFilter] = useState('all')
   const [compareIds, setCompareIds] = useState(() => getCompareIds())
   const [savedIds, setSavedIds] = useState(() => getSavedListingIds())
+  const [recentIds, setRecentIds] = useState(() => getRecentlyViewedIds())
+
+  // Session memory without requiring login — re-read whenever the
+  // listings feed itself changes, since that's the only signal this
+  // component gets that a visit to a listing detail page (which is what
+  // actually appends to the list) may have happened since last render.
+  useEffect(() => {
+    setRecentIds(getRecentlyViewedIds())
+  }, [listings])
+
+  const recentlyViewed = recentIds.map((id) => listings.find((l) => l.id === id)).filter(Boolean)
+
+  function handleClearRecent() {
+    setRecentIds(clearRecentlyViewed())
+  }
 
   function handleToggleCompare(id) {
     if (!compareIds.includes(id) && compareIds.length >= MAX_COMPARE) {
@@ -99,6 +115,50 @@ export default function ListingsBrowse({ listings, setView, hasMore, onLoadMore,
           </button>
         </div>
       </section>
+
+      {recentlyViewed.length > 0 && (
+        <div style={{ marginBottom: 20 }}>
+          <div className="results-meta">
+            <span>
+              <History size={13} style={{ verticalAlign: -2, marginRight: 4 }} /> Recently viewed
+            </span>
+            <button className="chip" onClick={handleClearRecent}>
+              <X size={12} /> Clear all
+            </button>
+          </div>
+          <div style={{ display: 'flex', gap: 10, overflowX: 'auto', paddingBottom: 4 }}>
+            {recentlyViewed.map((l) => (
+              <button
+                key={l.id}
+                onClick={() => setView('listing-detail', l)}
+                style={{
+                  flexShrink: 0,
+                  width: 150,
+                  textAlign: 'left',
+                  background: 'var(--surface)',
+                  border: '1px solid var(--line)',
+                  borderRadius: 16,
+                  overflow: 'hidden',
+                  cursor: 'pointer',
+                  padding: 0
+                }}
+              >
+                <div style={{ width: '100%', height: 90, background: 'var(--cream-deep)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  {(l.photoUrls?.[0] || l.photoUrl) ? (
+                    <img src={l.photoUrls?.[0] || l.photoUrl} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                  ) : (
+                    <Home size={20} color="var(--ink-faint)" />
+                  )}
+                </div>
+                <div style={{ padding: '8px 10px' }}>
+                  <p style={{ fontSize: 12, fontWeight: 700, margin: '0 0 2px' }}>₦{Number(l.price).toLocaleString()}</p>
+                  <p style={{ fontSize: 11, color: 'var(--ink-faint)', margin: 0 }}>{getPropertyTypeLabel(l.type)}</p>
+                </div>
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
 
       <div className="chip-row" style={{ marginTop: 0, marginBottom: 4 }}>
         {CATEGORY_FILTERS.map(({ key, label }) => (

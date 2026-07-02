@@ -75,6 +75,20 @@ export async function uploadListingPhoto(file) {
   return getDownloadURL(fileRef)
 }
 
+export const MAX_LISTING_PHOTOS = 6
+
+// Sequential, not Promise.all — Storage uploads from a slow mobile
+// connection (the primary use case here) are more likely to hit a flaky
+// single failure than benefit from parallelism, and sequential keeps the
+// error message pointing at exactly which photo failed.
+export async function uploadListingPhotos(files) {
+  const urls = []
+  for (const file of files) {
+    urls.push(await uploadListingPhoto(file))
+  }
+  return urls
+}
+
 // Moderator activation — the real enforcement point for the
 // auto-block-flagged-agents rule (see createListingAsLister's comment).
 // Refuses to activate (and instead rejects) if the lister name now
@@ -121,6 +135,13 @@ export async function setLasreraVerified(listingId, verified) {
 // between self-reported and moderator-checked renders.
 export async function setCacVerified(listingId, verified) {
   await updateDoc(doc(db, LISTINGS, listingId), { cacVerified: verified })
+}
+
+// Same pattern again, for the self-reported title-document claim (see
+// data/listingFacts.js) — a lister saying "C of O" is a claim, not a
+// fact, until a moderator has actually seen the document.
+export async function setTitleDocumentVerified(listingId, verified) {
+  await updateDoc(doc(db, LISTINGS, listingId), { titleDocumentVerified: verified })
 }
 
 // Lister-callable subset — their own listing's availability, not the

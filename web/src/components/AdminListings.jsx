@@ -2,7 +2,18 @@ import { useEffect, useState } from 'react'
 import { Plus, ShieldAlert, ShieldCheck, ShieldX, Clock, UserCheck, Eye, MessageSquare, BadgeCheck } from 'lucide-react'
 import { PROPERTY_TYPE_LABELS, SIZE_PROPERTY_TYPES, getPropertyTypeLabel } from '../data/propertyTypes.js'
 import { NIGERIAN_STATES, DUAL_REP_LABELS } from '../data/verificationRules.js'
-import { createListing, listListings, activateListing, rejectListing, getEffectiveStatus, getListingViewCount, setLasreraVerified, setCacVerified } from '../lib/listingsApi.js'
+import { TITLE_DOCUMENT_LABELS, AMENITY_GROUPS } from '../data/listingFacts.js'
+import {
+  createListing,
+  listListings,
+  activateListing,
+  rejectListing,
+  getEffectiveStatus,
+  getListingViewCount,
+  setLasreraVerified,
+  setCacVerified,
+  setTitleDocumentVerified
+} from '../lib/listingsApi.js'
 import { getInquiryCount } from '../lib/inquiriesApi.js'
 import VerificationBadge from './VerificationBadge.jsx'
 import TrustSignals from './TrustSignals.jsx'
@@ -18,8 +29,16 @@ const EMPTY_FORM = {
   locationText: '',
   price: '',
   sizeSqm: '',
+  bedrooms: '',
+  bathrooms: '',
+  parkingSpaces: '',
+  serviceCharge: '',
+  amenities: [],
+  titleDocumentType: 'none_yet',
+  encumbranceFreeDeclared: false,
   description: '',
   listerName: '',
+  listerType: 'individual',
   lasreraNumber: '',
   cacNumber: '',
   professionalIndemnityInsurance: false,
@@ -28,6 +47,7 @@ const EMPTY_FORM = {
 }
 
 const SIZE_TYPES = SIZE_PROPERTY_TYPES
+const NON_LAND_TYPES = ['house', 'apartment', 'commercial', 'estate']
 
 // Admin-only for Milestone 1 — no lister-account system exists yet (see
 // the plan this was built from). This is deliberately a moderator tool,
@@ -82,6 +102,13 @@ export default function AdminListings() {
     setForm((f) => ({ ...f, [field]: value }))
   }
 
+  function toggleAmenity(option) {
+    setForm((f) => ({
+      ...f,
+      amenities: f.amenities.includes(option) ? f.amenities.filter((a) => a !== option) : [...f.amenities, option]
+    }))
+  }
+
   async function handleCreate(e) {
     e.preventDefault()
     setError('')
@@ -99,6 +126,10 @@ export default function AdminListings() {
         ...form,
         price: Number(form.price),
         sizeSqm: SIZE_TYPES.includes(form.type) ? Number(form.sizeSqm) : null,
+        bedrooms: NON_LAND_TYPES.includes(form.type) && form.bedrooms !== '' ? Number(form.bedrooms) : null,
+        bathrooms: NON_LAND_TYPES.includes(form.type) && form.bathrooms !== '' ? Number(form.bathrooms) : null,
+        parkingSpaces: NON_LAND_TYPES.includes(form.type) && form.parkingSpaces !== '' ? Number(form.parkingSpaces) : null,
+        serviceCharge: NON_LAND_TYPES.includes(form.type) && form.serviceCharge !== '' ? Number(form.serviceCharge) : null,
         agencyFeePercent: Number(form.agencyFeePercent),
         lasreraNumber: form.lasreraNumber.trim() || null,
         cacNumber: form.cacNumber.trim() || null,
@@ -153,6 +184,15 @@ export default function AdminListings() {
       refresh()
     } catch (err) {
       alert('Failed to update CAC verification: ' + err.message)
+    }
+  }
+
+  async function handleToggleTitleDocVerified(listing) {
+    try {
+      await setTitleDocumentVerified(listing.id, !listing.titleDocumentVerified)
+      refresh()
+    } catch (err) {
+      alert('Failed to update title-document verification: ' + err.message)
     }
   }
 
@@ -223,6 +263,73 @@ export default function AdminListings() {
               />
             </div>
           )}
+          {NON_LAND_TYPES.includes(form.type) && (
+            <>
+              <div className="field">
+                <label htmlFor="listing-bedrooms">Bedrooms (optional)</label>
+                <input id="listing-bedrooms" type="number" min="0" value={form.bedrooms} onChange={(e) => update('bedrooms', e.target.value)} />
+              </div>
+              <div className="field">
+                <label htmlFor="listing-bathrooms">Bathrooms (optional)</label>
+                <input id="listing-bathrooms" type="number" min="0" value={form.bathrooms} onChange={(e) => update('bathrooms', e.target.value)} />
+              </div>
+              <div className="field">
+                <label htmlFor="listing-parking">Parking spaces (optional)</label>
+                <input id="listing-parking" type="number" min="0" value={form.parkingSpaces} onChange={(e) => update('parkingSpaces', e.target.value)} />
+              </div>
+              <div className="field">
+                <label htmlFor="listing-serviceCharge">Annual service charge, ₦ (optional)</label>
+                <input id="listing-serviceCharge" type="number" min="0" value={form.serviceCharge} onChange={(e) => update('serviceCharge', e.target.value)} />
+              </div>
+            </>
+          )}
+          <div className="field">
+            <label>Features (optional)</label>
+            {AMENITY_GROUPS.map((group) => (
+              <div key={group.key} style={{ marginBottom: 10 }}>
+                <p style={{ fontSize: 12, fontWeight: 700, color: 'var(--ink-faint)', margin: '0 0 6px' }}>{group.label}</p>
+                <div className="chip-row" style={{ marginTop: 0 }}>
+                  {group.options.map((option) => (
+                    <button
+                      key={option}
+                      type="button"
+                      className={`chip ${form.amenities.includes(option) ? 'active' : ''}`}
+                      onClick={() => toggleAmenity(option)}
+                    >
+                      {option}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+          <div className="field">
+            <label htmlFor="listing-titleDoc">Title document (optional)</label>
+            <select id="listing-titleDoc" value={form.titleDocumentType} onChange={(e) => update('titleDocumentType', e.target.value)}>
+              {Object.entries(TITLE_DOCUMENT_LABELS).map(([key, label]) => (
+                <option key={key} value={key}>
+                  {label}
+                </option>
+              ))}
+            </select>
+          </div>
+          {form.titleDocumentType !== 'none_yet' && (
+            <label className="field-checkbox">
+              <input
+                type="checkbox"
+                checked={form.encumbranceFreeDeclared}
+                onChange={(e) => update('encumbranceFreeDeclared', e.target.checked)}
+              />
+              <span>No known encumbrance, lien, or dispute.</span>
+            </label>
+          )}
+          <div className="field">
+            <label htmlFor="listing-listerType">Lister type</label>
+            <select id="listing-listerType" value={form.listerType} onChange={(e) => update('listerType', e.target.value)}>
+              <option value="individual">Individual</option>
+              <option value="agency">Agency / company</option>
+            </select>
+          </div>
           <div className="field">
             <label htmlFor="listing-agencyFee">Agency fee (% of {form.transactionType === 'rent' ? 'total rent' : 'sale price'})</label>
             <input
@@ -353,6 +460,9 @@ export default function AdminListings() {
                   cacNumber={listing.cacNumber}
                   cacVerified={listing.cacVerified}
                   professionalIndemnityInsurance={listing.professionalIndemnityInsurance}
+                  titleDocumentType={listing.titleDocumentType}
+                  titleDocumentVerified={listing.titleDocumentVerified}
+                  encumbranceFreeDeclared={listing.encumbranceFreeDeclared}
                 />
                 <div style={{ marginTop: 8 }}>
                   <FeeComplianceNote
@@ -381,6 +491,16 @@ export default function AdminListings() {
                     >
                       <BadgeCheck size={13} />
                       {listing.cacVerified ? 'CAC checked — mark unchecked' : 'Mark CAC # as checked'}
+                    </button>
+                  )}
+                  {listing.titleDocumentType && listing.titleDocumentType !== 'none_yet' && (
+                    <button
+                      className={`chip ${listing.titleDocumentVerified ? 'active' : ''}`}
+                      style={{ fontSize: 12 }}
+                      onClick={() => handleToggleTitleDocVerified(listing)}
+                    >
+                      <BadgeCheck size={13} />
+                      {listing.titleDocumentVerified ? 'Title doc checked — mark unchecked' : 'Mark title document as checked'}
                     </button>
                   )}
                 </div>

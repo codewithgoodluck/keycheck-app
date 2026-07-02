@@ -2,7 +2,8 @@ import { useRef, useState } from 'react'
 import { Send, Paperclip, X } from 'lucide-react'
 import { PROPERTY_TYPE_LABELS, SIZE_PROPERTY_TYPES } from '../data/propertyTypes.js'
 import { NIGERIAN_STATES, DUAL_REP_LABELS } from '../data/verificationRules.js'
-import { createListingAsLister, uploadListingPhoto } from '../lib/listingsApi.js'
+import { TITLE_DOCUMENT_LABELS, AMENITY_GROUPS } from '../data/listingFacts.js'
+import { createListingAsLister, uploadListingPhotos, MAX_LISTING_PHOTOS } from '../lib/listingsApi.js'
 import { msUntilNextSubmit, markSubmitted } from '../lib/antispam.js'
 import FeeCapFactBox from './FeeCapFactBox.jsx'
 import LocationPicker from './LocationPicker.jsx'
@@ -19,8 +20,16 @@ const EMPTY_FORM = {
   locationText: '',
   price: '',
   sizeSqm: '',
+  bedrooms: '',
+  bathrooms: '',
+  parkingSpaces: '',
+  serviceCharge: '',
+  amenities: [],
+  titleDocumentType: 'none_yet',
+  encumbranceFreeDeclared: false,
   description: '',
   listerName: '',
+  listerType: 'individual',
   listerPhone: '',
   lasreraNumber: '',
   cacNumber: '',
@@ -30,6 +39,7 @@ const EMPTY_FORM = {
 }
 
 const SIZE_TYPES = SIZE_PROPERTY_TYPES
+const NON_LAND_TYPES = ['house', 'apartment', 'commercial', 'estate']
 
 // Public self-service submission — adapted from AdminListings.jsx's form
 // fields, plus a photo upload and a listerPhone field for the WhatsApp
@@ -39,7 +49,7 @@ const SIZE_TYPES = SIZE_PROPERTY_TYPES
 export default function SubmitListing({ listerUser, setView }) {
   const [form, setForm] = useState(EMPTY_FORM)
   const [pin, setPin] = useState(null)
-  const [photoFile, setPhotoFile] = useState(null)
+  const [photoFiles, setPhotoFiles] = useState([])
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState('')
   const [submitted, setSubmitted] = useState(false)
@@ -51,19 +61,37 @@ export default function SubmitListing({ listerUser, setView }) {
     setForm((f) => ({ ...f, [field]: value }))
   }
 
+  function toggleAmenity(option) {
+    setForm((f) => ({
+      ...f,
+      amenities: f.amenities.includes(option) ? f.amenities.filter((a) => a !== option) : [...f.amenities, option]
+    }))
+  }
+
   function handleFileChange(e) {
-    const file = e.target.files?.[0]
-    if (!file) return
-    if (file.size >= 10 * 1024 * 1024) {
-      setError('File is too large (max 10MB).')
+    const files = Array.from(e.target.files || [])
+    if (files.length === 0) return
+    if (photoFiles.length + files.length > MAX_LISTING_PHOTOS) {
+      setError(`You can upload up to ${MAX_LISTING_PHOTOS} photos.`)
       return
     }
-    if (!file.type.startsWith('image/')) {
-      setError('Only image files are accepted.')
-      return
+    for (const file of files) {
+      if (file.size >= 10 * 1024 * 1024) {
+        setError(`"${file.name}" is too large (max 10MB).`)
+        return
+      }
+      if (!file.type.startsWith('image/')) {
+        setError('Only image files are accepted.')
+        return
+      }
     }
     setError('')
-    setPhotoFile(file)
+    setPhotoFiles((f) => [...f, ...files])
+    if (fileInputRef.current) fileInputRef.current.value = ''
+  }
+
+  function removePhotoFile(index) {
+    setPhotoFiles((f) => f.filter((_, i) => i !== index))
   }
 
   async function handleSubmit(e) {
@@ -100,12 +128,12 @@ export default function SubmitListing({ listerUser, setView }) {
 
     setSubmitting(true)
     try {
-      let photoUrl = null
-      if (photoFile) {
+      let photoUrls = []
+      if (photoFiles.length > 0) {
         try {
-          photoUrl = await uploadListingPhoto(photoFile)
+          photoUrls = await uploadListingPhotos(photoFiles)
         } catch (err) {
-          setError(`Photo upload failed: ${err.message}. You can remove it and submit without a photo.`)
+          setError(`Photo upload failed: ${err.message}. You can remove photos and submit without them.`)
           setSubmitting(false)
           return
         }
@@ -115,10 +143,15 @@ export default function SubmitListing({ listerUser, setView }) {
         ...form,
         price: Number(form.price),
         sizeSqm: SIZE_TYPES.includes(form.type) ? Number(form.sizeSqm) : null,
+        bedrooms: NON_LAND_TYPES.includes(form.type) && form.bedrooms !== '' ? Number(form.bedrooms) : null,
+        bathrooms: NON_LAND_TYPES.includes(form.type) && form.bathrooms !== '' ? Number(form.bathrooms) : null,
+        parkingSpaces: NON_LAND_TYPES.includes(form.type) && form.parkingSpaces !== '' ? Number(form.parkingSpaces) : null,
+        serviceCharge: NON_LAND_TYPES.includes(form.type) && form.serviceCharge !== '' ? Number(form.serviceCharge) : null,
         agencyFeePercent: Number(form.agencyFeePercent),
         lasreraNumber: form.lasreraNumber.trim() || null,
         cacNumber: form.cacNumber.trim() || null,
-        photoUrl,
+        photoUrl: photoUrls[0] || null,
+        photoUrls,
         lat: pin ? pin[0] : null,
         lng: pin ? pin[1] : null
       })
@@ -240,6 +273,74 @@ export default function SubmitListing({ listerUser, setView }) {
             </div>
           )}
 
+          {NON_LAND_TYPES.includes(form.type) && (
+            <>
+              <div className="field">
+                <label htmlFor="sl-bedrooms">Bedrooms (optional)</label>
+                <input id="sl-bedrooms" type="number" min="0" value={form.bedrooms} onChange={(e) => update('bedrooms', e.target.value)} />
+              </div>
+              <div className="field">
+                <label htmlFor="sl-bathrooms">Bathrooms (optional)</label>
+                <input id="sl-bathrooms" type="number" min="0" value={form.bathrooms} onChange={(e) => update('bathrooms', e.target.value)} />
+              </div>
+              <div className="field">
+                <label htmlFor="sl-parking">Parking spaces (optional)</label>
+                <input id="sl-parking" type="number" min="0" value={form.parkingSpaces} onChange={(e) => update('parkingSpaces', e.target.value)} />
+              </div>
+              <div className="field">
+                <label htmlFor="sl-serviceCharge">Annual service charge, ₦ (optional)</label>
+                <input id="sl-serviceCharge" type="number" min="0" value={form.serviceCharge} onChange={(e) => update('serviceCharge', e.target.value)} />
+              </div>
+            </>
+          )}
+
+          <div className="field">
+            <label>Features (optional)</label>
+            {AMENITY_GROUPS.map((group) => (
+              <div key={group.key} style={{ marginBottom: 10 }}>
+                <p style={{ fontSize: 12, fontWeight: 700, color: 'var(--ink-faint)', margin: '0 0 6px' }}>{group.label}</p>
+                <div className="chip-row" style={{ marginTop: 0 }}>
+                  {group.options.map((option) => (
+                    <button
+                      key={option}
+                      type="button"
+                      className={`chip ${form.amenities.includes(option) ? 'active' : ''}`}
+                      onClick={() => toggleAmenity(option)}
+                    >
+                      {option}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <div className="field">
+            <label htmlFor="sl-titleDoc">Title document (optional)</label>
+            <select id="sl-titleDoc" value={form.titleDocumentType} onChange={(e) => update('titleDocumentType', e.target.value)}>
+              {Object.entries(TITLE_DOCUMENT_LABELS).map(([key, label]) => (
+                <option key={key} value={key}>
+                  {label}
+                </option>
+              ))}
+            </select>
+            <p className="field-hint">
+              Self-reported — a moderator can mark this checked after reviewing the actual document,
+              same as the LASRERA/CAC numbers below. This is not a title search or legal guarantee.
+            </p>
+          </div>
+
+          {form.titleDocumentType !== 'none_yet' && (
+            <label className="field-checkbox">
+              <input
+                type="checkbox"
+                checked={form.encumbranceFreeDeclared}
+                onChange={(e) => update('encumbranceFreeDeclared', e.target.checked)}
+              />
+              <span>To my knowledge, this property has no existing encumbrance, lien, or dispute.</span>
+            </label>
+          )}
+
           {form.state === 'Lagos' && (
             <div style={{ marginBottom: 16 }}>
               <FeeCapFactBox />
@@ -277,18 +378,23 @@ export default function SubmitListing({ listerUser, setView }) {
           </div>
 
           <div className="field">
-            <label>Photo (optional)</label>
-            {photoFile ? (
-              <div className="evidence-picked">
-                <Paperclip size={14} /> {photoFile.name}
-                <button type="button" onClick={() => { setPhotoFile(null); if (fileInputRef.current) fileInputRef.current.value = '' }} aria-label="Remove photo">
-                  <X size={13} />
-                </button>
+            <label>Photos (optional, up to {MAX_LISTING_PHOTOS})</label>
+            {photoFiles.length > 0 && (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginBottom: 8 }}>
+                {photoFiles.map((file, i) => (
+                  <div className="evidence-picked" key={i}>
+                    <Paperclip size={14} /> {file.name}
+                    <button type="button" onClick={() => removePhotoFile(i)} aria-label="Remove photo">
+                      <X size={13} />
+                    </button>
+                  </div>
+                ))}
               </div>
-            ) : (
-              <input ref={fileInputRef} type="file" accept="image/*" onChange={handleFileChange} />
             )}
-            <p className="field-hint">A clear photo of the property (max 10MB). Publicly visible once your listing is approved.</p>
+            {photoFiles.length < MAX_LISTING_PHOTOS && (
+              <input ref={fileInputRef} type="file" accept="image/*" multiple onChange={handleFileChange} />
+            )}
+            <p className="field-hint">Clear photos of the property (max 10MB each). Publicly visible once your listing is approved.</p>
           </div>
 
           <div className="field">
@@ -300,6 +406,13 @@ export default function SubmitListing({ listerUser, setView }) {
               onChange={(e) => update('listerName', e.target.value)}
               required
             />
+          </div>
+          <div className="field">
+            <label htmlFor="sl-listerType">You are listing as</label>
+            <select id="sl-listerType" value={form.listerType} onChange={(e) => update('listerType', e.target.value)}>
+              <option value="individual">An individual</option>
+              <option value="agency">An agency / company</option>
+            </select>
           </div>
           <div className="field">
             <label htmlFor="sl-listerPhone">WhatsApp/phone number for inquiries</label>
