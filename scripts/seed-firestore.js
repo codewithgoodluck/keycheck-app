@@ -46,6 +46,15 @@ async function seed() {
     await collectionRef.add({
       ...report,
       upvotes: report.upvotes || 0,
+      // These are curated, sourced entries (every one has a real sourceUrl
+      // by convention — see seedReports.js's header comment), so the
+      // attestation is trivially true. Kept for consistency with reports
+      // created via the web form/WhatsApp bot, which now both require it
+      // (see firestore.rules' hasMinimumEvidence()). Not enforced here by
+      // rules — the Admin SDK bypasses security rules — but keeping every
+      // report's shape consistent matters for future logic that may read
+      // this field.
+      attestedAccuracy: true,
       createdAt: new Date().toISOString()
     })
     added++

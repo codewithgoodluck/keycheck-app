@@ -1,4 +1,4 @@
-import { db } from './firebase.js'
+import { db, storage } from './firebase.js'
 import {
   collection,
   onSnapshot,
@@ -11,6 +11,7 @@ import {
   limit,
   arrayUnion
 } from 'firebase/firestore'
+import { ref, uploadBytes } from 'firebase/storage'
 
 const COLLECTION = 'reports'
 
@@ -58,6 +59,26 @@ export async function logSearchMiss(queryText) {
   } catch (err) {
     console.warn('Failed to log search miss (non-fatal):', err.message)
   }
+}
+
+// Uploads an evidence file to the same evidence/ prefix the WhatsApp bot
+// uses (whatsapp-bot/mediaStorage.js), returning a Storage path — not a
+// public URL. Nothing under evidence/ is publicly readable (see
+// storage.rules); it's kept private since evidence may contain personal
+// ID documents. Throws on files over 10MB or non-image/PDF types, mirrored
+// client-side here so the error surfaces before an upload attempt rather
+// than as an opaque permission-denied from storage.rules.
+export async function uploadEvidence(file) {
+  if (file.size >= 10 * 1024 * 1024) {
+    throw new Error('File is too large (max 10MB).')
+  }
+  if (!/^image\/|^application\/pdf$/.test(file.type)) {
+    throw new Error('Only images or PDF files are accepted as evidence.')
+  }
+  const path = `evidence/${Date.now()}-${file.name}`
+  const fileRef = ref(storage, path)
+  await uploadBytes(fileRef, file, { contentType: file.type })
+  return path
 }
 
 export async function addReportToFirestore(report) {

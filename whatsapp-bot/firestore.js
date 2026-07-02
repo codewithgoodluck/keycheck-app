@@ -55,6 +55,13 @@ export async function saveReport(report) {
     source: 'whatsapp',
     evidenceUrls: report.evidenceUrls || [],
     upvotes: 0,
+    // The bot's conversational flow is itself a deliberate, multi-step
+    // act (not a driveby anonymous web hit), so the attestation is
+    // implicit — kept for shape-consistency with web-form reports, which
+    // now require this field (see firestore.rules' hasMinimumEvidence()).
+    // Not enforced here by rules — the Admin SDK bypasses security rules —
+    // this is purely a data-consistency choice.
+    attestedAccuracy: true,
     dateReported: new Date().toISOString().slice(0, 10),
     createdAt: new Date().toISOString()
   }

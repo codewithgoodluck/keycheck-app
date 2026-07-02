@@ -1,8 +1,9 @@
 import { useRef, useState } from 'react'
-import { MessageCircle, Send, ShieldCheck, ShieldAlert } from 'lucide-react'
+import { MessageCircle, Send, ShieldCheck, ShieldAlert, Paperclip, X } from 'lucide-react'
 import LocationPicker from './LocationPicker.jsx'
 import { msUntilNextSubmit, markSubmitted } from '../lib/antispam.js'
 import { addMySubmittedReportId, getMySubmittedReportIds } from '../lib/contributions.js'
+import { uploadEvidence } from '../lib/reportsApi.js'
 
 const WHATSAPP_NUMBER = import.meta.env.VITE_WHATSAPP_NUMBER || '2349000000000' // replace with your real WhatsApp Business number
 
@@ -11,6 +12,12 @@ const WHATSAPP_NUMBER = import.meta.env.VITE_WHATSAPP_NUMBER || '2349000000000' 
 // display:none). A real form submission never takes less than a few
 // seconds, so MIN_FILL_MS catches instant scripted submissions too.
 const MIN_FILL_MS = 3000
+
+// Minimum evidentiary bar — mirrors firestore.rules' hasMinimumEvidence()
+// exactly, so a validation failure here matches what the backend would
+// reject anyway. Enforced there too (not just here) since client-side
+// checks are trivially bypassable via a direct API call.
+const MIN_DESCRIPTION_FOR_NO_EVIDENCE = 60
 
 const COPY = {
   flag: {
@@ -41,18 +48,40 @@ export default function SubmitReport({ addReport, setView }) {
     type: 'land',
     locationText: '',
     agentName: '',
-    description: ''
+    description: '',
+    sourceUrl: ''
   })
   const [pin, setPin] = useState(null)
+  const [evidenceFile, setEvidenceFile] = useState(null)
+  const [attested, setAttested] = useState(false)
   const [honeypot, setHoneypot] = useState('')
   const [error, setError] = useState('')
+  const [submitting, setSubmitting] = useState(false)
   const [submittedCount, setSubmittedCount] = useState(null)
   const mountedAt = useRef(Date.now())
+  const fileInputRef = useRef(null)
 
   const copy = COPY[kind]
+  const hasMinimumEvidence =
+    Boolean(evidenceFile) || form.sourceUrl.trim().length > 0 || form.description.trim().length >= MIN_DESCRIPTION_FOR_NO_EVIDENCE
 
   function update(field, value) {
     setForm((f) => ({ ...f, [field]: value }))
+  }
+
+  function handleFileChange(e) {
+    const file = e.target.files?.[0]
+    if (!file) return
+    if (file.size >= 10 * 1024 * 1024) {
+      setError('File is too large (max 10MB).')
+      return
+    }
+    if (!/^image\/|^application\/pdf$/.test(file.type)) {
+      setError('Only images or PDF files are accepted as evidence.')
+      return
+    }
+    setError('')
+    setEvidenceFile(file)
   }
 
   async function handleSubmit(e) {
@@ -73,20 +102,51 @@ export default function SubmitReport({ addReport, setView }) {
       return
     }
 
-    const saved = await addReport({
-      ...form,
-      kind,
-      status: 'unverified',
-      source: 'web_submission',
-      evidenceUrls: [],
-      upvotes: 0,
-      lat: pin ? pin[0] : null,
-      lng: pin ? pin[1] : null,
-      dateReported: new Date().toISOString().slice(0, 10)
-    })
-    markSubmitted()
-    if (saved?.id) addMySubmittedReportId(saved.id)
-    setSubmittedCount(getMySubmittedReportIds().length)
+    if (!attested) {
+      setError('Please confirm the attestation checkbox before submitting.')
+      return
+    }
+
+    if (!hasMinimumEvidence) {
+      setError(
+        `Add at least one of: a photo/document, a link to a news article or public record, or a more detailed description (${MIN_DESCRIPTION_FOR_NO_EVIDENCE}+ characters).`
+      )
+      return
+    }
+
+    setSubmitting(true)
+    try {
+      let evidenceUrls = []
+      if (evidenceFile) {
+        try {
+          const path = await uploadEvidence(evidenceFile)
+          evidenceUrls = [path]
+        } catch (err) {
+          setError(`Evidence upload failed: ${err.message}. You can remove it and submit without, if you have a source link instead.`)
+          setSubmitting(false)
+          return
+        }
+      }
+
+      const saved = await addReport({
+        ...form,
+        sourceUrl: form.sourceUrl.trim(),
+        kind,
+        status: 'unverified',
+        source: 'web_submission',
+        evidenceUrls,
+        attestedAccuracy: true,
+        upvotes: 0,
+        lat: pin ? pin[0] : null,
+        lng: pin ? pin[1] : null,
+        dateReported: new Date().toISOString().slice(0, 10)
+      })
+      markSubmitted()
+      if (saved?.id) addMySubmittedReportId(saved.id)
+      setSubmittedCount(getMySubmittedReportIds().length)
+    } finally {
+      setSubmitting(false)
+    }
   }
 
   if (submittedCount !== null) {
@@ -194,12 +254,48 @@ export default function SubmitReport({ addReport, setView }) {
             />
           </div>
 
+          <div className="field">
+            <label htmlFor="sourceUrl">Link to a news article, police report, or other public record (optional)</label>
+            <input
+              id="sourceUrl"
+              type="url"
+              placeholder="https://..."
+              value={form.sourceUrl}
+              onChange={(e) => update('sourceUrl', e.target.value)}
+            />
+          </div>
+
+          <div className="field">
+            <label>Supporting evidence — photo or document (optional)</label>
+            {evidenceFile ? (
+              <div className="evidence-picked">
+                <Paperclip size={14} /> {evidenceFile.name}
+                <button type="button" onClick={() => { setEvidenceFile(null); if (fileInputRef.current) fileInputRef.current.value = '' }} aria-label="Remove file">
+                  <X size={13} />
+                </button>
+              </div>
+            ) : (
+              <input ref={fileInputRef} type="file" accept="image/*,application/pdf" onChange={handleFileChange} />
+            )}
+            <p className="field-hint">
+              A photo, receipt, or document (max 10MB). Kept private — visible only to moderators, never shown publicly.
+            </p>
+          </div>
+
+          <label className="field-checkbox">
+            <input type="checkbox" checked={attested} onChange={(e) => setAttested(e.target.checked)} />
+            <span>
+              I confirm this happened to me or someone I know, this description is accurate to my knowledge, and I
+              can provide evidence if asked.
+            </span>
+          </label>
+
           {error && (
             <p style={{ color: 'var(--red)', fontSize: 13, fontWeight: 600, margin: '0 0 12px' }}>{error}</p>
           )}
 
-          <button className="submit-btn" type="submit">
-            <Send size={15} /> {copy.submitLabel}
+          <button className="submit-btn" type="submit" disabled={submitting}>
+            <Send size={15} /> {submitting ? 'Submitting...' : copy.submitLabel}
           </button>
 
           <p className="disclaimer">{copy.disclaimer}</p>

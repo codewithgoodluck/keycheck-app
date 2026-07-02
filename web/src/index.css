@@ -781,6 +781,44 @@ button { font-family: inherit; }
 
 .field textarea { resize: vertical; min-height: 100px; }
 
+.field input[type='file'] {
+  border-style: dashed;
+  padding: 10px 14px;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.field-hint { margin: 6px 0 0; font-size: 12px; color: var(--ink-faint); line-height: 1.45; }
+
+.evidence-picked {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border: 1.5px solid var(--line);
+  background: var(--paper);
+  border-radius: var(--radius-sm);
+  padding: 10px 14px;
+  font-size: 13.5px;
+  color: var(--ink);
+}
+
+.evidence-picked svg:first-child { color: var(--ink-faint); flex-shrink: 0; }
+.evidence-picked button { margin-left: auto; background: none; border: none; color: var(--ink-faint); cursor: pointer; display: flex; padding: 2px; }
+.evidence-picked button:hover { color: var(--red); }
+
+.field-checkbox {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--ink-soft);
+  margin-bottom: 20px;
+  cursor: pointer;
+}
+
+.field-checkbox input { margin-top: 3px; width: 16px; height: 16px; accent-color: var(--green); flex-shrink: 0; }
+
 .whatsapp-note {
   display: flex;
   gap: 12px;

@@ -1,11 +1,17 @@
 import { useState } from 'react'
-import { ArrowLeft, Share2, Bookmark, Users, MapPin, FileText, Link2, ShieldQuestion, Send, MessageSquareReply } from 'lucide-react'
+import { ArrowLeft, Share2, Bookmark, Users, MapPin, FileText, Link2, ShieldQuestion, Send, MessageSquareReply, Flag } from 'lucide-react'
 import { StampInline } from './Stamp.jsx'
 import { hasConfirmed, markConfirmed, getConfirmedIds } from '../lib/confirms.js'
 import { getReportTitle } from '../lib/format.js'
 import { showToast } from '../lib/toast.js'
 import VerifyAgentNudge from './VerifyAgentNudge.jsx'
 import FeeCapFactBox from './FeeCapFactBox.jsx'
+
+// Distinct from the right-of-reply flow above: right-of-reply is for
+// publicly rebutting a report (stays visible, labeled unverified); this
+// is a direct formal takedown/dispute request to a moderator, which
+// matters for notice-and-takedown-style legal posture even if rarely used.
+const DISPUTE_EMAIL = 'goodluckmordi44@gmail.com'
 
 export default function ReportDetail({ report, setView, saved, onToggleSave, onConfirm, onAddReply }) {
   const [confirmed, setConfirmed] = useState(() => (report ? hasConfirmed(report.id) : false))
@@ -28,6 +34,12 @@ export default function ReportDetail({ report, setView, saved, onToggleSave, onC
   const isRentalType = report.type === 'house_agent' || report.type === 'landlord'
   const isLagos = report.locationText?.toLowerCase().includes('lagos')
   const showRentalNudge = isRentalType && isLagos
+
+  const disputeMailto = `mailto:${DISPUTE_EMAIL}?subject=${encodeURIComponent(
+    `Dispute report #${report.id} — ${title}`
+  )}&body=${encodeURIComponent(
+    `I am requesting review/removal of KeyCheck report #${report.id} (${title}).\n\nLink: ${window.location.origin}/?report=${report.id}\n\nReason:\n`
+  )}`
 
   function handleConfirm() {
     if (confirmed) return
@@ -273,6 +285,17 @@ export default function ReportDetail({ report, setView, saved, onToggleSave, onC
               </button>
             </>
           )}
+        </div>
+
+        <div className="detail-section">
+          <h4><Flag /> Formal dispute or removal request</h4>
+          <p>
+            A right-of-reply lets you respond publicly. If instead you believe this report is
+            false and should be reviewed for removal, contact a moderator directly.
+          </p>
+          <a href={disputeMailto} className="chip" style={{ display: 'inline-flex', marginTop: 4 }}>
+            <Flag size={13} /> Email a moderator about report #{report.id}
+          </a>
         </div>
       </div>
     </>

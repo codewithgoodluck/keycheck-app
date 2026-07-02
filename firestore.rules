@@ -43,8 +43,21 @@ service cloud.firestore {
       // Anyone can submit a new report, but only with safe defaults:
       // status must start "unverified" and upvotes must start at 0, so a
       // submitter can't mark their own report verified or pre-inflate it.
+      //
+      // Also requires a minimum evidentiary bar, enforced here (not just
+      // client-side) because client-side checks are trivially bypassable
+      // via a direct API call: attestedAccuracy must be true (a good-faith
+      // attestation on every single submission — cheap, but creates a
+      // paper trail that matters for defamation-risk mitigation), AND at
+      // least one of: an evidence file, a public source link, or a
+      // sufficiently specific (non-trivial-length) description. This is a
+      // deliberate policy decision to reduce baseless accusations going
+      // live with zero substantiation — see the moderation policy
+      // discussion this was built from.
       allow create: if request.resource.data.status == 'unverified'
-                    && request.resource.data.upvotes == 0;
+                    && request.resource.data.upvotes == 0
+                    && request.resource.data.attestedAccuracy == true
+                    && hasMinimumEvidence();
 
       // Public updates are allowed ONLY for the two actions regular users
       // take: confirming ("I had this too") and adding a reply. Both are
@@ -52,9 +65,24 @@ service cloud.firestore {
       allow update: if isOnlyConfirming() || isOnlyAddingReply();
 
       // Status changes, deleting a report, and editing existing replies
-      // (e.g. marking identityVerified) are admin-only.
-      allow update: if isAdmin();
+      // (e.g. marking identityVerified) are admin-only. A report can only
+      // be (or remain) "verified" if it has a real source attached —
+      // applies to every admin update, not just the transition itself, so
+      // a source can't be removed later while verified status stays set.
+      allow update: if isAdmin() && isValidVerifiedState();
       allow delete: if isAdmin();
+
+      function hasMinimumEvidence() {
+        return (request.resource.data.evidenceUrls is list && request.resource.data.evidenceUrls.size() > 0)
+               || (request.resource.data.sourceUrl is string && request.resource.data.sourceUrl.size() > 0)
+               || (request.resource.data.description is string && request.resource.data.description.size() >= 60);
+      }
+
+      function isValidVerifiedState() {
+        return request.resource.data.status != 'verified'
+               || (request.resource.data.sourceUrl is string && request.resource.data.sourceUrl.size() > 0)
+               || (request.resource.data.get('additionalSources', []).size() > 0);
+      }
 
       function isOnlyConfirming() {
         return request.resource.data.diff(resource.data).affectedKeys().hasOnly(['upvotes'])

@@ -1,0 +1,21 @@
+rules_version = '2';
+
+// Deploy with: firebase deploy --only storage
+//
+// Evidence uploads only. Anyone can upload (capped size + restricted
+// file types, to prevent abuse), but nothing here is publicly readable —
+// evidence may contain personal ID documents or other sensitive material,
+// consistent with whatsapp-bot/mediaStorage.js's existing policy for
+// bot-submitted evidence. Moderators view evidence via the Firebase
+// Console (governed by project IAM, not these rules) until a dedicated
+// admin-panel viewer exists.
+
+service firebase.storage {
+  match /b/{bucket}/o {
+    match /evidence/{allPaths=**} {
+      allow create: if request.resource.size < 10 * 1024 * 1024
+                    && request.resource.contentType.matches('image/.*|application/pdf');
+      allow read, update, delete: if false;
+    }
+  }
+}

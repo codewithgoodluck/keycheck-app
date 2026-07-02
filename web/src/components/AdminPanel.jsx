@@ -61,7 +61,11 @@ export default function AdminPanel({ reports, adminEmail }) {
     try {
       await setReportStatus(reportId, status)
     } catch (err) {
-      alert('Failed to update status (is Firebase configured?): ' + err.message)
+      const hint =
+        status === 'verified'
+          ? ' A report can only be marked "verified" once it has a sourceUrl or at least one additional source attached — add one below first.'
+          : ' (is Firebase configured?)'
+      alert('Failed to update status: ' + err.message + hint)
     } finally {
       setBusyId(null)
     }
