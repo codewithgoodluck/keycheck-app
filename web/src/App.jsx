@@ -12,10 +12,17 @@ import AdminLogin from './components/AdminLogin.jsx'
 import AdminPanel from './components/AdminPanel.jsx'
 import ToastStack from './components/ToastStack.jsx'
 import DueDiligence from './components/DueDiligence.jsx'
+import ListingsBrowse from './components/ListingsBrowse.jsx'
+import ListingDetail from './components/ListingDetail.jsx'
+import SubmitListing from './components/SubmitListing.jsx'
+import MyListings from './components/MyListings.jsx'
+import ListerAuth from './components/ListerAuth.jsx'
 import { seedReports } from './data/seedReports.js'
 import { getSavedIds, toggleSaved } from './lib/watchlist.js'
 import { subscribeToReports, addReportToFirestore, confirmReportInFirestore, addReplyToFirestore } from './lib/reportsApi.js'
+import { subscribeToListings } from './lib/listingsApi.js'
 import { watchAdminAuth } from './lib/adminApi.js'
+import { watchListerAuth } from './lib/listerAuth.js'
 import { getSeenIds, markSeen, areaOf } from './lib/notifications.js'
 import { getWatchedTerms } from './lib/watches.js'
 import { getStoredPushToken, onForegroundPushMessage } from './lib/push.js'
@@ -44,6 +51,17 @@ export default function App() {
   const unsubscribeRef = useRef(null)
   const savedIdsRef = useRef([])
   const firestoreBaselineRef = useRef(false)
+
+  // Verified Listings (Milestone 2) — mirrors the reports plumbing above,
+  // not a new pattern. listerUser uses the same Firebase Auth instance as
+  // adminUser (see lib/listerAuth.js): a lister is just any authenticated
+  // user without the moderator claim, not a separate Auth system.
+  const [listings, setListings] = useState([])
+  const [listingLimit, setListingLimit] = useState(100)
+  const [hasMoreListings, setHasMoreListings] = useState(false)
+  const [listerUser, setListerUser] = useState(undefined) // undefined = auth state not yet known
+  const [activeListingId, setActiveListingId] = useState(null)
+  const listingsUnsubscribeRef = useRef(null)
 
   const isAdminRoute =
     typeof window !== 'undefined' && new URLSearchParams(window.location.search).get('admin') === '1'
@@ -142,9 +160,36 @@ export default function App() {
     setReportLimit((n) => n + 200)
   }
 
+  // Re-subscribes with a bigger limit whenever listingLimit grows, same
+  // shape as the reports subscription above. Not gated behind isAdminRoute
+  // — browsing listings is a main-app feature, not admin-only.
+  useEffect(() => {
+    listingsUnsubscribeRef.current?.()
+    listingsUnsubscribeRef.current = subscribeToListings(
+      (liveListings, meta) => {
+        setListings(liveListings)
+        setHasMoreListings(Boolean(meta?.hasMore))
+      },
+      () => {},
+      listingLimit
+    )
+    return () => listingsUnsubscribeRef.current?.()
+  }, [listingLimit])
+
+  function loadMoreListings() {
+    setListingLimit((n) => n + 100)
+  }
+
   useEffect(() => {
     if (!isAdminRoute) return
     return watchAdminAuth((user) => setAdminUser(user))
+  }, [isAdminRoute])
+
+  // Lister auth state — not gated behind isAdminRoute, active on the main
+  // app for anyone visiting "My listings" or "Submit a listing".
+  useEffect(() => {
+    if (isAdminRoute) return
+    return watchListerAuth((user) => setListerUser(user))
   }, [isAdminRoute])
 
   // Restore a shared/bookmarked link on first load (?report=<id> or
@@ -224,6 +269,7 @@ export default function App() {
       setActiveReportId(null)
       setActiveProfileName(null)
     }
+    setActiveListingId(next === 'listing-detail' ? payload?.id || null : null)
     setPendingReportId(null)
     setViewRaw(next)
     window.scrollTo(0, 0)
@@ -304,6 +350,7 @@ export default function App() {
   }
 
   const activeReport = reports.find((r) => r.id === activeReportId) || null
+  const activeListing = listings.find((l) => l.id === activeListingId) || null
 
   if (isAdminRoute) {
     if (adminUser === undefined) {
@@ -389,6 +436,20 @@ export default function App() {
       {view === 'saved' && (
         <SavedReports reports={reports} savedIds={savedIds} setView={setView} onToggleSave={handleToggleSave} />
       )}
+
+      {view === 'listings' && (
+        <ListingsBrowse
+          listings={listings}
+          setView={setView}
+          hasMore={hasMoreListings}
+          onLoadMore={loadMoreListings}
+          listerUser={listerUser}
+        />
+      )}
+      {view === 'listing-detail' && <ListingDetail listing={activeListing} setView={setView} />}
+      {view === 'submit-listing' && <SubmitListing listerUser={listerUser} setView={setView} />}
+      {view === 'my-listings' && <MyListings listerUser={listerUser} setView={setView} />}
+      {view === 'lister-auth' && <ListerAuth setView={setView} />}
 
       {view !== 'submit' && <FloatingReportButton onClick={() => setView('submit')} />}
       <BottomNav view={view} setView={setView} savedCount={savedIds.length} />

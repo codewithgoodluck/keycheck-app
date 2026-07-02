@@ -115,15 +115,56 @@ service cloud.firestore {
       allow update, delete: if false;
     }
 
-    // Verified Listings Milestone 1 (see plan). Admin-only creation for
-    // now — no lister-account system exists yet. Only `active` listings
-    // are publicly visible; `pending`/`blocked` stay admin-only until a
-    // moderator activates them (blocked listings, from the
-    // auto-block-flagged-agents check in web/src/lib/listingsApi.js,
-    // should never become publicly visible by accident).
+    // Verified Listings. Milestone 2 adds self-serve lister accounts —
+    // a lister is any authenticated Firebase Auth user who is NOT an
+    // admin (no separate Auth instance; distinguished purely by the
+    // absence of the moderator claim). Admin-direct creation from
+    // Milestone 1 still works via isAdmin().
     match /listings/{listingId} {
-      allow read: if resource.data.status == 'active' || isAdmin();
-      allow create, update, delete: if isAdmin();
+      // Public sees only active listings. Admins see everything. A
+      // lister can see their own listing at any status (their "My
+      // listings" dashboard needs pending/rejected visibility too).
+      allow read: if resource.data.status == 'active'
+                  || isAdmin()
+                  || (request.auth != null && request.auth.uid == resource.data.listerId);
+
+      // Self-serve creation always starts 'pending' — never publicly
+      // visible until a moderator activates it (see isValidListingActivation()
+      // note: the auto-block-flagged-agents check itself runs
+      // client-side in listingsApi.js at *activation* time, not here —
+      // re-checking it in rules would need a cross-collection get() on
+      // every listing read/write, and the only path that makes a
+      // listing public is the admin activation flow, which is already
+      // the trust boundary this app relies on elsewhere (e.g. isAdmin()
+      // can already set a report's status to anything).
+      allow create: if request.auth != null
+                    && !isAdmin()
+                    && request.resource.data.listerId == request.auth.uid
+                    && request.resource.data.status == 'pending';
+
+      // Admins can do anything (activate, reject, edit, delete — same
+      // trust boundary as reports). A lister can only edit their own
+      // listing, and only within safe transitions: editing content while
+      // still pending, or moving an already-active listing between their
+      // own availability states — never self-approving to 'active' from
+      // 'pending', never reassigning listerId to someone else.
+      allow update: if isAdmin()
+                    || (request.auth != null
+                        && request.auth.uid == resource.data.listerId
+                        && isOwnerAllowedListingUpdate());
+      allow delete: if isAdmin()
+                    || (request.auth != null
+                        && request.auth.uid == resource.data.listerId
+                        && resource.data.status != 'active');
+
+      function isOwnerAllowedListingUpdate() {
+        return request.resource.data.listerId == resource.data.listerId
+               && (
+                 (resource.data.status == 'pending' && request.resource.data.status == 'pending')
+                 || (resource.data.status == 'active'
+                     && request.resource.data.status in ['under_offer', 'let', 'sold', 'expired', 'active'])
+               );
+      }
     }
 
     // FCM push token registry (see web/src/lib/push.js). Groundwork only —

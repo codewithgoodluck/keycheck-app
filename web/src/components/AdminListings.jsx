@@ -1,11 +1,11 @@
 import { useEffect, useState } from 'react'
-import { Plus, ShieldAlert, ShieldCheck, Clock } from 'lucide-react'
+import { Plus, ShieldAlert, ShieldCheck, ShieldX, Clock, UserCheck } from 'lucide-react'
 import { TYPE_LABELS } from '../lib/format.js'
 import { NIGERIAN_STATES } from '../data/verificationRules.js'
-import { createListing, listListings, updateListingStatus } from '../lib/listingsApi.js'
+import { createListing, listListings, activateListing, rejectListing } from '../lib/listingsApi.js'
 import VerificationBadge from './VerificationBadge.jsx'
 
-const STATUS_ICON = { active: ShieldCheck, pending: Clock, blocked: ShieldAlert }
+const STATUS_ICON = { active: ShieldCheck, pending: Clock, blocked: ShieldAlert, rejected: ShieldX }
 
 const EMPTY_FORM = {
   type: 'house_agent',
@@ -63,12 +63,26 @@ export default function AdminListings() {
     }
   }
 
-  async function handleActivate(id) {
+  async function handleActivate(listing) {
     try {
-      await updateListingStatus(id, 'active')
+      const result = await activateListing(listing.id, listing.listerName)
+      if (!result.activated) {
+        alert(`Not activated: "${listing.listerName}" has an active disputed/verified fraud report — the listing was rejected instead.`)
+      }
       refresh()
     } catch (err) {
       alert('Failed to activate: ' + err.message)
+    }
+  }
+
+  async function handleReject(id) {
+    const reason = prompt('Reason for rejecting this listing (shown to the lister):')
+    if (reason === null) return
+    try {
+      await rejectListing(id, reason)
+      refresh()
+    } catch (err) {
+      alert('Failed to reject: ' + err.message)
     }
   }
 
@@ -160,14 +174,23 @@ export default function AdminListings() {
               <div key={listing.id} className="detail-card" style={{ padding: '16px 20px' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12, alignItems: 'flex-start', marginBottom: 8 }}>
                   <div>
-                    <p style={{ fontWeight: 700, margin: '0 0 4px' }}>
+                    <p style={{ fontWeight: 700, margin: '0 0 4px', display: 'flex', alignItems: 'center', gap: 6 }}>
                       {TYPE_LABELS[listing.type] || listing.type}: {listing.listerName}
+                      {listing.listerId && (
+                        <span title="Self-serve (lister account)" style={{ display: 'inline-flex', color: 'var(--ink-faint)' }}>
+                          <UserCheck size={13} />
+                        </span>
+                      )}
                     </p>
                     <p style={{ fontSize: 13, color: 'var(--ink-soft)', margin: 0 }}>
                       {listing.locationText}, {listing.state} · ₦{Number(listing.price).toLocaleString()}
                     </p>
                   </div>
-                  <span className={`stamp-inline ${listing.status === 'active' ? 'verified' : listing.status === 'blocked' ? 'disputed' : 'unverified'}`}>
+                  <span
+                    className={`stamp-inline ${
+                      listing.status === 'active' ? 'verified' : listing.status === 'blocked' || listing.status === 'rejected' ? 'disputed' : 'unverified'
+                    }`}
+                  >
                     <Icon /> {listing.status}
                   </span>
                 </div>
@@ -176,9 +199,14 @@ export default function AdminListings() {
                 )}
                 <VerificationBadge state={listing.state} lasreraNumber={listing.lasreraNumber} />
                 {listing.status === 'pending' && (
-                  <button className="chip" style={{ marginTop: 10 }} onClick={() => handleActivate(listing.id)}>
-                    Activate (make publicly visible)
-                  </button>
+                  <div style={{ display: 'flex', gap: 8, marginTop: 10 }}>
+                    <button className="chip" onClick={() => handleActivate(listing)}>
+                      Activate (make publicly visible)
+                    </button>
+                    <button className="chip" onClick={() => handleReject(listing.id)}>
+                      Reject
+                    </button>
+                  </div>
                 )}
               </div>
             )

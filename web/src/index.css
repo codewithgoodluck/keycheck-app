@@ -483,6 +483,13 @@ button { font-family: inherit; }
 .report-card .card-icon.disputed { background: var(--red-soft); color: var(--red); }
 .report-card .card-icon.unverified { background: var(--gold-soft); color: var(--gold); }
 
+/* Listing cards (ListingCard.jsx) reuse .card-icon without a status
+   modifier — a listing has no verified/disputed concept, just possibly a
+   photo. This bare fallback only applies when no modifier class is
+   present (report cards always add one via resolveStampKey), so it can't
+   affect report styling. */
+.report-card .card-icon { background: var(--paper); color: var(--ink-faint); }
+
 .report-card .card-body { flex: 1; min-width: 0; }
 
 .report-card .card-top-row {

@@ -1,4 +1,6 @@
-import { Search, FilePlus2, Bookmark, ShieldCheck, Map, ClipboardCheck } from 'lucide-react'
+import { Search, FilePlus2, Bookmark, ShieldCheck, Map, ClipboardCheck, Home } from 'lucide-react'
+
+const LISTING_VIEWS = ['listings', 'listing-detail', 'submit-listing', 'my-listings', 'lister-auth']
 
 export default function Header({ view, setView, savedCount }) {
   return (
@@ -21,6 +23,10 @@ export default function Header({ view, setView, savedCount }) {
         <button className={view === 'diligence' ? 'active' : ''} onClick={() => setView('diligence')}>
           <ClipboardCheck size={15} />
           <span className="label">Check</span>
+        </button>
+        <button className={LISTING_VIEWS.includes(view) ? 'active' : ''} onClick={() => setView('listings')}>
+          <Home size={15} />
+          <span className="label">Listings</span>
         </button>
         <button className={view === 'saved' ? 'active' : ''} onClick={() => setView('saved')}>
           <Bookmark size={15} />
