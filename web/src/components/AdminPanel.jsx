@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { LogOut, Trash2, ShieldCheck, Link2, Plus, Search, Home } from 'lucide-react'
+import { LogOut, Trash2, ShieldCheck, Link2, Plus, Search, Home, Users, Flag, Star } from 'lucide-react'
 import { getReportTitle } from '../lib/format.js'
 import {
   adminLogout,
@@ -12,6 +12,9 @@ import {
   getRecentSearchMisses
 } from '../lib/adminApi.js'
 import AdminListings from './AdminListings.jsx'
+import AdminBuyersAgents from './AdminBuyersAgents.jsx'
+import AdminListingFlags from './AdminListingFlags.jsx'
+import AdminReviews from './AdminReviews.jsx'
 
 const STATUS_OPTIONS = ['unverified', 'disputed', 'verified']
 
@@ -138,10 +141,25 @@ export default function AdminPanel({ reports, adminEmail }) {
         <button className={`chip ${filter === 'listings' ? 'active' : ''}`} onClick={() => setFilter('listings')}>
           <Home size={12} /> Listings
         </button>
+        <button className={`chip ${filter === 'buyers_agents' ? 'active' : ''}`} onClick={() => setFilter('buyers_agents')}>
+          <Users size={12} /> Buyer's agents
+        </button>
+        <button className={`chip ${filter === 'listing_flags' ? 'active' : ''}`} onClick={() => setFilter('listing_flags')}>
+          <Flag size={12} /> Listing flags
+        </button>
+        <button className={`chip ${filter === 'reviews' ? 'active' : ''}`} onClick={() => setFilter('reviews')}>
+          <Star size={12} /> Reviews
+        </button>
       </div>
 
       {filter === 'listings' ? (
         <AdminListings />
+      ) : filter === 'buyers_agents' ? (
+        <AdminBuyersAgents />
+      ) : filter === 'listing_flags' ? (
+        <AdminListingFlags />
+      ) : filter === 'reviews' ? (
+        <AdminReviews />
       ) : filter === 'search_misses' ? (
         <div className="report-list">
           {searchMisses === null ? (

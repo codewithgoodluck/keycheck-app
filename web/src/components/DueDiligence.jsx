@@ -17,7 +17,7 @@ const CATEGORIES = [
   { key: 'estate', label: 'Buying from an estate/developer', Icon: Building2 }
 ]
 
-export default function DueDiligence() {
+export default function DueDiligence({ setView }) {
   const [category, setCategory] = useState(null)
   const [mode, setMode] = useState('checklist') // 'checklist' | 'quiz' | 'guide'
   const [checked, setChecked] = useState([])
@@ -83,7 +83,7 @@ export default function DueDiligence() {
           <button className="detail-back" onClick={() => setShowDiaspora(false)}>
             Choose a different situation
           </button>
-          <DiasporaGuidance />
+          <DiasporaGuidance setView={setView} />
         </>
       ) : (
         <>

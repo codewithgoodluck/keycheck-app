@@ -1,11 +1,12 @@
 import { useMemo, useState } from 'react'
-import { Search, FileSearch, Home, Plus, GitCompare } from 'lucide-react'
+import { Search, FileSearch, Home, Plus, GitCompare, Users } from 'lucide-react'
 import ListingCard from './ListingCard.jsx'
 import WatchAreaControls from './WatchAreaControls.jsx'
 import { TYPE_LABELS } from '../lib/format.js'
 import { NIGERIAN_STATES } from '../data/verificationRules.js'
 import { getEffectiveStatus } from '../lib/listingsApi.js'
 import { getCompareIds, toggleCompare, MAX_COMPARE } from '../lib/compareList.js'
+import { getSavedListingIds, toggleSavedListing } from '../lib/listingWatchlist.js'
 
 const CATEGORY_FILTERS = [
   { key: 'all', label: 'All categories' },
@@ -27,6 +28,7 @@ export default function ListingsBrowse({ listings, setView, hasMore, onLoadMore,
   const [categoryFilter, setCategoryFilter] = useState('all')
   const [stateFilter, setStateFilter] = useState('all')
   const [compareIds, setCompareIds] = useState(() => getCompareIds())
+  const [savedIds, setSavedIds] = useState(() => getSavedListingIds())
 
   function handleToggleCompare(id) {
     if (!compareIds.includes(id) && compareIds.length >= MAX_COMPARE) {
@@ -34,6 +36,10 @@ export default function ListingsBrowse({ listings, setView, hasMore, onLoadMore,
       return
     }
     setCompareIds(toggleCompare(id))
+  }
+
+  function handleToggleSave(id) {
+    setSavedIds(toggleSavedListing(id))
   }
 
   const results = useMemo(() => {
@@ -92,6 +98,9 @@ export default function ListingsBrowse({ listings, setView, hasMore, onLoadMore,
               <Home /> My listings
             </button>
           )}
+          <button className="chip" onClick={() => setView('buyers-agent-directory')}>
+            <Users /> Want someone repping you instead? Find a buyer's agent
+          </button>
         </div>
       </section>
 
@@ -140,6 +149,8 @@ export default function ListingsBrowse({ listings, setView, hasMore, onLoadMore,
               onClick={() => setView('listing-detail', l)}
               comparing={compareIds.includes(l.id)}
               onToggleCompare={handleToggleCompare}
+              saved={savedIds.includes(l.id)}
+              onToggleSave={handleToggleSave}
             />
           ))}
           {hasMore && (

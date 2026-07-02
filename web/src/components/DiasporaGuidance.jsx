@@ -1,4 +1,4 @@
-import { ExternalLink, ScrollText, Video, AlertTriangle, Info } from 'lucide-react'
+import { ExternalLink, ScrollText, Video, AlertTriangle, Info, Users } from 'lucide-react'
 import { POA_FACTS, POA_ABROAD_TIP, REMOTE_VERIFICATION_TIPS } from '../data/diasporaGuidance.js'
 import { FRAUD_SCHEMES } from '../data/fraudSchemes.js'
 
@@ -9,11 +9,25 @@ import { FRAUD_SCHEMES } from '../data/fraudSchemes.js'
 // couldn't be confirmed against a single reliable source, so it's
 // rendered visually distinct from the sourced facts below, as advice to
 // confirm directly rather than a citation.
-export default function DiasporaGuidance() {
+export default function DiasporaGuidance({ setView }) {
   const remoteScamScheme = FRAUD_SCHEMES.find((s) => s.id === 'remote-no-inspection')
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+      <div className="detail-card" style={{ padding: '16px 20px' }}>
+        <p style={{ fontWeight: 700, margin: '0 0 4px', display: 'flex', alignItems: 'center', gap: 6 }}>
+          <Users size={16} /> Want someone repping only you?
+        </p>
+        <p style={{ fontSize: 13, color: 'var(--ink-soft)', margin: '0 0 12px' }}>
+          A regular agent typically represents the seller or landlord, even when dealing directly
+          with you. KeyCheck's buyer's-agent directory lists agents whose fee is paid by and
+          loyalty is explicitly to the buyer — vetted against the same fraud registry as listings.
+        </p>
+        <button className="chip active" onClick={() => setView('buyers-agent-directory')}>
+          <Users size={13} /> Browse buyer's agents
+        </button>
+      </div>
+
       <div className="detail-card" style={{ padding: '16px 20px' }}>
         <p style={{ fontWeight: 700, margin: '0 0 4px', display: 'flex', alignItems: 'center', gap: 6 }}>
           <ScrollText size={16} /> Power of Attorney — what it actually means

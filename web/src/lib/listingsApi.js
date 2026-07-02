@@ -107,6 +107,22 @@ export async function updateListingStatus(listingId, status) {
   await updateDoc(doc(db, LISTINGS, listingId), { status })
 }
 
+// Moderator-only manual check against the real LASRERA search (see
+// firestore.rules — lasreraNumber itself is free text a lister can type
+// in, so this flag is the only thing distinguishing "self-reported" from
+// "a moderator actually looked it up," which VerificationBadge.jsx
+// renders differently.
+export async function setLasreraVerified(listingId, verified) {
+  await updateDoc(doc(db, LISTINGS, listingId), { lasreraVerified: verified })
+}
+
+// Same manual-check pattern as setLasreraVerified, for the nationally
+// checkable CAC number — see TrustSignals.jsx for how the distinction
+// between self-reported and moderator-checked renders.
+export async function setCacVerified(listingId, verified) {
+  await updateDoc(doc(db, LISTINGS, listingId), { cacVerified: verified })
+}
+
 // Lister-callable subset — their own listing's availability, not the
 // pending->active transition (that's moderator-only, enforced in
 // firestore.rules' isOwnerAllowedListingUpdate()). Moving (back) into

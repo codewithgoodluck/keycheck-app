@@ -22,6 +22,14 @@ const LAND_ITEMS = [
   },
   { id: 'consent', text: 'Governor’s Consent has actually been obtained — "in process" is not the same as obtained.' },
   { id: 'search', text: 'You’ve searched the seller/agent’s name and this exact address on KeyCheck.' },
+  {
+    id: 'cac',
+    text: 'If dealing with a company (not a private individual), you’ve confirmed it’s a real, registered company at the Corporate Affairs Commission — not just a name on a signboard.'
+  },
+  {
+    id: 'scuml',
+    text: 'If dealing with a real-estate firm, you’ve asked to see their SCUML registration — real-estate firms are legally required to register as Designated Non-Financial Businesses under Nigeria’s anti-money-laundering law.'
+  },
   { id: 'inspect', text: 'You will physically inspect the plot, with the document originals in hand, before paying in full.' },
   { id: 'receipt', text: 'You will get an official receipt for every payment — no "family receipt only" arrangements.' }
 ]
@@ -38,13 +46,29 @@ const RENTAL_ITEMS = [
   { id: 'inspect', text: 'You will physically inspect the property before making any payment.' },
   { id: 'receipt', text: 'You will get an official receipt for every payment.' },
   { id: 'pressure', text: 'You are not being pressured to pay today or "lose the place".' },
-  { id: 'search', text: 'You’ve searched the agent/landlord’s name and this address on KeyCheck.' }
+  { id: 'search', text: 'You’ve searched the agent/landlord’s name and this address on KeyCheck.' },
+  {
+    id: 'cac',
+    text: 'If dealing with a letting agency (not a private landlord), you’ve confirmed it’s a real, registered company at the Corporate Affairs Commission.'
+  },
+  {
+    id: 'scuml',
+    text: 'If dealing with a real-estate firm, you’ve asked to see their SCUML registration — required for real-estate firms under Nigeria’s anti-money-laundering law.'
+  }
 ]
 
 const ESTATE_ITEMS = [
   { id: 'cofo', text: 'You have seen the original Certificate of Occupancy or Governor’s Consent for the unit.' },
   { id: 'not-resold', text: 'You’ve confirmed, independently of the seller, that this exact unit hasn’t already been sold to someone else.' },
   { id: 'search', text: 'You’ve searched the developer/estate name on KeyCheck.' },
+  {
+    id: 'cac',
+    text: 'You’ve confirmed the developer is a real, registered company at the Corporate Affairs Commission.'
+  },
+  {
+    id: 'scuml',
+    text: 'You’ve asked to see the developer’s SCUML registration — required for real-estate firms under Nigeria’s anti-money-laundering law.'
+  },
   { id: 'inspect', text: 'You will physically inspect the unit before paying in full.' },
   { id: 'payment', text: 'Payment terms are in writing — not a verbal promise or a cheque you haven’t confirmed clears.' }
 ]

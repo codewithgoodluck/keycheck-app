@@ -1,11 +1,13 @@
 import { useEffect, useState } from 'react'
-import { Plus, ShieldAlert, ShieldCheck, ShieldX, Clock, UserCheck, Eye, MessageSquare } from 'lucide-react'
+import { Plus, ShieldAlert, ShieldCheck, ShieldX, Clock, UserCheck, Eye, MessageSquare, BadgeCheck } from 'lucide-react'
 import { TYPE_LABELS } from '../lib/format.js'
 import { NIGERIAN_STATES, DUAL_REP_LABELS } from '../data/verificationRules.js'
-import { createListing, listListings, activateListing, rejectListing, getEffectiveStatus, getListingViewCount } from '../lib/listingsApi.js'
+import { createListing, listListings, activateListing, rejectListing, getEffectiveStatus, getListingViewCount, setLasreraVerified, setCacVerified } from '../lib/listingsApi.js'
 import { getInquiryCount } from '../lib/inquiriesApi.js'
 import VerificationBadge from './VerificationBadge.jsx'
+import TrustSignals from './TrustSignals.jsx'
 import FeeComplianceNote from './FeeComplianceNote.jsx'
+import LocationPicker from './LocationPicker.jsx'
 
 const STATUS_ICON = { active: ShieldCheck, pending: Clock, blocked: ShieldAlert, rejected: ShieldX, expired: ShieldX }
 
@@ -19,6 +21,8 @@ const EMPTY_FORM = {
   description: '',
   listerName: '',
   lasreraNumber: '',
+  cacNumber: '',
+  professionalIndemnityInsurance: false,
   agencyFeePercent: '',
   dualRepresentation: 'seller_only'
 }
@@ -31,6 +35,7 @@ const SIZE_TYPES = ['land', 'estate']
 export default function AdminListings() {
   const [listings, setListings] = useState(null)
   const [form, setForm] = useState(EMPTY_FORM)
+  const [pin, setPin] = useState(null)
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState('')
   const [counts, setCounts] = useState({}) // listingId -> { views, inquiries }
@@ -95,9 +100,13 @@ export default function AdminListings() {
         price: Number(form.price),
         sizeSqm: SIZE_TYPES.includes(form.type) ? Number(form.sizeSqm) : null,
         agencyFeePercent: Number(form.agencyFeePercent),
-        lasreraNumber: form.lasreraNumber.trim() || null
+        lasreraNumber: form.lasreraNumber.trim() || null,
+        cacNumber: form.cacNumber.trim() || null,
+        lat: pin ? pin[0] : null,
+        lng: pin ? pin[1] : null
       })
       setForm(EMPTY_FORM)
+      setPin(null)
       refresh()
     } catch (err) {
       setError('Failed to create listing: ' + err.message)
@@ -126,6 +135,24 @@ export default function AdminListings() {
       refresh()
     } catch (err) {
       alert('Failed to reject: ' + err.message)
+    }
+  }
+
+  async function handleToggleLasreraVerified(listing) {
+    try {
+      await setLasreraVerified(listing.id, !listing.lasreraVerified)
+      refresh()
+    } catch (err) {
+      alert('Failed to update LASRERA verification: ' + err.message)
+    }
+  }
+
+  async function handleToggleCacVerified(listing) {
+    try {
+      await setCacVerified(listing.id, !listing.cacVerified)
+      refresh()
+    } catch (err) {
+      alert('Failed to update CAC verification: ' + err.message)
     }
   }
 
@@ -174,6 +201,10 @@ export default function AdminListings() {
               onChange={(e) => update('locationText', e.target.value)}
               required
             />
+          </div>
+          <div className="field">
+            <label>Pin the location on a map (optional)</label>
+            <LocationPicker value={pin} onChange={setPin} />
           </div>
           <div className="field">
             <label htmlFor="listing-price">Price (₦)</label>
@@ -241,6 +272,25 @@ export default function AdminListings() {
             </div>
           )}
 
+          <div className="field">
+            <label htmlFor="listing-cac">CAC registration number (optional)</label>
+            <input
+              id="listing-cac"
+              type="text"
+              value={form.cacNumber}
+              onChange={(e) => update('cacNumber', e.target.value)}
+            />
+          </div>
+
+          <label className="field-checkbox">
+            <input
+              type="checkbox"
+              checked={form.professionalIndemnityInsurance}
+              onChange={(e) => update('professionalIndemnityInsurance', e.target.checked)}
+            />
+            <span>Carries professional indemnity insurance (voluntary, not legally required in Nigeria)</span>
+          </label>
+
           {error && <p style={{ color: 'var(--red)', fontSize: 13, fontWeight: 600, margin: '0 0 12px' }}>{error}</p>}
 
           <button className="submit-btn" type="submit" disabled={submitting}>
@@ -298,7 +348,12 @@ export default function AdminListings() {
                 {listing.blockedReason && (
                   <p style={{ fontSize: 12.5, color: 'var(--red)', margin: '0 0 8px' }}>{listing.blockedReason}</p>
                 )}
-                <VerificationBadge state={listing.state} lasreraNumber={listing.lasreraNumber} />
+                <VerificationBadge state={listing.state} lasreraNumber={listing.lasreraNumber} lasreraVerified={listing.lasreraVerified} />
+                <TrustSignals
+                  cacNumber={listing.cacNumber}
+                  cacVerified={listing.cacVerified}
+                  professionalIndemnityInsurance={listing.professionalIndemnityInsurance}
+                />
                 <div style={{ marginTop: 8 }}>
                   <FeeComplianceNote
                     state={listing.state}
@@ -306,6 +361,28 @@ export default function AdminListings() {
                     agencyFeePercent={listing.agencyFeePercent}
                     dualRepresentation={listing.dualRepresentation}
                   />
+                </div>
+                <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginTop: 8 }}>
+                  {listing.state === 'Lagos' && listing.lasreraNumber && (
+                    <button
+                      className={`chip ${listing.lasreraVerified ? 'active' : ''}`}
+                      style={{ fontSize: 12 }}
+                      onClick={() => handleToggleLasreraVerified(listing)}
+                    >
+                      <BadgeCheck size={13} />
+                      {listing.lasreraVerified ? 'LASRERA checked — mark unchecked' : 'Mark LASRERA # as checked'}
+                    </button>
+                  )}
+                  {listing.cacNumber && (
+                    <button
+                      className={`chip ${listing.cacVerified ? 'active' : ''}`}
+                      style={{ fontSize: 12 }}
+                      onClick={() => handleToggleCacVerified(listing)}
+                    >
+                      <BadgeCheck size={13} />
+                      {listing.cacVerified ? 'CAC checked — mark unchecked' : 'Mark CAC # as checked'}
+                    </button>
+                  )}
                 </div>
                 {listing.status === 'pending' && (
                   <div style={{ display: 'flex', gap: 8, marginTop: 10 }}>

@@ -1,11 +1,19 @@
 import { useState } from 'react'
-import { Bookmark, Eye, X } from 'lucide-react'
+import { Bookmark, Eye, X, Home } from 'lucide-react'
 import ReportCard from './ReportCard.jsx'
+import ListingCard from './ListingCard.jsx'
 import { getWatchedTerms, removeWatch } from '../lib/watches.js'
+import { getSavedListingIds, toggleSavedListing } from '../lib/listingWatchlist.js'
 
-export default function SavedReports({ reports, savedIds, setView, onToggleSave }) {
+export default function SavedReports({ reports, savedIds, setView, onToggleSave, listings = [] }) {
   const saved = reports.filter((r) => savedIds.includes(r.id))
   const [watchedTerms, setWatchedTerms] = useState(() => getWatchedTerms())
+  const [savedListingIds, setSavedListingIds] = useState(() => getSavedListingIds())
+  const savedListings = listings.filter((l) => savedListingIds.includes(l.id))
+
+  function handleToggleSaveListing(id) {
+    setSavedListingIds(toggleSavedListing(id))
+  }
 
   function handleRemoveWatch(term) {
     setWatchedTerms(removeWatch(term))
@@ -61,6 +69,32 @@ export default function SavedReports({ reports, savedIds, setView, onToggleSave 
           <Bookmark size={28} />
           <p>Nothing saved yet. Tap the bookmark icon on any report to track it here.</p>
           <button onClick={() => setView('home')}>Search reports</button>
+        </div>
+      )}
+
+      <div className="results-meta" style={{ marginTop: 28 }}>
+        <span>
+          <Home size={13} style={{ verticalAlign: -2, marginRight: 4 }} /> Saved listings
+        </span>
+      </div>
+
+      {savedListings.length > 0 ? (
+        <div className="report-list">
+          {savedListings.map((l) => (
+            <ListingCard
+              key={l.id}
+              listing={l}
+              onClick={() => setView('listing-detail', l)}
+              saved={true}
+              onToggleSave={handleToggleSaveListing}
+            />
+          ))}
+        </div>
+      ) : (
+        <div className="empty-state">
+          <Home size={28} />
+          <p>No listings saved yet. Tap the bookmark icon on any listing to track it here.</p>
+          <button onClick={() => setView('listings')}>Browse listings</button>
         </div>
       )}
     </>

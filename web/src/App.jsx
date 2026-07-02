@@ -19,6 +19,10 @@ import MyListings from './components/MyListings.jsx'
 import ListerAuth from './components/ListerAuth.jsx'
 import CompareListings from './components/CompareListings.jsx'
 import AreaGuide from './components/AreaGuide.jsx'
+import BuyersAgentDirectory from './components/BuyersAgentDirectory.jsx'
+import BecomeBuyersAgent from './components/BecomeBuyersAgent.jsx'
+import Terms from './components/Terms.jsx'
+import Market from './components/Market.jsx'
 import { seedReports } from './data/seedReports.js'
 import { getSavedIds, toggleSaved } from './lib/watchlist.js'
 import { subscribeToReports, addReportToFirestore, confirmReportInFirestore, addReplyToFirestore } from './lib/reportsApi.js'
@@ -489,7 +493,7 @@ export default function App() {
           onLoadMore={loadMoreReports}
         />
       )}
-      {view === 'map' && <MapView reports={reports} setView={setView} />}
+      {view === 'map' && <MapView reports={reports} listings={listings} setView={setView} />}
       {view === 'detail' && pendingReportId && (
         <div style={{ padding: 60, textAlign: 'center', color: 'var(--ink-soft)' }}>Loading report...</div>
       )}
@@ -522,10 +526,10 @@ export default function App() {
           onToggleSave={handleToggleSave}
         />
       )}
-      {view === 'diligence' && <DueDiligence />}
+      {view === 'diligence' && <DueDiligence setView={setView} />}
       {view === 'submit' && <SubmitReport addReport={addReport} setView={setView} />}
       {view === 'saved' && (
-        <SavedReports reports={reports} savedIds={savedIds} setView={setView} onToggleSave={handleToggleSave} />
+        <SavedReports reports={reports} savedIds={savedIds} setView={setView} onToggleSave={handleToggleSave} listings={listings} />
       )}
 
       {view === 'listings' && (
@@ -537,13 +541,20 @@ export default function App() {
           listerUser={listerUser}
         />
       )}
+      {view === 'buyers-agent-directory' && <BuyersAgentDirectory setView={setView} />}
+      {view === 'become-buyers-agent' && <BecomeBuyersAgent listerUser={listerUser} setView={setView} />}
       {view === 'listing-detail' && <ListingDetail listing={activeListing} listings={listings} setView={setView} />}
       {view === 'compare-listings' && <CompareListings listings={listings} setView={setView} />}
       {view === 'submit-listing' && <SubmitListing listerUser={listerUser} setView={setView} />}
       {view === 'my-listings' && <MyListings listerUser={listerUser} setView={setView} />}
       {view === 'lister-auth' && <ListerAuth setView={setView} />}
+      {view === 'terms' && <Terms setView={setView} />}
+      {view === 'market' && <Market listings={listings} setView={setView} />}
 
       {view !== 'submit' && <FloatingReportButton onClick={() => setView('submit')} />}
+      <footer className="site-footer">
+        <button onClick={() => setView('terms')}>Terms of Service</button>
+      </footer>
       <BottomNav view={view} setView={setView} savedCount={savedIds.length} />
     </div>
   )

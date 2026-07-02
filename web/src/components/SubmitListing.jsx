@@ -3,7 +3,14 @@ import { Send, Paperclip, X } from 'lucide-react'
 import { TYPE_LABELS } from '../lib/format.js'
 import { NIGERIAN_STATES, DUAL_REP_LABELS } from '../data/verificationRules.js'
 import { createListingAsLister, uploadListingPhoto } from '../lib/listingsApi.js'
+import { msUntilNextSubmit, markSubmitted } from '../lib/antispam.js'
 import FeeCapFactBox from './FeeCapFactBox.jsx'
+import LocationPicker from './LocationPicker.jsx'
+
+// Same honeypot + cooldown pattern as SubmitReport.jsx/InquiryForm.jsx —
+// listings had neither, which made self-serve submission the one
+// unprotected write path a spam script could hit repeatedly.
+const MIN_FILL_MS = 3000
 
 const EMPTY_FORM = {
   type: 'house_agent',
@@ -16,6 +23,8 @@ const EMPTY_FORM = {
   listerName: '',
   listerPhone: '',
   lasreraNumber: '',
+  cacNumber: '',
+  professionalIndemnityInsurance: false,
   agencyFeePercent: '',
   dualRepresentation: 'seller_only'
 }
@@ -29,11 +38,14 @@ const SIZE_TYPES = ['land', 'estate']
 // here (see listingsApi.js's activateListing()).
 export default function SubmitListing({ listerUser, setView }) {
   const [form, setForm] = useState(EMPTY_FORM)
+  const [pin, setPin] = useState(null)
   const [photoFile, setPhotoFile] = useState(null)
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState('')
   const [submitted, setSubmitted] = useState(false)
+  const [honeypot, setHoneypot] = useState('')
   const fileInputRef = useRef(null)
+  const mountedAt = useRef(Date.now())
 
   function update(field, value) {
     setForm((f) => ({ ...f, [field]: value }))
@@ -73,6 +85,19 @@ export default function SubmitListing({ listerUser, setView }) {
       return
     }
 
+    if (honeypot.trim()) return // bot filled the hidden field — drop silently, no error to tip it off
+
+    if (Date.now() - mountedAt.current < MIN_FILL_MS) {
+      setError('That was fast — please take a moment to review before submitting.')
+      return
+    }
+
+    const wait = msUntilNextSubmit()
+    if (wait > 0) {
+      setError(`You can submit again in ${Math.ceil(wait / 1000)}s. This limit helps keep spam down.`)
+      return
+    }
+
     setSubmitting(true)
     try {
       let photoUrl = null
@@ -92,8 +117,12 @@ export default function SubmitListing({ listerUser, setView }) {
         sizeSqm: SIZE_TYPES.includes(form.type) ? Number(form.sizeSqm) : null,
         agencyFeePercent: Number(form.agencyFeePercent),
         lasreraNumber: form.lasreraNumber.trim() || null,
-        photoUrl
+        cacNumber: form.cacNumber.trim() || null,
+        photoUrl,
+        lat: pin ? pin[0] : null,
+        lng: pin ? pin[1] : null
       })
+      markSubmitted()
       setSubmitted(true)
     } catch (err) {
       const hint = err.message.toLowerCase().includes('permission')
@@ -132,6 +161,22 @@ export default function SubmitListing({ listerUser, setView }) {
 
       <div className="form-card">
         <form onSubmit={handleSubmit}>
+          <div
+            aria-hidden="true"
+            style={{ position: 'absolute', width: 1, height: 1, overflow: 'hidden', opacity: 0, pointerEvents: 'none' }}
+          >
+            <label htmlFor="sl-website">Website</label>
+            <input
+              id="sl-website"
+              name="website"
+              type="text"
+              tabIndex={-1}
+              autoComplete="off"
+              value={honeypot}
+              onChange={(e) => setHoneypot(e.target.value)}
+            />
+          </div>
+
           <div className="field">
             <label htmlFor="sl-type">Type</label>
             <select id="sl-type" value={form.type} onChange={(e) => update('type', e.target.value)}>
@@ -170,6 +215,11 @@ export default function SubmitListing({ listerUser, setView }) {
               required
             />
           </div>
+          <div className="field">
+            <label>Pin the location on a map (optional)</label>
+            <LocationPicker value={pin} onChange={setPin} />
+          </div>
+
           <div className="field">
             <label htmlFor="sl-price">Price (₦)</label>
             <input id="sl-price" type="number" min="0" value={form.price} onChange={(e) => update('price', e.target.value)} required />
@@ -274,11 +324,45 @@ export default function SubmitListing({ listerUser, setView }) {
             </div>
           )}
 
+          <div className="field">
+            <label htmlFor="sl-cac">CAC registration number (optional)</label>
+            <input
+              id="sl-cac"
+              type="text"
+              placeholder="RC or BN number, if this is a registered company"
+              value={form.cacNumber}
+              onChange={(e) => update('cacNumber', e.target.value)}
+            />
+            <p className="field-hint">
+              Self-reported, not independently verified by KeyCheck. Checkable by anyone against the
+              Corporate Affairs Commission's public register.
+            </p>
+          </div>
+
+          <label className="field-checkbox">
+            <input
+              type="checkbox"
+              checked={form.professionalIndemnityInsurance}
+              onChange={(e) => update('professionalIndemnityInsurance', e.target.checked)}
+            />
+            <span>
+              I carry professional indemnity insurance. Voluntary — Nigerian law doesn't currently
+              require this for real-estate practice, unlike some other countries.
+            </span>
+          </label>
+
           {error && <p style={{ color: 'var(--red)', fontSize: 13, fontWeight: 600, margin: '0 0 12px' }}>{error}</p>}
 
           <button className="submit-btn" type="submit" disabled={submitting}>
             <Send size={15} /> {submitting ? 'Submitting...' : 'Submit for review'}
           </button>
+          <p className="field-hint" style={{ marginTop: 8 }}>
+            By submitting, you agree to KeyCheck's{' '}
+            <button type="button" onClick={() => setView('terms')} style={{ background: 'none', border: 'none', padding: 0, color: 'inherit', textDecoration: 'underline', cursor: 'pointer', font: 'inherit' }}>
+              Terms of Service
+            </button>
+            .
+          </p>
         </form>
       </div>
     </div>

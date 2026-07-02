@@ -15,7 +15,7 @@ const ROWS = [
   },
   { label: 'Location', render: (l) => `${l.locationText}, ${l.state}` },
   { label: 'For sale/rent', render: (l) => (l.transactionType === 'rent' ? 'Rent' : 'Sale') },
-  { label: 'Verification', render: (l) => <VerificationBadge state={l.state} lasreraNumber={l.lasreraNumber} /> },
+  { label: 'Verification', render: (l) => <VerificationBadge state={l.state} lasreraNumber={l.lasreraNumber} lasreraVerified={l.lasreraVerified} /> },
   {
     label: 'Fee compliance',
     render: (l) => (

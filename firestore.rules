@@ -101,6 +101,41 @@ service cloud.firestore {
       }
     }
 
+    // Reviews — deliberately a separate collection from reports, never
+    // merged (see web/src/components/Reviews.jsx and lib/reviewsApi.js).
+    // A fraud report is an allegation of wrongdoing; a review is a
+    // subjective transaction experience. Collapsing them into one score
+    // would damage what makes a fraud flag mean something specific: a
+    // landlord with a bad review about slow repairs must never look
+    // equivalent to one with an active disputed fraud report. No
+    // attestation/evidence bar like reports' hasMinimumEvidence() — a
+    // review isn't an accusation, so that bar doesn't apply the same way;
+    // the anti-abuse line here is just "not empty, not absurdly long."
+    match /reviews/{reviewId} {
+      allow read: if true;
+
+      allow create: if request.resource.data.status == 'unverified'
+                    && request.resource.data.listerName is string && request.resource.data.listerName.size() > 0
+                    && request.resource.data.rating is int && request.resource.data.rating >= 1 && request.resource.data.rating <= 5
+                    && request.resource.data.transactionType in ['rented', 'bought']
+                    && request.resource.data.text is string && request.resource.data.text.size() >= 10 && request.resource.data.text.size() <= 1000;
+
+      // Same public-reply shape as reports' isOnlyAddingReply() — a
+      // lister's right-of-reply isn't gated to a specific authenticated
+      // account (reviews target a free-text listerName, same as reports'
+      // agentName; there's no verified ownership link to check), so this
+      // stays public and is marked unverified until a moderator confirms
+      // identity, exactly like report replies.
+      allow update: if isOnlyAddingReply();
+      allow update: if isAdmin();
+      allow delete: if isAdmin();
+
+      function isOnlyAddingReply() {
+        return request.resource.data.diff(resource.data).affectedKeys().hasOnly(['replies'])
+               && request.resource.data.replies.size() == resource.data.get('replies', []).size() + 1;
+      }
+    }
+
     // Fire-and-forget log of searches that returned zero results (see
     // web/src/lib/reportsApi.js logSearchMiss). Purely an analytics signal
     // for moderators deciding what to seed next — nobody but a moderator
@@ -137,10 +172,17 @@ service cloud.firestore {
       // listing public is the admin activation flow, which is already
       // the trust boundary this app relies on elsewhere (e.g. isAdmin()
       // can already set a report's status to anything).
-      allow create: if request.auth != null
-                    && !isAdmin()
-                    && request.resource.data.listerId == request.auth.uid
-                    && request.resource.data.status == 'pending';
+      //
+      // Admin-direct creation (createListing() in listingsApi.js, used by
+      // AdminListings.jsx) is a separate path from self-serve: it doesn't
+      // set listerId and can start 'blocked' (flagged-agent check runs at
+      // creation time for this path, unlike self-serve), so it can't reuse
+      // the self-serve branch's constraints — isAdmin() alone gates it,
+      // same trust boundary as update/delete below.
+      allow create: if isAdmin()
+                    || (request.auth != null
+                        && request.resource.data.listerId == request.auth.uid
+                        && request.resource.data.status == 'pending');
 
       // Admins can do anything (activate, reject, edit, delete — same
       // trust boundary as reports). A lister can only edit their own
@@ -168,6 +210,38 @@ service cloud.firestore {
                      && request.resource.data.status in ['active', 'under_offer', 'let', 'sold', 'expired'])
                );
       }
+    }
+
+    // Buyer's-agent directory (see web/src/components/BuyersAgentDirectory.jsx)
+    // — a trust-signal surface (buyers are meant to seek these people out
+    // and trust them more), so it goes through the same
+    // pending -> moderator-activation flow as listings, with the same
+    // auto-block-flagged-agents re-check at activation time
+    // (lib/buyersAgentsApi.js's activateBuyersAgentEntry). Skipping that
+    // gate here would be inconsistent with treating it as "the single
+    // highest-leverage trust feature" for listings — the same fraud risk
+    // applies to a self-declared "trustworthy" directory entry.
+    match /buyers_agents/{entryId} {
+      allow read: if resource.data.status == 'active'
+                  || isAdmin()
+                  || (request.auth != null && request.auth.uid == resource.data.listerId);
+
+      allow create: if request.auth != null
+                    && !isAdmin()
+                    && request.resource.data.listerId == request.auth.uid
+                    && request.resource.data.status == 'pending';
+
+      // Owner can edit their own entry's content (fee note, phone,
+      // state) but never change status themselves — activation and
+      // rejection are moderator-only, same trust boundary as listings.
+      allow update: if isAdmin()
+                    || (request.auth != null
+                        && request.auth.uid == resource.data.listerId
+                        && request.resource.data.listerId == resource.data.listerId
+                        && request.resource.data.status == resource.data.status);
+
+      allow delete: if isAdmin()
+                    || (request.auth != null && request.auth.uid == resource.data.listerId);
     }
 
     // Lightweight inquiry leads (see web/src/components/InquiryForm.jsx)
@@ -208,6 +282,29 @@ service cloud.firestore {
                     && request.resource.data.at is string;
       allow read: if isAdmin() || (request.auth != null && request.auth.uid == resource.data.listerId);
       allow update, delete: if false;
+    }
+
+    // "Report this listing" flags (see web/src/components/ListingDetail.jsx's
+    // report button and lib/listingFlagsApi.js) — feeds the moderator
+    // queue that closes the loop back into fraud/quality review, same
+    // spirit as search_misses's public-write/admin-read shape. No buyer
+    // account needed (anonymous flagging, same trust posture as reports),
+    // and never publicly readable — an unresolved "this looks fake" flag
+    // sitting in the open would itself look like a fraud allegation
+    // before a moderator has had a chance to check it.
+    match /listing_flags/{flagId} {
+      allow create: if request.resource.data.keys().hasOnly(['listingId', 'reason', 'note', 'status', 'createdAt'])
+                    && request.resource.data.listingId is string
+                    && request.resource.data.reason in ['fake', 'duplicate', 'already_taken', 'other']
+                    && request.resource.data.note is string && request.resource.data.note.size() <= 500
+                    && request.resource.data.status == 'open';
+
+      allow read: if isAdmin();
+
+      allow update: if isAdmin()
+                    && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status']);
+
+      allow delete: if isAdmin();
     }
 
     // FCM push token registry (see web/src/lib/push.js). Groundwork only —

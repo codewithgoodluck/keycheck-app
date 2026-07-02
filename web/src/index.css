@@ -1108,6 +1108,24 @@ button { font-family: inherit; }
   .fab { padding: 15px; }
 }
 
+/* ---------- Site footer ---------- */
+
+.site-footer {
+  display: flex;
+  justify-content: center;
+  padding: 24px 0 90px;
+}
+
+.site-footer button {
+  background: none;
+  border: none;
+  color: var(--ink-faint);
+  font-size: 12px;
+  text-decoration: underline;
+  cursor: pointer;
+  padding: 4px;
+}
+
 /* ---------- Bottom nav (mobile only) ---------- */
 
 .bottom-nav {

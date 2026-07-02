@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { LogOut, Plus, ShieldCheck, ShieldAlert, Clock, ShieldX, RefreshCw, MessageSquare, ChevronDown, ChevronUp, Eye } from 'lucide-react'
+import { LogOut, Plus, ShieldCheck, ShieldAlert, Clock, ShieldX, RefreshCw, MessageSquare, ChevronDown, ChevronUp, Eye, Users } from 'lucide-react'
 import { TYPE_LABELS } from '../lib/format.js'
 import { getMyListings, updateListingLifecycle, renewListing, getEffectiveStatus, getListingViewCount } from '../lib/listingsApi.js'
 import { getInquiriesForListing, markInquiryRead, getInquiryCount } from '../lib/inquiriesApi.js'
@@ -124,6 +124,9 @@ export default function MyListings({ listerUser, setView }) {
           <button className="chip active" onClick={() => setView('submit-listing')}>
             <Plus size={13} /> New listing
           </button>
+          <button className="chip" onClick={() => setView('become-buyers-agent')}>
+            <Users size={13} /> Offer buyer's-agent services
+          </button>
           <button
             className="icon-btn"
             style={{ width: 'auto', padding: '0 14px', fontSize: 13, fontWeight: 600, gap: 6, display: 'flex', alignItems: 'center' }}
@@ -174,7 +177,7 @@ export default function MyListings({ listerUser, setView }) {
                 {listing.blockedReason && (
                   <p style={{ fontSize: 12.5, color: 'var(--red)', margin: '0 0 8px' }}>{listing.blockedReason}</p>
                 )}
-                <VerificationBadge state={listing.state} lasreraNumber={listing.lasreraNumber} />
+                <VerificationBadge state={listing.state} lasreraNumber={listing.lasreraNumber} lasreraVerified={listing.lasreraVerified} />
                 <div style={{ marginTop: 8 }}>
                   <FeeComplianceNote
                     state={listing.state}

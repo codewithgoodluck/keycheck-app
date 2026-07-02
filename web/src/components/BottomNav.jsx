@@ -1,4 +1,4 @@
-import { Search, FilePlus2, Bookmark, Map, ClipboardCheck, Home } from 'lucide-react'
+import { Search, FilePlus2, Bookmark, Map, ClipboardCheck, Home, Compass } from 'lucide-react'
 
 const LISTING_VIEWS = ['listings', 'listing-detail', 'submit-listing', 'my-listings', 'lister-auth']
 
@@ -26,6 +26,10 @@ export default function BottomNav({ view, setView, savedCount }) {
       <button className={LISTING_VIEWS.includes(view) ? 'active' : ''} onClick={() => setView('listings')}>
         <Home size={19} />
         <span>Listings</span>
+      </button>
+      <button className={view === 'market' ? 'active' : ''} onClick={() => setView('market')}>
+        <Compass size={19} />
+        <span>Market</span>
       </button>
       <button className={view === 'saved' ? 'active' : ''} onClick={() => setView('saved')}>
         <Bookmark size={19} />

@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { ShieldAlert, ArrowLeft, Home } from 'lucide-react'
 import ReportCard from './ReportCard.jsx'
 import VerificationBadge from './VerificationBadge.jsx'
+import Reviews from './Reviews.jsx'
 import { getListingsByListerName } from '../lib/listingsApi.js'
 
 // Groups reports by an exact agentName match. Names in the data are free
@@ -67,7 +68,7 @@ export default function AgentProfile({ reports, name, setView, savedIds, onToggl
                   {l.locationText}, {l.state} · ₦{Number(l.price).toLocaleString()}
                 </p>
                 <p style={{ fontSize: 13, color: 'var(--ink-soft)', margin: '0 0 10px' }}>{l.description}</p>
-                <VerificationBadge state={l.state} lasreraNumber={l.lasreraNumber} />
+                <VerificationBadge state={l.state} lasreraNumber={l.lasreraNumber} lasreraVerified={l.lasreraVerified} />
               </div>
             ))}
           </div>
@@ -103,6 +104,8 @@ export default function AgentProfile({ reports, name, setView, savedIds, onToggl
           <p>No reports found under this exact name.</p>
         </div>
       )}
+
+      <Reviews listerName={name} />
     </>
   )
 }

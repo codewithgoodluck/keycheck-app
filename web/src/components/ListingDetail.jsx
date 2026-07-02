@@ -1,11 +1,14 @@
 import { useEffect, useState } from 'react'
-import { ArrowLeft, MapPin, FileText, MessageCircle, Home, Clock, GitCompare, Share2 } from 'lucide-react'
+import { ArrowLeft, MapPin, FileText, MessageCircle, Home, Clock, GitCompare, Share2, Bookmark, Flag } from 'lucide-react'
 import { TYPE_LABELS } from '../lib/format.js'
 import VerificationBadge from './VerificationBadge.jsx'
+import TrustSignals from './TrustSignals.jsx'
 import FeeComplianceNote from './FeeComplianceNote.jsx'
 import MarketPriceIndicator from './MarketPriceIndicator.jsx'
 import { getEffectiveStatus, logListingView } from '../lib/listingsApi.js'
 import { getCompareIds, isComparing, toggleCompare, MAX_COMPARE } from '../lib/compareList.js'
+import { isListingSaved, toggleSavedListing } from '../lib/listingWatchlist.js'
+import { flagListing, FLAG_REASON_LABELS } from '../lib/listingFlagsApi.js'
 import { areaOf } from '../lib/notifications.js'
 import { showToast } from '../lib/toast.js'
 import InquiryForm from './InquiryForm.jsx'
@@ -29,6 +32,11 @@ export default function ListingDetail({ listing, listings, setView }) {
     if (listing) setComparing(isComparing(listing.id))
   }, [listing?.id])
 
+  const [saved, setSaved] = useState(false)
+  useEffect(() => {
+    if (listing) setSaved(isListingSaved(listing.id))
+  }, [listing?.id])
+
   function handleToggleCompare() {
     const current = getCompareIds()
     if (!current.includes(listing.id) && current.length >= MAX_COMPARE) {
@@ -37,6 +45,31 @@ export default function ListingDetail({ listing, listings, setView }) {
     }
     toggleCompare(listing.id)
     setComparing((c) => !c)
+  }
+
+  function handleToggleSave() {
+    toggleSavedListing(listing.id)
+    setSaved((s) => !s)
+  }
+
+  const [showFlagForm, setShowFlagForm] = useState(false)
+  const [flagReason, setFlagReason] = useState('fake')
+  const [flagNote, setFlagNote] = useState('')
+  const [flagSubmitting, setFlagSubmitting] = useState(false)
+  const [flagSubmitted, setFlagSubmitted] = useState(false)
+
+  async function handleSubmitFlag(e) {
+    e.preventDefault()
+    setFlagSubmitting(true)
+    try {
+      await flagListing(listing.id, flagReason, flagNote)
+      setFlagSubmitted(true)
+      setShowFlagForm(false)
+    } catch (err) {
+      alert('Failed to report this listing: ' + err.message)
+    } finally {
+      setFlagSubmitting(false)
+    }
   }
 
   // Clean /listing/:id URL, not the ?listing= query form — routes
@@ -99,6 +132,13 @@ export default function ListingDetail({ listing, listings, setView }) {
               <Share2 size={17} />
             </button>
             <button
+              className={`icon-btn ${saved ? 'saved' : ''}`}
+              onClick={handleToggleSave}
+              aria-label={saved ? 'Remove from saved' : 'Save listing'}
+            >
+              <Bookmark size={17} />
+            </button>
+            <button
               className={`icon-btn ${comparing ? 'saved' : ''}`}
               onClick={handleToggleCompare}
               aria-label={comparing ? 'Remove from compare' : 'Add to compare'}
@@ -133,7 +173,12 @@ export default function ListingDetail({ listing, listings, setView }) {
 
         <div className="detail-section">
           <h4><Home /> Verification</h4>
-          <VerificationBadge state={listing.state} lasreraNumber={listing.lasreraNumber} />
+          <VerificationBadge state={listing.state} lasreraNumber={listing.lasreraNumber} lasreraVerified={listing.lasreraVerified} />
+          <TrustSignals
+            cacNumber={listing.cacNumber}
+            cacVerified={listing.cacVerified}
+            professionalIndemnityInsurance={listing.professionalIndemnityInsurance}
+          />
           <div style={{ marginTop: 10 }}>
             <FeeComplianceNote
               state={listing.state}
@@ -166,6 +211,43 @@ export default function ListingDetail({ listing, listings, setView }) {
 
       <div style={{ marginTop: 16 }}>
         <InquiryForm listing={listing} />
+      </div>
+
+      <div style={{ marginTop: 20, textAlign: 'center' }}>
+        {flagSubmitted ? (
+          <p style={{ fontSize: 12.5, color: 'var(--ink-soft)' }}>
+            Thanks — this listing has been flagged for a moderator to review.
+          </p>
+        ) : showFlagForm ? (
+          <form onSubmit={handleSubmitFlag} className="form-card" style={{ textAlign: 'left' }}>
+            <div className="field">
+              <label htmlFor="flag-reason">What's wrong with this listing?</label>
+              <select id="flag-reason" value={flagReason} onChange={(e) => setFlagReason(e.target.value)}>
+                {Object.entries(FLAG_REASON_LABELS).map(([key, label]) => (
+                  <option key={key} value={key}>
+                    {label}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div className="field">
+              <label htmlFor="flag-note">More detail (optional)</label>
+              <textarea id="flag-note" value={flagNote} onChange={(e) => setFlagNote(e.target.value)} />
+            </div>
+            <div style={{ display: 'flex', gap: 8 }}>
+              <button className="submit-btn" type="submit" disabled={flagSubmitting}>
+                <Flag size={14} /> {flagSubmitting ? 'Submitting...' : 'Submit report'}
+              </button>
+              <button type="button" className="chip" onClick={() => setShowFlagForm(false)}>
+                Cancel
+              </button>
+            </div>
+          </form>
+        ) : (
+          <button className="chip" onClick={() => setShowFlagForm(true)} style={{ fontSize: 12.5, color: 'var(--ink-faint)' }}>
+            <Flag size={12} /> Report this listing (fake, duplicate, or already taken)
+          </button>
+        )}
       </div>
     </>
   )
