@@ -1,10 +1,11 @@
 import { useState } from 'react'
-import { Landmark, Users, Home, Building2, Building, ExternalLink, ShieldQuestion } from 'lucide-react'
+import { Landmark, Users, Home, Building2, Building, ExternalLink, ShieldQuestion, BookOpen } from 'lucide-react'
 import { CHECKLISTS } from '../data/checklists.js'
 import { getChecked, toggleChecked } from '../lib/checklistProgress.js'
 import FeeCapFactBox from './FeeCapFactBox.jsx'
 import VerifyAgentNudge from './VerifyAgentNudge.jsx'
 import RiskQuiz from './RiskQuiz.jsx'
+import FraudSchemes from './FraudSchemes.jsx'
 
 const CATEGORIES = [
   { key: 'land', label: 'Buying land', Icon: Landmark },
@@ -18,10 +19,17 @@ export default function DueDiligence() {
   const [category, setCategory] = useState(null)
   const [mode, setMode] = useState('checklist') // 'checklist' | 'quiz'
   const [checked, setChecked] = useState([])
+  const [showSchemes, setShowSchemes] = useState(false)
 
+  // Also used directly as FraudSchemes.jsx's onJumpToChecklist callback —
+  // its "Caught by" link jumps straight to a category's checklist. No
+  // App.jsx-level navigation needed since FraudSchemes renders inside
+  // this component, not as a separate top-level view.
   function selectCategory(key) {
     setCategory(key)
     setChecked(getChecked(key))
+    setMode('checklist')
+    setShowSchemes(false)
   }
 
   function handleToggle(itemId) {
@@ -39,7 +47,7 @@ export default function DueDiligence() {
         use these before you commit to anything, not just after something's gone wrong.
       </p>
 
-      {!category ? (
+      {!category && !showSchemes ? (
         <div className="form-card">
           <p style={{ margin: '0 0 16px', fontWeight: 600 }}>What are you about to do?</p>
           <div className="diligence-category-grid">
@@ -50,7 +58,17 @@ export default function DueDiligence() {
               </button>
             ))}
           </div>
+          <button className="chip" style={{ marginTop: 16 }} onClick={() => setShowSchemes(true)}>
+            <BookOpen size={13} /> Browse known fraud schemes instead
+          </button>
         </div>
+      ) : showSchemes ? (
+        <>
+          <button className="detail-back" onClick={() => setShowSchemes(false)}>
+            Choose a different situation
+          </button>
+          <FraudSchemes onJumpToChecklist={selectCategory} />
+        </>
       ) : (
         <>
           <button className="detail-back" onClick={() => setCategory(null)}>
