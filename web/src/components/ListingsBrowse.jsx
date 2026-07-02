@@ -1,10 +1,11 @@
 import { useMemo, useState } from 'react'
-import { Search, FileSearch, Home, Plus } from 'lucide-react'
+import { Search, FileSearch, Home, Plus, GitCompare } from 'lucide-react'
 import ListingCard from './ListingCard.jsx'
 import WatchAreaControls from './WatchAreaControls.jsx'
 import { TYPE_LABELS } from '../lib/format.js'
 import { NIGERIAN_STATES } from '../data/verificationRules.js'
 import { getEffectiveStatus } from '../lib/listingsApi.js'
+import { getCompareIds, toggleCompare, MAX_COMPARE } from '../lib/compareList.js'
 
 const CATEGORY_FILTERS = [
   { key: 'all', label: 'All categories' },
@@ -25,6 +26,15 @@ export default function ListingsBrowse({ listings, setView, hasMore, onLoadMore,
   const [submittedQuery, setSubmittedQuery] = useState('')
   const [categoryFilter, setCategoryFilter] = useState('all')
   const [stateFilter, setStateFilter] = useState('all')
+  const [compareIds, setCompareIds] = useState(() => getCompareIds())
+
+  function handleToggleCompare(id) {
+    if (!compareIds.includes(id) && compareIds.length >= MAX_COMPARE) {
+      alert(`You can compare up to ${MAX_COMPARE} listings at a time. Remove one first.`)
+      return
+    }
+    setCompareIds(toggleCompare(id))
+  }
 
   const results = useMemo(() => {
     // Query already fetches status == 'active' server-side, but there's
@@ -111,10 +121,26 @@ export default function ListingsBrowse({ listings, setView, hasMore, onLoadMore,
 
       <WatchAreaControls term={submittedQuery} />
 
+      {compareIds.length >= 2 && (
+        <div className="watch-alerts">
+          <div className="watch-alert">
+            <GitCompare size={15} />
+            <span>{compareIds.length} listings selected to compare.</span>
+            <button onClick={() => setView('compare-listings')}>Compare</button>
+          </div>
+        </div>
+      )}
+
       {results.length > 0 ? (
         <div className="report-list">
           {results.map((l) => (
-            <ListingCard key={l.id} listing={l} onClick={() => setView('listing-detail', l)} />
+            <ListingCard
+              key={l.id}
+              listing={l}
+              onClick={() => setView('listing-detail', l)}
+              comparing={compareIds.includes(l.id)}
+              onToggleCompare={handleToggleCompare}
+            />
           ))}
           {hasMore && (
             <button className="chip" style={{ alignSelf: 'center', marginTop: 8 }} onClick={onLoadMore}>

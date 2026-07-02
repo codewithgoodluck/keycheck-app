@@ -1,10 +1,11 @@
-import { useEffect } from 'react'
-import { ArrowLeft, MapPin, FileText, MessageCircle, Home, Clock } from 'lucide-react'
+import { useEffect, useState } from 'react'
+import { ArrowLeft, MapPin, FileText, MessageCircle, Home, Clock, GitCompare } from 'lucide-react'
 import { TYPE_LABELS } from '../lib/format.js'
 import VerificationBadge from './VerificationBadge.jsx'
 import FeeComplianceNote from './FeeComplianceNote.jsx'
 import MarketPriceIndicator from './MarketPriceIndicator.jsx'
 import { getEffectiveStatus, logListingView } from '../lib/listingsApi.js'
+import { getCompareIds, isComparing, toggleCompare, MAX_COMPARE } from '../lib/compareList.js'
 import InquiryForm from './InquiryForm.jsx'
 
 const SIZE_TYPES = ['land', 'estate']
@@ -15,11 +16,26 @@ const SIZE_TYPES = ['land', 'estate']
 // a choice, not one replacing the other.
 export default function ListingDetail({ listing, listings, setView }) {
   // Hooks must run unconditionally (before the early return below), so
-  // the "no listing" guard lives inside the effect body instead.
+  // the "no listing" guard lives inside each effect body instead.
   useEffect(() => {
     if (!listing) return
     logListingView(listing.id, listing.listerId)
   }, [listing?.id])
+
+  const [comparing, setComparing] = useState(false)
+  useEffect(() => {
+    if (listing) setComparing(isComparing(listing.id))
+  }, [listing?.id])
+
+  function handleToggleCompare() {
+    const current = getCompareIds()
+    if (!current.includes(listing.id) && current.length >= MAX_COMPARE) {
+      alert(`You can compare up to ${MAX_COMPARE} listings at a time. Remove one first.`)
+      return
+    }
+    toggleCompare(listing.id)
+    setComparing((c) => !c)
+  }
 
   if (!listing) {
     return (
@@ -56,6 +72,15 @@ export default function ListingDetail({ listing, listings, setView }) {
             <h1>
               {TYPE_LABELS[listing.type] || listing.type} — ₦{Number(listing.price).toLocaleString()}
             </h1>
+          </div>
+          <div className="detail-actions">
+            <button
+              className={`icon-btn ${comparing ? 'saved' : ''}`}
+              onClick={handleToggleCompare}
+              aria-label={comparing ? 'Remove from compare' : 'Add to compare'}
+            >
+              <GitCompare size={17} />
+            </button>
           </div>
         </div>
 

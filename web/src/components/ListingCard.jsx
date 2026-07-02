@@ -1,9 +1,11 @@
-import { MapPin, Home } from 'lucide-react'
+import { MapPin, Home, GitCompare } from 'lucide-react'
 import { TYPE_LABELS } from '../lib/format.js'
 import VerificationBadge from './VerificationBadge.jsx'
 
-// Mirrors ReportCard.jsx's shape for the browse results list.
-export default function ListingCard({ listing, onClick }) {
+// Mirrors ReportCard.jsx's shape for the browse results list, including
+// its save-button pattern (stopPropagation + icon toggle) for the new
+// compare button.
+export default function ListingCard({ listing, onClick, comparing, onToggleCompare }) {
   return (
     <div className="report-card" onClick={onClick}>
       <div className="card-icon" style={{ padding: 0, overflow: 'hidden' }}>
@@ -21,6 +23,18 @@ export default function ListingCard({ listing, onClick }) {
             </h3>
             <p className="desc">{listing.description}</p>
           </div>
+          {onToggleCompare && (
+            <button
+              className={`save-btn ${comparing ? 'saved' : ''}`}
+              onClick={(e) => {
+                e.stopPropagation()
+                onToggleCompare(listing.id)
+              }}
+              aria-label={comparing ? 'Remove from compare' : 'Add to compare'}
+            >
+              <GitCompare size={18} />
+            </button>
+          )}
         </div>
         <div className="card-meta">
           <span>

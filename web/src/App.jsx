@@ -17,6 +17,7 @@ import ListingDetail from './components/ListingDetail.jsx'
 import SubmitListing from './components/SubmitListing.jsx'
 import MyListings from './components/MyListings.jsx'
 import ListerAuth from './components/ListerAuth.jsx'
+import CompareListings from './components/CompareListings.jsx'
 import { seedReports } from './data/seedReports.js'
 import { getSavedIds, toggleSaved } from './lib/watchlist.js'
 import { subscribeToReports, addReportToFirestore, confirmReportInFirestore, addReplyToFirestore } from './lib/reportsApi.js'
@@ -484,6 +485,7 @@ export default function App() {
         />
       )}
       {view === 'listing-detail' && <ListingDetail listing={activeListing} listings={listings} setView={setView} />}
+      {view === 'compare-listings' && <CompareListings listings={listings} setView={setView} />}
       {view === 'submit-listing' && <SubmitListing listerUser={listerUser} setView={setView} />}
       {view === 'my-listings' && <MyListings listerUser={listerUser} setView={setView} />}
       {view === 'lister-auth' && <ListerAuth setView={setView} />}
