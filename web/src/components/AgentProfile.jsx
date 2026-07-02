@@ -1,5 +1,8 @@
-import { ShieldAlert, ArrowLeft } from 'lucide-react'
+import { useEffect, useState } from 'react'
+import { ShieldAlert, ArrowLeft, Home } from 'lucide-react'
 import ReportCard from './ReportCard.jsx'
+import VerificationBadge from './VerificationBadge.jsx'
+import { getListingsByListerName } from '../lib/listingsApi.js'
 
 // Groups reports by an exact agentName match. Names in the data are free
 // text (sometimes with aliases appended, e.g. "X / Y Ltd"), so this is a
@@ -15,6 +18,20 @@ export default function AgentProfile({ reports, name, setView, savedIds, onToggl
   const verifiedCount = flags.filter((r) => r.status === 'verified').length
   const disputedCount = flags.filter((r) => r.status === 'disputed').length
   const totalConfirmations = matches.reduce((sum, r) => sum + (r.upvotes || 0), 0)
+
+  // One-off fetch, not a global subscription — listings are a small
+  // Milestone 1 feature most profile visitors won't have, so this avoids
+  // adding an always-on listener to App.jsx for it (see the plan).
+  const [listings, setListings] = useState(null)
+  useEffect(() => {
+    setListings(null)
+    getListingsByListerName(name)
+      .then(setListings)
+      .catch((err) => {
+        console.warn('Failed to load listings for profile:', err.message)
+        setListings([])
+      })
+  }, [name])
 
   return (
     <>
@@ -39,6 +56,23 @@ export default function AgentProfile({ reports, name, setView, savedIds, onToggl
         <div className="stat-card"><div className="num">{disputedCount}</div><div className="label">In court</div></div>
         <div className="stat-card"><div className="num">{totalConfirmations}</div><div className="label">Confirmations</div></div>
       </div>
+
+      {listings?.length > 0 && (
+        <>
+          <div className="results-meta"><span><Home size={13} style={{ verticalAlign: -2, marginRight: 4 }} /> Active listings</span></div>
+          <div className="report-list" style={{ marginBottom: 24 }}>
+            {listings.map((l) => (
+              <div key={l.id} className="detail-card" style={{ padding: '16px 20px' }}>
+                <p style={{ fontWeight: 700, margin: '0 0 4px' }}>
+                  {l.locationText}, {l.state} · ₦{Number(l.price).toLocaleString()}
+                </p>
+                <p style={{ fontSize: 13, color: 'var(--ink-soft)', margin: '0 0 10px' }}>{l.description}</p>
+                <VerificationBadge state={l.state} lasreraNumber={l.lasreraNumber} />
+              </div>
+            ))}
+          </div>
+        </>
+      )}
 
       {matches.length > 0 ? (
         <>

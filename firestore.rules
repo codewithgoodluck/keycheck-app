@@ -115,6 +115,17 @@ service cloud.firestore {
       allow update, delete: if false;
     }
 
+    // Verified Listings Milestone 1 (see plan). Admin-only creation for
+    // now — no lister-account system exists yet. Only `active` listings
+    // are publicly visible; `pending`/`blocked` stay admin-only until a
+    // moderator activates them (blocked listings, from the
+    // auto-block-flagged-agents check in web/src/lib/listingsApi.js,
+    // should never become publicly visible by accident).
+    match /listings/{listingId} {
+      allow read: if resource.data.status == 'active' || isAdmin();
+      allow create, update, delete: if isAdmin();
+    }
+
     // FCM push token registry (see web/src/lib/push.js). Groundwork only —
     // nothing currently reads this to actually send a push; a future
     // Cloud Function or the whatsapp-bot service would use the Admin SDK

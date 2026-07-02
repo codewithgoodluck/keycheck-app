@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { LogOut, Trash2, ShieldCheck, Link2, Plus, Search } from 'lucide-react'
+import { LogOut, Trash2, ShieldCheck, Link2, Plus, Search, Home } from 'lucide-react'
 import { getReportTitle } from '../lib/format.js'
 import {
   adminLogout,
@@ -11,6 +11,7 @@ import {
   removeSourceLink,
   getRecentSearchMisses
 } from '../lib/adminApi.js'
+import AdminListings from './AdminListings.jsx'
 
 const STATUS_OPTIONS = ['unverified', 'disputed', 'verified']
 
@@ -134,9 +135,14 @@ export default function AdminPanel({ reports, adminEmail }) {
         <button className={`chip ${filter === 'search_misses' ? 'active' : ''}`} onClick={() => setFilter('search_misses')}>
           <Search size={12} /> Search misses
         </button>
+        <button className={`chip ${filter === 'listings' ? 'active' : ''}`} onClick={() => setFilter('listings')}>
+          <Home size={12} /> Listings
+        </button>
       </div>
 
-      {filter === 'search_misses' ? (
+      {filter === 'listings' ? (
+        <AdminListings />
+      ) : filter === 'search_misses' ? (
         <div className="report-list">
           {searchMisses === null ? (
             <p style={{ color: 'var(--ink-soft)' }}>Loading...</p>
