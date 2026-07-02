@@ -1,0 +1,7 @@
+{
+  "rewrites": [
+    { "source": "/report/:id", "destination": "/api/og?type=report&id=:id" },
+    { "source": "/listing/:id", "destination": "/api/og?type=listing&id=:id" },
+    { "source": "/(.*)", "destination": "/index.html" }
+  ]
+}

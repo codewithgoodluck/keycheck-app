@@ -230,16 +230,22 @@ export default function App() {
   }, [isAdminRoute])
 
   // Restore a shared/bookmarked link on first load (?report=<id>,
-  // ?profile=<name>, or ?area=<name>). Report lookups have to wait for
-  // `reports` to actually contain that id (seed data resolves instantly,
-  // Firestore data arrives async), so this only records intent here —
-  // resolution happens below.
+  // ?profile=<name>, ?area=<name>, or ?listing=<id>). Report lookups have
+  // to wait for `reports` to actually contain that id (seed data
+  // resolves instantly, Firestore data arrives async), so this only
+  // records intent here — resolution happens below. Listings have no
+  // equivalent pending-wait mechanism — ListingDetail.jsx already
+  // handles a not-yet-loaded listing gracefully (same "not found"
+  // fallback used when navigating in-app), so this stays as simple as
+  // the ?area= case rather than replicating the report's async-wait
+  // plumbing for a single deep-link edge case.
   useEffect(() => {
     if (isAdminRoute) return
     const params = new URLSearchParams(window.location.search)
     const reportId = params.get('report')
     const profileName = params.get('profile')
     const areaName = params.get('area')
+    const listingId = params.get('listing')
     if (reportId) {
       setActiveReportId(reportId)
       setPendingReportId(reportId)
@@ -250,6 +256,9 @@ export default function App() {
     } else if (areaName) {
       setActiveAreaName(areaName)
       setViewRaw('area-guide')
+    } else if (listingId) {
+      setActiveListingId(listingId)
+      setViewRaw('listing-detail')
     }
   }, [isAdminRoute])
 
@@ -274,29 +283,41 @@ export default function App() {
       const reportId = params.get('report')
       const profileName = params.get('profile')
       const areaName = params.get('area')
+      const listingId = params.get('listing')
       if (reportId) {
         const found = reports.find((r) => r.id === reportId)
         setActiveReportId(reportId)
         setActiveProfileName(null)
         setActiveAreaName(null)
+        setActiveListingId(null)
         setPendingReportId(found ? null : reportId)
         setViewRaw('detail')
       } else if (profileName) {
         setActiveProfileName(profileName)
         setActiveReportId(null)
         setActiveAreaName(null)
+        setActiveListingId(null)
         setPendingReportId(null)
         setViewRaw('profile')
       } else if (areaName) {
         setActiveAreaName(areaName)
         setActiveReportId(null)
         setActiveProfileName(null)
+        setActiveListingId(null)
         setPendingReportId(null)
         setViewRaw('area-guide')
+      } else if (listingId) {
+        setActiveListingId(listingId)
+        setActiveReportId(null)
+        setActiveProfileName(null)
+        setActiveAreaName(null)
+        setPendingReportId(null)
+        setViewRaw('listing-detail')
       } else {
         setActiveReportId(null)
         setActiveProfileName(null)
         setActiveAreaName(null)
+        setActiveListingId(null)
         setPendingReportId(null)
         setViewRaw('home')
       }
@@ -335,6 +356,8 @@ export default function App() {
       url.search = `?profile=${encodeURIComponent(payload)}`
     } else if (next === 'area-guide' && payload) {
       url.search = `?area=${encodeURIComponent(payload)}`
+    } else if (next === 'listing-detail' && payload) {
+      url.search = `?listing=${encodeURIComponent(payload.id)}`
     } else {
       url.search = ''
     }

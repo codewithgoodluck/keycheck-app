@@ -66,7 +66,11 @@ export default function ReportDetail({ report, setView, saved, onToggleSave, onC
   }
 
   async function handleShare() {
-    const url = `${window.location.origin}/?report=${report.id}`
+    // Clean /report/:id URL, not the ?report= query form — routes
+    // through the dynamic-OG serverless function (web/api/og.js) so the
+    // shared link shows this report's real title/description when
+    // pasted into WhatsApp/Twitter/Facebook, not the generic site card.
+    const url = `${window.location.origin}/report/${report.id}`
     const shareData = { title: 'KeyCheck report', text: title, url }
     if (navigator.share) {
       try {

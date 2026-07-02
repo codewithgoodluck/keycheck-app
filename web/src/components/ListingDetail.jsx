@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { ArrowLeft, MapPin, FileText, MessageCircle, Home, Clock, GitCompare } from 'lucide-react'
+import { ArrowLeft, MapPin, FileText, MessageCircle, Home, Clock, GitCompare, Share2 } from 'lucide-react'
 import { TYPE_LABELS } from '../lib/format.js'
 import VerificationBadge from './VerificationBadge.jsx'
 import FeeComplianceNote from './FeeComplianceNote.jsx'
@@ -7,6 +7,7 @@ import MarketPriceIndicator from './MarketPriceIndicator.jsx'
 import { getEffectiveStatus, logListingView } from '../lib/listingsApi.js'
 import { getCompareIds, isComparing, toggleCompare, MAX_COMPARE } from '../lib/compareList.js'
 import { areaOf } from '../lib/notifications.js'
+import { showToast } from '../lib/toast.js'
 import InquiryForm from './InquiryForm.jsx'
 
 const SIZE_TYPES = ['land', 'estate']
@@ -36,6 +37,25 @@ export default function ListingDetail({ listing, listings, setView }) {
     }
     toggleCompare(listing.id)
     setComparing((c) => !c)
+  }
+
+  // Clean /listing/:id URL, not the ?listing= query form — routes
+  // through the dynamic-OG serverless function (web/api/og.js) so the
+  // shared link shows this listing's real title/price/photo when pasted
+  // into WhatsApp/Twitter/Facebook, not the generic site card.
+  async function handleShare() {
+    const url = `${window.location.origin}/listing/${listing.id}`
+    const shareData = { title: 'KeyCheck listing', text: `${TYPE_LABELS[listing.type] || listing.type} — ₦${Number(listing.price).toLocaleString()}`, url }
+    if (navigator.share) {
+      try {
+        await navigator.share(shareData)
+      } catch {
+        // user cancelled, no-op
+      }
+    } else {
+      await navigator.clipboard.writeText(url)
+      showToast('Link copied to clipboard', 'success')
+    }
   }
 
   if (!listing) {
@@ -75,6 +95,9 @@ export default function ListingDetail({ listing, listings, setView }) {
             </h1>
           </div>
           <div className="detail-actions">
+            <button className="icon-btn" onClick={handleShare} aria-label="Share">
+              <Share2 size={17} />
+            </button>
             <button
               className={`icon-btn ${comparing ? 'saved' : ''}`}
               onClick={handleToggleCompare}
