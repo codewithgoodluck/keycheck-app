@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useState } from 'react'
 import { MapContainer, TileLayer, CircleMarker, Popup, useMap } from 'react-leaflet'
 import { Search, LocateFixed, Navigation, Eye, EyeOff, FileSearch, Home } from 'lucide-react'
-import { getReportTitle, TYPE_LABELS } from '../lib/format.js'
+import { getReportTitle } from '../lib/format.js'
+import { getPropertyTypeLabel } from '../data/propertyTypes.js'
 import { StampInline } from './Stamp.jsx'
 import { addWatch, removeWatch, isWatching } from '../lib/watches.js'
 import { syncWatchedTermsIfSubscribed } from '../lib/push.js'
@@ -256,7 +257,7 @@ export default function MapView({ reports, listings = [], setView }) {
               <Popup>
                 <div style={{ fontFamily: 'Inter, sans-serif', maxWidth: 220 }}>
                   <strong style={{ fontSize: 13.5 }}>
-                    {TYPE_LABELS[l.type] || l.type} — ₦{Number(l.price).toLocaleString()}
+                    {getPropertyTypeLabel(l.type)} — ₦{Number(l.price).toLocaleString()}
                   </strong>
                   <p style={{ fontSize: 12.5, color: '#5b6358', margin: '6px 0 10px' }}>
                     {l.locationText}, {l.state}

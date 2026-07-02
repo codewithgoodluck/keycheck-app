@@ -464,9 +464,14 @@ button { font-family: inherit; }
 .report-card:hover { box-shadow: var(--shadow-md); transform: translateY(-2px); }
 
 .report-card:has(.card-icon.verified) { border-left-color: var(--green); }
-.report-card:has(.card-icon.clean) { border-left-color: var(--teal); }
 .report-card:has(.card-icon.disputed) { border-left-color: var(--red); }
 .report-card:has(.card-icon.unverified) { border-left-color: var(--gold); }
+
+/* Vouches ("clean transaction" endorsements) get a distinct whole-card
+   tint, not just a border-color swap — a fraud flag and a positive vouch
+   should read as different things at a glance, not the same card shape
+   with a different accent color. */
+.report-card:has(.card-icon.clean) { border-left-color: var(--teal); background: var(--teal-soft); }
 
 .report-card .card-icon {
   width: 42px;

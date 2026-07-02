@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Plus, ShieldAlert, ShieldCheck, ShieldX, Clock, UserCheck, Eye, MessageSquare, BadgeCheck } from 'lucide-react'
-import { TYPE_LABELS } from '../lib/format.js'
+import { PROPERTY_TYPE_LABELS, SIZE_PROPERTY_TYPES, getPropertyTypeLabel } from '../data/propertyTypes.js'
 import { NIGERIAN_STATES, DUAL_REP_LABELS } from '../data/verificationRules.js'
 import { createListing, listListings, activateListing, rejectListing, getEffectiveStatus, getListingViewCount, setLasreraVerified, setCacVerified } from '../lib/listingsApi.js'
 import { getInquiryCount } from '../lib/inquiriesApi.js'
@@ -12,7 +12,7 @@ import LocationPicker from './LocationPicker.jsx'
 const STATUS_ICON = { active: ShieldCheck, pending: Clock, blocked: ShieldAlert, rejected: ShieldX, expired: ShieldX }
 
 const EMPTY_FORM = {
-  type: 'house_agent',
+  type: 'house',
   transactionType: 'rent',
   state: 'Lagos',
   locationText: '',
@@ -27,7 +27,7 @@ const EMPTY_FORM = {
   dualRepresentation: 'seller_only'
 }
 
-const SIZE_TYPES = ['land', 'estate']
+const SIZE_TYPES = SIZE_PROPERTY_TYPES
 
 // Admin-only for Milestone 1 — no lister-account system exists yet (see
 // the plan this was built from). This is deliberately a moderator tool,
@@ -162,9 +162,9 @@ export default function AdminListings() {
         <p style={{ margin: '0 0 16px', fontWeight: 700 }}>Add a listing</p>
         <form onSubmit={handleCreate}>
           <div className="field">
-            <label htmlFor="listing-type">Type</label>
+            <label htmlFor="listing-type">Property type</label>
             <select id="listing-type" value={form.type} onChange={(e) => update('type', e.target.value)}>
-              {Object.entries(TYPE_LABELS).map(([key, label]) => (
+              {Object.entries(PROPERTY_TYPE_LABELS).map(([key, label]) => (
                 <option key={key} value={key}>
                   {label}
                 </option>
@@ -316,7 +316,7 @@ export default function AdminListings() {
                 <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12, alignItems: 'flex-start', marginBottom: 8 }}>
                   <div>
                     <p style={{ fontWeight: 700, margin: '0 0 4px', display: 'flex', alignItems: 'center', gap: 6 }}>
-                      {TYPE_LABELS[listing.type] || listing.type}: {listing.listerName}
+                      {getPropertyTypeLabel(listing.type)}: {listing.listerName}
                       {listing.listerId && (
                         <span title="Self-serve (lister account)" style={{ display: 'inline-flex', color: 'var(--ink-faint)' }}>
                           <UserCheck size={13} />

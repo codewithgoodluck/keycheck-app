@@ -331,22 +331,61 @@ export default function SearchHome({ reports, setView, savedIds, onToggleSave, h
       <WatchAreaControls term={submittedQuery} />
 
       {results.length > 0 ? (
-        <div className="report-list">
-          {results.map((r) => (
-            <ReportCard
-              key={r.id}
-              report={r}
-              onClick={() => setView('detail', r)}
-              saved={savedIds.includes(r.id)}
-              onToggleSave={onToggleSave}
-            />
-          ))}
-          {hasMore && (
-            <button className="chip" style={{ alignSelf: 'center', marginTop: 8 }} onClick={onLoadMore}>
-              Load more reports
-            </button>
-          )}
-        </div>
+        kindFilter === 'all' ? (
+          // Flags and vouches are different kinds of claim (an accusation
+          // vs. a positive experience) — shown in separate sections by
+          // default rather than interleaved in one feed, so a vouch never
+          // reads as "just another status" next to a fraud flag. Picking
+          // a specific kind filter above still shows a single flat list.
+          <>
+            {results.filter((r) => r.kind !== 'endorsement').length > 0 && (
+              <>
+                <div className="results-meta"><span><AlertTriangle size={13} style={{ verticalAlign: -2, marginRight: 4 }} /> Flagged reports</span></div>
+                <div className="report-list" style={{ marginBottom: 24 }}>
+                  {results
+                    .filter((r) => r.kind !== 'endorsement')
+                    .map((r) => (
+                      <ReportCard key={r.id} report={r} onClick={() => setView('detail', r)} saved={savedIds.includes(r.id)} onToggleSave={onToggleSave} />
+                    ))}
+                </div>
+              </>
+            )}
+            {results.filter((r) => r.kind === 'endorsement').length > 0 && (
+              <>
+                <div className="results-meta"><span><ShieldPlus size={13} style={{ verticalAlign: -2, marginRight: 4 }} /> Clean records</span></div>
+                <div className="report-list">
+                  {results
+                    .filter((r) => r.kind === 'endorsement')
+                    .map((r) => (
+                      <ReportCard key={r.id} report={r} onClick={() => setView('detail', r)} saved={savedIds.includes(r.id)} onToggleSave={onToggleSave} />
+                    ))}
+                </div>
+              </>
+            )}
+            {hasMore && (
+              <button className="chip" style={{ display: 'flex', margin: '16px auto 0' }} onClick={onLoadMore}>
+                Load more reports
+              </button>
+            )}
+          </>
+        ) : (
+          <div className="report-list">
+            {results.map((r) => (
+              <ReportCard
+                key={r.id}
+                report={r}
+                onClick={() => setView('detail', r)}
+                saved={savedIds.includes(r.id)}
+                onToggleSave={onToggleSave}
+              />
+            ))}
+            {hasMore && (
+              <button className="chip" style={{ alignSelf: 'center', marginTop: 8 }} onClick={onLoadMore}>
+                Load more reports
+              </button>
+            )}
+          </div>
+        )
       ) : (
         <div className="empty-state">
           <FileSearch size={28} />

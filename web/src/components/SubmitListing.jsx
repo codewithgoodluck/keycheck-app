@@ -1,6 +1,6 @@
 import { useRef, useState } from 'react'
 import { Send, Paperclip, X } from 'lucide-react'
-import { TYPE_LABELS } from '../lib/format.js'
+import { PROPERTY_TYPE_LABELS, SIZE_PROPERTY_TYPES } from '../data/propertyTypes.js'
 import { NIGERIAN_STATES, DUAL_REP_LABELS } from '../data/verificationRules.js'
 import { createListingAsLister, uploadListingPhoto } from '../lib/listingsApi.js'
 import { msUntilNextSubmit, markSubmitted } from '../lib/antispam.js'
@@ -13,7 +13,7 @@ import LocationPicker from './LocationPicker.jsx'
 const MIN_FILL_MS = 3000
 
 const EMPTY_FORM = {
-  type: 'house_agent',
+  type: 'house',
   transactionType: 'rent',
   state: 'Lagos',
   locationText: '',
@@ -29,7 +29,7 @@ const EMPTY_FORM = {
   dualRepresentation: 'seller_only'
 }
 
-const SIZE_TYPES = ['land', 'estate']
+const SIZE_TYPES = SIZE_PROPERTY_TYPES
 
 // Public self-service submission — adapted from AdminListings.jsx's form
 // fields, plus a photo upload and a listerPhone field for the WhatsApp
@@ -178,9 +178,9 @@ export default function SubmitListing({ listerUser, setView }) {
           </div>
 
           <div className="field">
-            <label htmlFor="sl-type">Type</label>
+            <label htmlFor="sl-type">Property type</label>
             <select id="sl-type" value={form.type} onChange={(e) => update('type', e.target.value)}>
-              {Object.entries(TYPE_LABELS).map(([key, label]) => (
+              {Object.entries(PROPERTY_TYPE_LABELS).map(([key, label]) => (
                 <option key={key} value={key}>
                   {label}
                 </option>

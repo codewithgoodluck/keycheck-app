@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { LogOut, Plus, ShieldCheck, ShieldAlert, Clock, ShieldX, RefreshCw, MessageSquare, ChevronDown, ChevronUp, Eye, Users } from 'lucide-react'
-import { TYPE_LABELS } from '../lib/format.js'
+import { getPropertyTypeLabel } from '../data/propertyTypes.js'
 import { getMyListings, updateListingLifecycle, renewListing, getEffectiveStatus, getListingViewCount } from '../lib/listingsApi.js'
 import { getInquiriesForListing, markInquiryRead, getInquiryCount } from '../lib/inquiriesApi.js'
 import { listerSignOut } from '../lib/listerAuth.js'
@@ -154,7 +154,7 @@ export default function MyListings({ listerUser, setView }) {
               <div key={listing.id} className="detail-card" style={{ padding: '16px 20px' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12, alignItems: 'flex-start', marginBottom: 8 }}>
                   <div>
-                    <p style={{ fontWeight: 700, margin: '0 0 4px' }}>{TYPE_LABELS[listing.type] || listing.type}</p>
+                    <p style={{ fontWeight: 700, margin: '0 0 4px' }}>{getPropertyTypeLabel(listing.type)}</p>
                     <p style={{ fontSize: 13, color: 'var(--ink-soft)', margin: '0 0 2px' }}>
                       {listing.locationText}, {listing.state} · ₦{Number(listing.price).toLocaleString()}
                     </p>

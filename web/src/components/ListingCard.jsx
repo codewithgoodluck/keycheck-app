@@ -1,5 +1,5 @@
 import { MapPin, Home, GitCompare, Bookmark, Star } from 'lucide-react'
-import { TYPE_LABELS } from '../lib/format.js'
+import { getPropertyTypeLabel } from '../data/propertyTypes.js'
 import VerificationBadge from './VerificationBadge.jsx'
 
 // Mirrors ReportCard.jsx's shape for the browse results list, including
@@ -22,7 +22,7 @@ export default function ListingCard({ listing, onClick, comparing, onToggleCompa
         <div className="card-top-row">
           <div>
             <h3>
-              {TYPE_LABELS[listing.type] || listing.type} · ₦{Number(listing.price).toLocaleString()}
+              {getPropertyTypeLabel(listing.type)} · ₦{Number(listing.price).toLocaleString()}
             </h3>
             <p className="desc">{listing.description}</p>
           </div>

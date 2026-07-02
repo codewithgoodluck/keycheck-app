@@ -2,7 +2,7 @@ import { useMemo, useState } from 'react'
 import { Search, FileSearch, Home, Plus, GitCompare, Users } from 'lucide-react'
 import ListingCard from './ListingCard.jsx'
 import WatchAreaControls from './WatchAreaControls.jsx'
-import { TYPE_LABELS } from '../lib/format.js'
+import { PROPERTY_TYPE_LABELS } from '../data/propertyTypes.js'
 import { NIGERIAN_STATES } from '../data/verificationRules.js'
 import { getEffectiveStatus } from '../lib/listingsApi.js'
 import { getCompareIds, toggleCompare, MAX_COMPARE } from '../lib/compareList.js'
@@ -10,11 +10,7 @@ import { getSavedListingIds, toggleSavedListing } from '../lib/listingWatchlist.
 
 const CATEGORY_FILTERS = [
   { key: 'all', label: 'All categories' },
-  { key: 'land', label: TYPE_LABELS.land },
-  { key: 'agent', label: TYPE_LABELS.agent },
-  { key: 'house_agent', label: TYPE_LABELS.house_agent },
-  { key: 'landlord', label: TYPE_LABELS.landlord },
-  { key: 'estate', label: TYPE_LABELS.estate }
+  ...Object.entries(PROPERTY_TYPE_LABELS).map(([key, label]) => ({ key, label }))
 ]
 
 // Structurally mirrors SearchHome.jsx (search bar, filter chips,

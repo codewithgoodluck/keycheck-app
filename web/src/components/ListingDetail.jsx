@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { ArrowLeft, MapPin, FileText, MessageCircle, Home, Clock, GitCompare, Share2, Bookmark, Flag } from 'lucide-react'
-import { TYPE_LABELS } from '../lib/format.js'
+import { getPropertyTypeLabel } from '../data/propertyTypes.js'
 import VerificationBadge from './VerificationBadge.jsx'
 import TrustSignals from './TrustSignals.jsx'
 import FeeComplianceNote from './FeeComplianceNote.jsx'
@@ -78,7 +78,7 @@ export default function ListingDetail({ listing, listings, setView }) {
   // into WhatsApp/Twitter/Facebook, not the generic site card.
   async function handleShare() {
     const url = `${window.location.origin}/listing/${listing.id}`
-    const shareData = { title: 'KeyCheck listing', text: `${TYPE_LABELS[listing.type] || listing.type} — ₦${Number(listing.price).toLocaleString()}`, url }
+    const shareData = { title: 'KeyCheck listing', text: `${getPropertyTypeLabel(listing.type)} — ₦${Number(listing.price).toLocaleString()}`, url }
     if (navigator.share) {
       try {
         await navigator.share(shareData)
@@ -124,7 +124,7 @@ export default function ListingDetail({ listing, listings, setView }) {
           <div>
             <p className="card-id">#{listing.id}</p>
             <h1>
-              {TYPE_LABELS[listing.type] || listing.type} — ₦{Number(listing.price).toLocaleString()}
+              {getPropertyTypeLabel(listing.type)} — ₦{Number(listing.price).toLocaleString()}
             </h1>
           </div>
           <div className="detail-actions">
@@ -209,9 +209,18 @@ export default function ListingDetail({ listing, listings, setView }) {
         )}
       </div>
 
-      <div style={{ marginTop: 16 }}>
-        <InquiryForm listing={listing} />
-      </div>
+      {listing.listerId ? (
+        <div style={{ marginTop: 16 }}>
+          <InquiryForm listing={listing} />
+        </div>
+      ) : (
+        waNumber && (
+          <p style={{ fontSize: 12, color: 'var(--ink-faint)', marginTop: 12 }}>
+            This listing was created directly by a moderator and has no lister account attached, so
+            in-app messaging isn't available for it — use WhatsApp above to get in touch.
+          </p>
+        )
+      )}
 
       <div style={{ marginTop: 20, textAlign: 'center' }}>
         {flagSubmitted ? (

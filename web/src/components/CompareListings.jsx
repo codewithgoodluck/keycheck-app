@@ -1,11 +1,11 @@
 import { useState } from 'react'
 import { ArrowLeft, X } from 'lucide-react'
-import { TYPE_LABELS } from '../lib/format.js'
+import { getPropertyTypeLabel, SIZE_PROPERTY_TYPES } from '../data/propertyTypes.js'
 import { getCompareIds, removeFromCompare } from '../lib/compareList.js'
 import VerificationBadge from './VerificationBadge.jsx'
 import FeeComplianceNote from './FeeComplianceNote.jsx'
 
-const SIZE_TYPES = ['land', 'estate']
+const SIZE_TYPES = SIZE_PROPERTY_TYPES
 
 const ROWS = [
   { label: 'Price', render: (l) => `₦${Number(l.price).toLocaleString()}` },
@@ -58,6 +58,14 @@ export default function CompareListings({ listings, setView }) {
         <ArrowLeft size={15} /> Back to listings
       </button>
 
+      <div className="saved-header">
+        <h1>Compare listings</h1>
+        <p>
+          {selected.length} listing{selected.length === 1 ? '' : 's'} side by side — price, location,
+          verification, and fee compliance, so you're not juggling separate tabs.
+        </p>
+      </div>
+
       <div style={{ overflowX: 'auto' }}>
         <table style={{ borderCollapse: 'collapse', width: '100%', minWidth: 480 }}>
           <thead>
@@ -66,7 +74,7 @@ export default function CompareListings({ listings, setView }) {
               {selected.map((l) => (
                 <th key={l.id} style={{ padding: '10px 12px', minWidth: 180, verticalAlign: 'top' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 6 }}>
-                    <span style={{ fontWeight: 700, fontSize: 14 }}>{TYPE_LABELS[l.type] || l.type}</span>
+                    <span style={{ fontWeight: 700, fontSize: 14 }}>{getPropertyTypeLabel(l.type)}</span>
                     <button className="icon-btn" style={{ width: 24, height: 24 }} onClick={() => handleRemove(l.id)} aria-label="Remove from compare">
                       <X size={12} />
                     </button>

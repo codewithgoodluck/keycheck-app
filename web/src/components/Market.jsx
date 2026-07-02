@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Compass, ArrowLeft, ArrowRight, Search, Eye, EyeOff, BellRing } from 'lucide-react'
 import ListingCard from './ListingCard.jsx'
-import { TYPE_LABELS } from '../lib/format.js'
+import { PROPERTY_TYPE_LABELS } from '../data/propertyTypes.js'
 import { NIGERIAN_STATES } from '../data/verificationRules.js'
 import { getEffectiveStatus } from '../lib/listingsApi.js'
 import { getReviewAggregate, getReviewsForLister } from '../lib/reviewsApi.js'
@@ -10,13 +10,7 @@ import { getSavedListingIds, toggleSavedListing } from '../lib/listingWatchlist.
 import { addWatch, removeWatch, isWatching } from '../lib/watches.js'
 import { enablePushNotifications, syncWatchedTermsIfSubscribed, getStoredPushToken } from '../lib/push.js'
 
-const CATEGORY_STEPS = [
-  { key: 'house_agent', label: TYPE_LABELS.house_agent },
-  { key: 'landlord', label: TYPE_LABELS.landlord },
-  { key: 'land', label: TYPE_LABELS.land },
-  { key: 'agent', label: TYPE_LABELS.agent },
-  { key: 'estate', label: TYPE_LABELS.estate }
-]
+const CATEGORY_STEPS = Object.entries(PROPERTY_TYPE_LABELS).map(([key, label]) => ({ key, label }))
 
 const EMPTY_INTENT = { category: null, transactionType: 'rent', state: 'all', locationText: '', budgetMax: '' }
 
