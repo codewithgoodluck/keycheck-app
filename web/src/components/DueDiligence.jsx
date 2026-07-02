@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Landmark, Users, Home, Building2, Building, ExternalLink, ShieldQuestion, BookOpen, ListOrdered } from 'lucide-react'
+import { Landmark, Users, Home, Building2, Building, ExternalLink, ShieldQuestion, BookOpen, ListOrdered, Plane } from 'lucide-react'
 import { CHECKLISTS } from '../data/checklists.js'
 import { getChecked, toggleChecked } from '../lib/checklistProgress.js'
 import FeeCapFactBox from './FeeCapFactBox.jsx'
@@ -7,6 +7,7 @@ import VerifyAgentNudge from './VerifyAgentNudge.jsx'
 import RiskQuiz from './RiskQuiz.jsx'
 import FraudSchemes from './FraudSchemes.jsx'
 import TransactionGuide from './TransactionGuide.jsx'
+import DiasporaGuidance from './DiasporaGuidance.jsx'
 
 const CATEGORIES = [
   { key: 'land', label: 'Buying land', Icon: Landmark },
@@ -21,6 +22,7 @@ export default function DueDiligence() {
   const [mode, setMode] = useState('checklist') // 'checklist' | 'quiz' | 'guide'
   const [checked, setChecked] = useState([])
   const [showSchemes, setShowSchemes] = useState(false)
+  const [showDiaspora, setShowDiaspora] = useState(false)
 
   // Also used directly as FraudSchemes.jsx's onJumpToChecklist callback —
   // its "Caught by" link jumps straight to a category's checklist. No
@@ -31,6 +33,7 @@ export default function DueDiligence() {
     setChecked(getChecked(key))
     setMode('checklist')
     setShowSchemes(false)
+    setShowDiaspora(false)
   }
 
   function handleToggle(itemId) {
@@ -48,7 +51,7 @@ export default function DueDiligence() {
         use these before you commit to anything, not just after something's gone wrong.
       </p>
 
-      {!category && !showSchemes ? (
+      {!category && !showSchemes && !showDiaspora ? (
         <div className="form-card">
           <p style={{ margin: '0 0 16px', fontWeight: 600 }}>What are you about to do?</p>
           <div className="diligence-category-grid">
@@ -59,9 +62,14 @@ export default function DueDiligence() {
               </button>
             ))}
           </div>
-          <button className="chip" style={{ marginTop: 16 }} onClick={() => setShowSchemes(true)}>
-            <BookOpen size={13} /> Browse known fraud schemes instead
-          </button>
+          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginTop: 16 }}>
+            <button className="chip" onClick={() => setShowSchemes(true)}>
+              <BookOpen size={13} /> Browse known fraud schemes instead
+            </button>
+            <button className="chip" onClick={() => setShowDiaspora(true)}>
+              <Plane size={13} /> Buying from abroad? Diaspora guidance
+            </button>
+          </div>
         </div>
       ) : showSchemes ? (
         <>
@@ -69,6 +77,13 @@ export default function DueDiligence() {
             Choose a different situation
           </button>
           <FraudSchemes onJumpToChecklist={selectCategory} />
+        </>
+      ) : showDiaspora ? (
+        <>
+          <button className="detail-back" onClick={() => setShowDiaspora(false)}>
+            Choose a different situation
+          </button>
+          <DiasporaGuidance />
         </>
       ) : (
         <>
