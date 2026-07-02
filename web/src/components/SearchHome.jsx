@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { Search, ShieldCheck, AlertTriangle, MapPin, FileSearch, ShieldPlus, TrendingUp, Clock3, Users } from 'lucide-react'
+import { Search, ShieldCheck, AlertTriangle, MapPin, FileSearch, ShieldPlus, TrendingUp, Clock3, Users, ChevronLeft, ChevronRight } from 'lucide-react'
 import ReportCard from './ReportCard.jsx'
 import StatsBar from './StatsBar.jsx'
 import TrendingCard from './TrendingCard.jsx'
@@ -30,7 +30,7 @@ const CATEGORY_FILTERS = [
   { key: 'estate', label: TYPE_LABELS.estate }
 ]
 
-export default function SearchHome({ reports, setView, savedIds, onToggleSave, hasMore, onLoadMore }) {
+export default function SearchHome({ reports, listings = [], setView, savedIds, onToggleSave, hasMore, onLoadMore }) {
   const [query, setQuery] = useState('')
   const [submittedQuery, setSubmittedQuery] = useState('')
   const [kindFilter, setKindFilter] = useState('all')
@@ -40,6 +40,22 @@ export default function SearchHome({ reports, setView, savedIds, onToggleSave, h
   const [showSuggestions, setShowSuggestions] = useState(false)
   const [activeIndex, setActiveIndex] = useState(-1)
   const blurTimer = useRef(null)
+  const trendingStripRef = useRef(null)
+
+  // Real photos from active listings, not stock imagery — the banner
+  // shows an actual property already on the platform. Falls back to the
+  // plain gradient hero (no image) when nothing's been listed with a
+  // photo yet, rather than showing a broken/empty background.
+  const heroPhoto = useMemo(() => {
+    const withPhoto = listings.find((l) => l.status === 'active' && (l.photoUrls?.[0] || l.photoUrl))
+    return withPhoto ? withPhoto.photoUrls?.[0] || withPhoto.photoUrl : null
+  }, [listings])
+
+  function scrollTrending(dir) {
+    const el = trendingStripRef.current
+    if (!el) return
+    el.scrollBy({ left: dir * (el.clientWidth * 0.8), behavior: 'smooth' })
+  }
 
   const trendingLocations = useMemo(() => {
     const counts = {}
@@ -156,7 +172,10 @@ export default function SearchHome({ reports, setView, savedIds, onToggleSave, h
 
   return (
     <>
-      <section className="hero">
+      <section
+        className={`hero ${heroPhoto ? 'hero-photo' : ''}`}
+        style={heroPhoto ? { backgroundImage: `url(${heroPhoto})` } : undefined}
+      >
         <p className="eyebrow">
           <ShieldCheck size={13} /> Community housing &amp; land registry
         </p>
@@ -269,10 +288,28 @@ export default function SearchHome({ reports, setView, savedIds, onToggleSave, h
           <p className="trending-section-label">
             <TrendingUp size={13} /> Trending now
           </p>
-          <div className="trending-strip">
-            {trendingReports.map((r) => (
-              <TrendingCard key={r.id} report={r} onClick={() => setView('detail', r)} />
-            ))}
+          <div className="trending-carousel">
+            <button
+              type="button"
+              className="trending-carousel-nav prev"
+              onClick={() => scrollTrending(-1)}
+              aria-label="Scroll trending left"
+            >
+              <ChevronLeft size={18} />
+            </button>
+            <div className="trending-strip" ref={trendingStripRef}>
+              {trendingReports.map((r) => (
+                <TrendingCard key={r.id} report={r} onClick={() => setView('detail', r)} />
+              ))}
+            </div>
+            <button
+              type="button"
+              className="trending-carousel-nav next"
+              onClick={() => scrollTrending(1)}
+              aria-label="Scroll trending right"
+            >
+              <ChevronRight size={18} />
+            </button>
           </div>
         </div>
       )}

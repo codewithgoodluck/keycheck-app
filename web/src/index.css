@@ -179,6 +179,38 @@ button { font-family: inherit; }
   font-size: 15.5px;
 }
 
+/* Full-bleed banner photo — a real photo from an active listing (see
+   SearchHome.jsx's heroPhoto), not stock imagery. Bleeds edge-to-edge
+   within .app's own padding (same trick as .theme-market .hero) rather
+   than a small inset image, with a dark gradient scrim so the white
+   text stays readable regardless of what the underlying photo looks
+   like. Falls back to the plain gradient .hero (no image, no bleed)
+   when no listing has a photo yet.  */
+.hero-photo {
+  position: relative;
+  margin: 0 -20px;
+  padding: 64px 20px 40px;
+  background-size: cover;
+  background-position: center;
+  border-radius: 0 0 32px 32px;
+  overflow: hidden;
+  isolation: isolate;
+}
+
+.hero-photo::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(15, 23, 18, 0.55) 0%, rgba(15, 23, 18, 0.86) 100%);
+  z-index: 0;
+}
+
+.hero-photo > * { position: relative; z-index: 1; }
+
+.hero-photo .eyebrow { background: rgba(255, 255, 255, 0.16); color: #fff; }
+.hero-photo h1 { color: #fff; }
+.hero-photo p { color: rgba(255, 255, 255, 0.88); }
+
 .search-wrap { position: relative; }
 
 .search-suggestions {
@@ -356,6 +388,13 @@ button { font-family: inherit; }
   margin: 0 0 10px;
 }
 
+.trending-carousel {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
 .trending-strip {
   display: flex;
   gap: 12px;
@@ -363,6 +402,30 @@ button { font-family: inherit; }
   scroll-snap-type: x mandatory;
   padding-bottom: 4px;
   -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+
+.trending-strip::-webkit-scrollbar { display: none; }
+
+.trending-carousel-nav {
+  flex-shrink: 0;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  border: 1px solid var(--line);
+  background: var(--surface);
+  color: var(--ink-soft);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: border-color 0.15s ease, color 0.15s ease;
+}
+
+.trending-carousel-nav:hover { border-color: var(--green); color: var(--green-deep); }
+
+@media (max-width: 640px) {
+  .trending-carousel-nav { display: none; }
 }
 
 .trending-card {
