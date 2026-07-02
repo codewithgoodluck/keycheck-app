@@ -48,6 +48,7 @@
 * { box-sizing: border-box; }
 
 html, body, #root { height: 100%; }
+html, body { overflow-x: hidden; }
 
 body {
   margin: 0;
@@ -180,15 +181,22 @@ button { font-family: inherit; }
 }
 
 /* Full-bleed banner photo — a real photo from an active listing (see
-   SearchHome.jsx's heroPhoto), not stock imagery. Bleeds edge-to-edge
-   within .app's own padding (same trick as .theme-market .hero) rather
-   than a small inset image, with a dark gradient scrim so the white
-   text stays readable regardless of what the underlying photo looks
-   like. Falls back to the plain gradient .hero (no image, no bleed)
-   when no listing has a photo yet.  */
+   SearchHome.jsx's heroPhoto), not stock imagery. Breaks out to the full
+   viewport width (both edges of the screen, not just .app's own 920px
+   container) via the standard left:50%/-50vw centering trick, while
+   height/padding stay exactly what they were — html/body get
+   overflow-x: hidden as a guard against the 100vw calculation
+   introducing a horizontal scrollbar on scrollbar-width platforms.
+   Dark gradient scrim keeps the white text readable regardless of what
+   the underlying photo looks like. Falls back to the plain gradient
+   .hero (no image, no bleed) when no listing has a photo yet. */
 .hero-photo {
   position: relative;
-  margin: 0 -20px;
+  left: 50%;
+  right: 50%;
+  width: 100vw;
+  margin-left: -50vw;
+  margin-right: -50vw;
   padding: 64px 20px 40px;
   background-size: cover;
   background-position: center;
