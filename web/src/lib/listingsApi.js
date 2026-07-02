@@ -1,9 +1,10 @@
 import { db, storage } from './firebase.js'
-import { collection, addDoc, updateDoc, doc, getDocs, onSnapshot, query, where, orderBy, limit } from 'firebase/firestore'
+import { collection, addDoc, updateDoc, doc, getDocs, getCountFromServer, onSnapshot, query, where, orderBy, limit } from 'firebase/firestore'
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage'
 
 const LISTINGS = 'listings'
 const REPORTS = 'reports'
+const LISTING_VIEWS = 'listing_views'
 const LIFECYCLE_STATUSES = ['under_offer', 'let', 'sold', 'expired', 'active']
 const DEFAULT_LISTING_DURATION_DAYS = 30
 
@@ -208,4 +209,25 @@ export function subscribeToListings(onData, onError, limitCount = 100) {
     onError?.(err)
     return () => {}
   }
+}
+
+// Fire-and-forget, mirrors reportsApi.js's logSearchMiss exactly. No
+// dedup — every page view logs one document (see the plan's simplification
+// note); failures never block rendering the listing itself.
+export async function logListingView(listingId, listerId) {
+  try {
+    await addDoc(collection(db, LISTING_VIEWS), { listingId, listerId, at: new Date().toISOString() })
+  } catch (err) {
+    console.warn('Failed to log listing view (non-fatal):', err.message)
+  }
+}
+
+// getCountFromServer() aggregates server-side without downloading every
+// view document. The query still needs to filter on both fields (not
+// just listingId) to structurally satisfy the read rule — same lesson as
+// getListingsByListerName above.
+export async function getListingViewCount(listingId, listerId) {
+  const q = query(collection(db, LISTING_VIEWS), where('listingId', '==', listingId), where('listerId', '==', listerId))
+  const snap = await getCountFromServer(q)
+  return snap.data().count
 }

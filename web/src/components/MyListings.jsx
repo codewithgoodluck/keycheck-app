@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react'
-import { LogOut, Plus, ShieldCheck, ShieldAlert, Clock, ShieldX, RefreshCw, MessageSquare, ChevronDown, ChevronUp } from 'lucide-react'
+import { LogOut, Plus, ShieldCheck, ShieldAlert, Clock, ShieldX, RefreshCw, MessageSquare, ChevronDown, ChevronUp, Eye } from 'lucide-react'
 import { TYPE_LABELS } from '../lib/format.js'
-import { getMyListings, updateListingLifecycle, renewListing, getEffectiveStatus } from '../lib/listingsApi.js'
-import { getInquiriesForListing, markInquiryRead } from '../lib/inquiriesApi.js'
+import { getMyListings, updateListingLifecycle, renewListing, getEffectiveStatus, getListingViewCount } from '../lib/listingsApi.js'
+import { getInquiriesForListing, markInquiryRead, getInquiryCount } from '../lib/inquiriesApi.js'
 import { listerSignOut } from '../lib/listerAuth.js'
 import VerificationBadge from './VerificationBadge.jsx'
 import FeeComplianceNote from './FeeComplianceNote.jsx'
@@ -15,11 +15,34 @@ export default function MyListings({ listerUser, setView }) {
   const [busyId, setBusyId] = useState(null)
   const [expandedId, setExpandedId] = useState(null)
   const [inquiries, setInquiries] = useState(null)
+  const [counts, setCounts] = useState({}) // listingId -> { views, inquiries }
 
   useEffect(() => {
     if (!listerUser) return
     refresh()
   }, [listerUser])
+
+  // Cheap aggregation queries (getCountFromServer doesn't download
+  // documents), so eager-fetching for every listing card is fine here —
+  // unlike the full inquiry *list* below, which stays on-demand.
+  useEffect(() => {
+    if (!listings || listings.length === 0 || !listerUser) return
+    let cancelled = false
+    Promise.all(
+      listings.map(async (l) => {
+        const [views, inquiryCount] = await Promise.all([
+          getListingViewCount(l.id, listerUser.uid).catch(() => 0),
+          getInquiryCount(l.id, listerUser.uid).catch(() => 0)
+        ])
+        return [l.id, { views, inquiries: inquiryCount }]
+      })
+    ).then((entries) => {
+      if (!cancelled) setCounts(Object.fromEntries(entries))
+    })
+    return () => {
+      cancelled = true
+    }
+  }, [listings, listerUser])
 
   function refresh() {
     getMyListings(listerUser.uid)
@@ -123,13 +146,17 @@ export default function MyListings({ listerUser, setView }) {
           listings.map((listing) => {
             const effectiveStatus = getEffectiveStatus(listing)
             const Icon = STATUS_ICON[effectiveStatus] || Clock
+            const listingCounts = counts[listing.id] || { views: 0, inquiries: 0 }
             return (
               <div key={listing.id} className="detail-card" style={{ padding: '16px 20px' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12, alignItems: 'flex-start', marginBottom: 8 }}>
                   <div>
                     <p style={{ fontWeight: 700, margin: '0 0 4px' }}>{TYPE_LABELS[listing.type] || listing.type}</p>
-                    <p style={{ fontSize: 13, color: 'var(--ink-soft)', margin: 0 }}>
+                    <p style={{ fontSize: 13, color: 'var(--ink-soft)', margin: '0 0 2px' }}>
                       {listing.locationText}, {listing.state} · ₦{Number(listing.price).toLocaleString()}
+                    </p>
+                    <p style={{ fontSize: 12, color: 'var(--ink-faint)', margin: 0, display: 'flex', alignItems: 'center', gap: 4 }}>
+                      <Eye size={12} /> {listingCounts.views} view{listingCounts.views === 1 ? '' : 's'}
                     </p>
                   </div>
                   <span
@@ -187,7 +214,7 @@ export default function MyListings({ listerUser, setView }) {
                 )}
 
                 <button className="chip" style={{ marginTop: 12 }} onClick={() => toggleInquiries(listing.id)}>
-                  <MessageSquare size={13} /> Inquiries
+                  <MessageSquare size={13} /> Inquiries ({listingCounts.inquiries})
                   {expandedId === listing.id ? <ChevronUp size={13} /> : <ChevronDown size={13} />}
                 </button>
 

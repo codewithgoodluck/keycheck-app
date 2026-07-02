@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'react'
-import { Plus, ShieldAlert, ShieldCheck, ShieldX, Clock, UserCheck } from 'lucide-react'
+import { Plus, ShieldAlert, ShieldCheck, ShieldX, Clock, UserCheck, Eye, MessageSquare } from 'lucide-react'
 import { TYPE_LABELS } from '../lib/format.js'
 import { NIGERIAN_STATES, DUAL_REP_LABELS } from '../data/verificationRules.js'
-import { createListing, listListings, activateListing, rejectListing, getEffectiveStatus } from '../lib/listingsApi.js'
+import { createListing, listListings, activateListing, rejectListing, getEffectiveStatus, getListingViewCount } from '../lib/listingsApi.js'
+import { getInquiryCount } from '../lib/inquiriesApi.js'
 import VerificationBadge from './VerificationBadge.jsx'
 import FeeComplianceNote from './FeeComplianceNote.jsx'
 
@@ -29,10 +30,36 @@ export default function AdminListings() {
   const [form, setForm] = useState(EMPTY_FORM)
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState('')
+  const [counts, setCounts] = useState({}) // listingId -> { views, inquiries }
 
   useEffect(() => {
     refresh()
   }, [])
+
+  // Legacy admin-direct-created listings (this form's own create path)
+  // have no listerId at all, so counting is skipped for those — a query
+  // filtered on an undefined listerId would either throw or just never
+  // match, not a meaningful "0".
+  useEffect(() => {
+    if (!listings || listings.length === 0) return
+    const withLister = listings.filter((l) => l.listerId)
+    if (withLister.length === 0) return
+    let cancelled = false
+    Promise.all(
+      withLister.map(async (l) => {
+        const [views, inquiryCount] = await Promise.all([
+          getListingViewCount(l.id, l.listerId).catch(() => 0),
+          getInquiryCount(l.id, l.listerId).catch(() => 0)
+        ])
+        return [l.id, { views, inquiries: inquiryCount }]
+      })
+    ).then((entries) => {
+      if (!cancelled) setCounts(Object.fromEntries(entries))
+    })
+    return () => {
+      cancelled = true
+    }
+  }, [listings])
 
   function refresh() {
     listListings()
@@ -215,6 +242,7 @@ export default function AdminListings() {
           listings.map((listing) => {
             const effectiveStatus = getEffectiveStatus(listing)
             const Icon = STATUS_ICON[effectiveStatus] || Clock
+            const listingCounts = counts[listing.id]
             return (
               <div key={listing.id} className="detail-card" style={{ padding: '16px 20px' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12, alignItems: 'flex-start', marginBottom: 8 }}>
@@ -230,6 +258,12 @@ export default function AdminListings() {
                     <p style={{ fontSize: 13, color: 'var(--ink-soft)', margin: 0 }}>
                       {listing.locationText}, {listing.state} · ₦{Number(listing.price).toLocaleString()}
                     </p>
+                    {listingCounts && (
+                      <p style={{ fontSize: 12, color: 'var(--ink-faint)', margin: '2px 0 0', display: 'flex', alignItems: 'center', gap: 10 }}>
+                        <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}><Eye size={12} /> {listingCounts.views}</span>
+                        <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}><MessageSquare size={12} /> {listingCounts.inquiries}</span>
+                      </p>
+                    )}
                   </div>
                   <span
                     className={`stamp-inline ${

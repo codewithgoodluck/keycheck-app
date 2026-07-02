@@ -194,6 +194,22 @@ service cloud.firestore {
       allow delete: if isAdmin() || (request.auth != null && request.auth.uid == resource.data.listerId);
     }
 
+    // View-count analytics (see web/src/lib/listingsApi.js's
+    // logListingView/getListingViewCount) — fire-and-forget log, same
+    // shape/spirit as search_misses below. listerId is denormalized onto
+    // the view-log doc itself (the viewer already has it from the public
+    // listing they just read) so the read/count rule can check ownership
+    // directly without a cross-collection get(). No dedup — every page
+    // load logs a view, a deliberate simplification (see the plan).
+    match /listing_views/{viewId} {
+      allow create: if request.resource.data.keys().hasOnly(['listingId', 'listerId', 'at'])
+                    && request.resource.data.listingId is string
+                    && request.resource.data.listerId is string
+                    && request.resource.data.at is string;
+      allow read: if isAdmin() || (request.auth != null && request.auth.uid == resource.data.listerId);
+      allow update, delete: if false;
+    }
+
     // FCM push token registry (see web/src/lib/push.js). Groundwork only —
     // nothing currently reads this to actually send a push; a future
     // Cloud Function or the whatsapp-bot service would use the Admin SDK

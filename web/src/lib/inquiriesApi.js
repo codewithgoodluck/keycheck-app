@@ -1,5 +1,5 @@
 import { db } from './firebase.js'
-import { collection, addDoc, updateDoc, doc, getDocs, query, where } from 'firebase/firestore'
+import { collection, addDoc, updateDoc, doc, getDocs, getCountFromServer, query, where } from 'firebase/firestore'
 
 const INQUIRIES = 'inquiries'
 
@@ -42,4 +42,13 @@ export async function getInquiriesForListing(listingId, listerId) {
 
 export async function markInquiryRead(inquiryId) {
   await updateDoc(doc(db, INQUIRIES, inquiryId), { read: true })
+}
+
+// getCountFromServer() aggregates server-side, no need for a redundant
+// counter field on the listing itself — reuses the same collection
+// getInquiriesForListing already queries, same two-filter requirement.
+export async function getInquiryCount(listingId, listerId) {
+  const q = query(collection(db, INQUIRIES), where('listingId', '==', listingId), where('listerId', '==', listerId))
+  const snap = await getCountFromServer(q)
+  return snap.data().count
 }
