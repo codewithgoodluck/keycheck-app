@@ -87,20 +87,19 @@ export default async function handler(req, res) {
     const doc = await fetchDoc('reports', id)
     if (doc) {
       og = {
-        title: `${TYPE_LABELS[doc.type?.stringValue] || 'Report'}: ${doc.locationText?.stringValue || 'KeyCheck report'}`,
-        description: (doc.description?.stringValue || SITE_DESCRIPTION).slice(0, 200),
+        title: `${TYPE_LABELS[doc.type] || 'Report'}: ${doc.locationText || 'KeyCheck report'}`,
+        description: (doc.description || SITE_DESCRIPTION).slice(0, 200),
         image: SITE_IMAGE,
         url: `${SITE_URL}/report/${id}`
       }
     }
   } else if (type === 'listing' && id) {
     const doc = await fetchDoc('listings', id)
-    if (doc && doc.status?.stringValue === 'active') {
-      const price = doc.price?.integerValue || doc.price?.doubleValue
+    if (doc && doc.status === 'active') {
       og = {
-        title: `${TYPE_LABELS[doc.type?.stringValue] || 'Listing'} — ₦${Number(price || 0).toLocaleString()}`,
-        description: (doc.description?.stringValue || SITE_DESCRIPTION).slice(0, 200),
-        image: doc.photoUrl?.stringValue || SITE_IMAGE,
+        title: `${TYPE_LABELS[doc.type] || 'Listing'} — ₦${Number(doc.price || 0).toLocaleString()}`,
+        description: (doc.description || SITE_DESCRIPTION).slice(0, 200),
+        image: doc.photoUrl || SITE_IMAGE,
         url: `${SITE_URL}/listing/${id}`
       }
     }
