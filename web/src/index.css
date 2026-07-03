@@ -155,18 +155,21 @@ button { font-family: inherit; }
 
 /* ---------- Hero ---------- */
 
-/* Full-bleed, gradient-only — deliberately never a photo. An earlier
-   version pulled a real photo from a moderator-verified listing, but
-   nothing curates a photo for "suitable as the whole site's banner"
-   specifically (a verified listing's photo turned out to be a scanned
-   ID document), so this reverted to a solid gradient that can never
-   show unmoderated user content. Breaks out to the true viewport width
-   (both edges of the screen, not just .app's own 920px container) via
-   the standard left:50%/-50vw centering trick — html/body get
-   overflow-x: hidden as a guard against the 100vw calculation
-   introducing a horizontal scrollbar on scrollbar-width platforms.
-   Same treatment (see .page-banner below) is reused on every other page
-   for one consistent banner system across the whole app. */
+/* Full-bleed. Breaks out to the true viewport width (both edges of the
+   screen, not just .app's own 920px container) via the standard
+   left:50%/-50vw centering trick — html gets overflow-x: hidden as a
+   guard against the 100vw calculation introducing a horizontal
+   scrollbar. Same treatment (see .page-banner below) is reused on every
+   other page for one consistent banner system across the whole app.
+
+   background-image is two layers: a dark scrim gradient (always
+   present, so text stays readable regardless of what's under it) over
+   --banner-image, a single site-wide image a moderator sets from the
+   admin panel (see lib/siteSettings.js) — never pulled automatically
+   from a listing or report, which is what caused a scanned ID document
+   to end up as the site banner previously. --banner-image defaults to
+   `none`, in which case background-color (the solid ink/green tone)
+   shows through the scrim on its own, identical to having no image set. */
 .hero {
   position: relative;
   left: 50%;
@@ -175,7 +178,11 @@ button { font-family: inherit; }
   margin-left: -50vw;
   margin-right: -50vw;
   padding: 52px 20px 34px;
-  background: linear-gradient(135deg, var(--ink) 0%, var(--green-deep) 100%);
+  background-color: var(--ink);
+  background-image: linear-gradient(135deg, rgba(21, 33, 26, 0.72) 0%, rgba(15, 122, 55, 0.86) 100%), var(--banner-image, none);
+  background-size: cover, cover;
+  background-position: center, center;
+  background-repeat: no-repeat, no-repeat;
   border-radius: 0 0 32px 32px;
   color: #fff;
   margin-bottom: 28px;
@@ -229,14 +236,19 @@ button { font-family: inherit; }
   margin-left: -50vw;
   margin-right: -50vw;
   padding: 36px 20px 28px;
-  background: linear-gradient(135deg, var(--ink) 0%, var(--green-deep) 100%);
+  background-color: var(--ink);
+  background-image: linear-gradient(135deg, rgba(21, 33, 26, 0.72) 0%, rgba(15, 122, 55, 0.86) 100%), var(--banner-image, none);
+  background-size: cover, cover;
+  background-position: center, center;
+  background-repeat: no-repeat, no-repeat;
   border-radius: 0 0 28px 28px;
   color: #fff;
   margin-bottom: 24px;
 }
 
 .page-banner.page-banner-market {
-  background: linear-gradient(135deg, var(--coral-deep) 0%, var(--coral) 100%);
+  background-color: var(--coral-deep);
+  background-image: linear-gradient(135deg, rgba(193, 79, 43, 0.72) 0%, rgba(226, 103, 63, 0.86) 100%), var(--banner-image, none);
 }
 
 .page-banner .eyebrow {
@@ -385,6 +397,98 @@ button { font-family: inherit; }
 .chip.active { background: var(--green); color: #fff; border-color: var(--green); }
 .chip svg { width: 13px; height: 13px; }
 
+/* ---------- Filter bar (segmented view toggle + expandable filters) ---------- */
+
+/* Replaces three stacked, identically-styled pill rows (kind/status/
+   category) with one primary control (the thing you'd change most
+   often) and a single secondary panel for the rest — status and
+   category were being filtered far less often than kind, so giving
+   them equal visual weight as three rows of the same chip style made
+   it unclear which choice actually mattered. */
+.filter-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-bottom: 4px;
+}
+
+.segmented-control {
+  display: inline-flex;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 3px;
+  gap: 2px;
+}
+
+.segmented-control button {
+  border: none;
+  background: none;
+  color: var(--ink-soft);
+  font-size: 12.5px;
+  font-weight: 600;
+  padding: 7px 14px;
+  border-radius: 999px;
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.segmented-control button.active { background: var(--green); color: #fff; }
+
+.filters-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--ink-soft);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  padding: 8px 14px;
+  border-radius: 999px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.filters-toggle:hover,
+.filters-toggle.active { border-color: var(--green); color: var(--green-deep); }
+
+.filters-count-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 17px;
+  height: 17px;
+  padding: 0 4px;
+  border-radius: 999px;
+  background: var(--green);
+  color: #fff;
+  font-size: 10.5px;
+  font-weight: 700;
+}
+
+.filters-panel {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  padding: 16px;
+  margin: 10px 0 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.filters-group-label {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--ink-faint);
+  margin: 0 0 8px;
+}
+
 /* ---------- Stats bar ---------- */
 
 .stats-bar {
@@ -430,113 +534,6 @@ button { font-family: inherit; }
 @media (max-width: 600px) {
   .stats-bar { grid-template-columns: repeat(2, 1fr); }
 }
-
-/* ---------- Trending strip ---------- */
-
-.trending-section { margin: 24px 0; }
-
-.trending-section-label {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 11.5px;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-  color: var(--green);
-  margin: 0 0 10px;
-}
-
-.trending-carousel {
-  position: relative;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
-
-.trending-strip {
-  display: flex;
-  gap: 12px;
-  overflow-x: auto;
-  scroll-snap-type: x mandatory;
-  padding-bottom: 4px;
-  -webkit-overflow-scrolling: touch;
-  scrollbar-width: none;
-}
-
-.trending-strip::-webkit-scrollbar { display: none; }
-
-.trending-carousel-nav {
-  flex-shrink: 0;
-  width: 34px;
-  height: 34px;
-  border-radius: 50%;
-  border: 1px solid var(--line);
-  background: var(--surface);
-  color: var(--ink-soft);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  transition: border-color 0.15s ease, color 0.15s ease;
-}
-
-.trending-carousel-nav:hover { border-color: var(--green); color: var(--green-deep); }
-
-@media (max-width: 640px) {
-  .trending-carousel-nav { display: none; }
-}
-
-.trending-card {
-  scroll-snap-align: start;
-  flex: 0 0 auto;
-  width: 200px;
-  background: var(--surface);
-  border: 1px solid var(--line);
-  border-left: 3px solid var(--line);
-  border-radius: var(--radius-sm);
-  padding: 14px;
-  cursor: pointer;
-  transition: border-top-color 0.15s ease, border-right-color 0.15s ease, border-bottom-color 0.15s ease;
-}
-
-.trending-card:hover { border-top-color: var(--ink-faint); border-right-color: var(--ink-faint); border-bottom-color: var(--ink-faint); }
-
-.trending-card:has(.card-icon.verified) { border-left-color: var(--green); }
-.trending-card:has(.card-icon.clean) { border-left-color: var(--teal); }
-.trending-card:has(.card-icon.disputed) { border-left-color: var(--red); }
-.trending-card:has(.card-icon.unverified) { border-left-color: var(--gold); }
-
-.trending-card .card-icon {
-  width: 30px;
-  height: 30px;
-  border-radius: 9px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin-bottom: 10px;
-}
-
-.trending-card h4 {
-  margin: 0 0 10px;
-  font-size: 13.5px;
-  font-weight: 600;
-  line-height: 1.35;
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-}
-
-.trending-card-stats {
-  display: flex;
-  gap: 12px;
-  font-size: 11.5px;
-  color: var(--ink-faint);
-}
-
-.trending-card-stats span { display: inline-flex; align-items: center; gap: 4px; }
-.trending-card-stats svg { width: 12px; height: 12px; }
 
 /* ---------- Results list ---------- */
 
@@ -1231,7 +1228,11 @@ button { font-family: inherit; }
   margin-left: -50vw;
   margin-right: -50vw;
   padding: 36px 20px 28px;
-  background: linear-gradient(135deg, var(--ink) 0%, var(--green-deep) 100%);
+  background-color: var(--ink);
+  background-image: linear-gradient(135deg, rgba(21, 33, 26, 0.72) 0%, rgba(15, 122, 55, 0.86) 100%), var(--banner-image, none);
+  background-size: cover, cover;
+  background-position: center, center;
+  background-repeat: no-repeat, no-repeat;
   border-radius: 0 0 28px 28px;
   color: #fff;
   margin-bottom: 24px;
@@ -1246,6 +1247,39 @@ button { font-family: inherit; }
 }
 
 .saved-header p { color: rgba(255, 255, 255, 0.85); margin: 0; font-size: 13.5px; }
+
+/* Every banner's content centers on mobile — eyebrow chip, heading,
+   subtitle, and (on .hero specifically) the search bar and trending-
+   location chip row all switch from left-aligned to centered, since a
+   left-aligned block reads awkwardly on a narrow full-bleed banner.
+   Desktop stays left-aligned, unchanged. */
+@media (max-width: 640px) {
+  .hero,
+  .page-banner,
+  .saved-header {
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .hero .eyebrow,
+  .page-banner .eyebrow {
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  .hero h1,
+  .hero p,
+  .page-banner h1,
+  .page-banner p {
+    max-width: none;
+  }
+
+  .hero .search-wrap { width: 100%; }
+
+  .hero .chip-row { justify-content: center; }
+}
 
 /* ---------- Floating action button ---------- */
 
@@ -1389,7 +1423,11 @@ button { font-family: inherit; }
    Market/Listings banner reaches both edges of the screen exactly like
    every other page's banner now does. */
 .theme-market .hero {
-  background: linear-gradient(180deg, var(--cream) 0%, var(--cream-deep) 100%);
+  background-color: var(--cream-deep);
+  background-image: linear-gradient(180deg, rgba(251, 243, 231, 0.82) 0%, rgba(243, 228, 207, 0.92) 100%), var(--banner-image, none);
+  background-size: cover, cover;
+  background-position: center, center;
+  background-repeat: no-repeat, no-repeat;
   margin-bottom: 28px;
   padding: 36px 20px 32px;
   border-radius: 0 0 32px 32px;

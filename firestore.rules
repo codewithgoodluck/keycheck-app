@@ -322,5 +322,15 @@ service cloud.firestore {
       allow read: if isAdmin();
       allow delete: if false;
     }
+
+    // Site-wide settings — currently just the banner image shown across
+    // every page's banner (see web/src/lib/siteSettings.js). Public read
+    // (every visitor needs it to render the page), admin-only write —
+    // this affects the whole site's appearance, not a single user's own
+    // data, so it needs the same trust boundary as activating a listing.
+    match /settings/{docId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
   }
 }

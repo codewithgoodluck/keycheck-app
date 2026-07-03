@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { LogOut, Trash2, ShieldCheck, Link2, Plus, Search, Home, Users, Flag, Star } from 'lucide-react'
+import { LogOut, Trash2, ShieldCheck, Link2, Plus, Search, Home, Users, Flag, Star, Image } from 'lucide-react'
 import { getReportTitle } from '../lib/format.js'
 import {
   adminLogout,
@@ -15,6 +15,7 @@ import AdminListings from './AdminListings.jsx'
 import AdminBuyersAgents from './AdminBuyersAgents.jsx'
 import AdminListingFlags from './AdminListingFlags.jsx'
 import AdminReviews from './AdminReviews.jsx'
+import AdminSiteBanner from './AdminSiteBanner.jsx'
 
 const STATUS_OPTIONS = ['unverified', 'disputed', 'verified']
 
@@ -150,6 +151,9 @@ export default function AdminPanel({ reports, adminEmail }) {
         <button className={`chip ${filter === 'reviews' ? 'active' : ''}`} onClick={() => setFilter('reviews')}>
           <Star size={12} /> Reviews
         </button>
+        <button className={`chip ${filter === 'site_banner' ? 'active' : ''}`} onClick={() => setFilter('site_banner')}>
+          <Image size={12} /> Site banner
+        </button>
       </div>
 
       {filter === 'listings' ? (
@@ -160,6 +164,8 @@ export default function AdminPanel({ reports, adminEmail }) {
         <AdminListingFlags />
       ) : filter === 'reviews' ? (
         <AdminReviews />
+      ) : filter === 'site_banner' ? (
+        <AdminSiteBanner />
       ) : filter === 'search_misses' ? (
         <div className="report-list">
           {searchMisses === null ? (

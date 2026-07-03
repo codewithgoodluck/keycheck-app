@@ -32,6 +32,7 @@ import { watchListerAuth } from './lib/listerAuth.js'
 import { getSeenIds, markSeen, getSeenListingIds, markListingsSeen, areaOf } from './lib/notifications.js'
 import { getWatchedTerms } from './lib/watches.js'
 import { getStoredPushToken, onForegroundPushMessage } from './lib/push.js'
+import { subscribeSiteBannerUrl } from './lib/siteSettings.js'
 import { Bell, X } from 'lucide-react'
 
 // MVP starts with in-memory seeded data so the app is demoable with zero
@@ -76,6 +77,17 @@ export default function App() {
 
   useEffect(() => {
     setSavedIds(getSavedIds())
+  }, [])
+
+  // Site-wide banner image, admin-controlled (see lib/siteSettings.js) —
+  // applied as a single CSS custom property read by every banner class
+  // (.hero, .page-banner, .saved-header, and their market variants)
+  // rather than threaded as a prop through a dozen page components.
+  useEffect(() => {
+    const unsubscribe = subscribeSiteBannerUrl((url) => {
+      document.documentElement.style.setProperty('--banner-image', url ? `url("${url}")` : 'none')
+    })
+    return unsubscribe
   }, [])
 
   useEffect(() => {

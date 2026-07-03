@@ -1,33 +1,34 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { Search, ShieldCheck, AlertTriangle, MapPin, FileSearch, ShieldPlus, TrendingUp, Clock3, Users, ChevronLeft, ChevronRight } from 'lucide-react'
+import { Search, ShieldCheck, AlertTriangle, MapPin, FileSearch, ShieldPlus, TrendingUp, Clock3, Users, SlidersHorizontal, ChevronDown } from 'lucide-react'
 import ReportCard from './ReportCard.jsx'
 import StatsBar from './StatsBar.jsx'
-import TrendingCard from './TrendingCard.jsx'
 import StatusLegend from './StatusLegend.jsx'
 import WatchAreaControls from './WatchAreaControls.jsx'
-import { TYPE_LABELS } from '../lib/format.js'
 import { logSearchMiss } from '../lib/reportsApi.js'
-import { trendingScore, sortByTrending } from '../lib/trending.js'
+import { trendingScore } from '../lib/trending.js'
 
 const KIND_FILTERS = [
-  { key: 'all', label: 'Everything', Icon: FileSearch },
-  { key: 'flag', label: 'Flags only', Icon: AlertTriangle },
-  { key: 'endorsement', label: 'Clean records', Icon: ShieldPlus }
+  { key: 'all', label: 'Everything' },
+  { key: 'flag', label: 'Flags only' },
+  { key: 'endorsement', label: 'Clean records' }
 ]
 
+// Shorter labels than lib/format.js's TYPE_LABELS on purpose — those
+// carry "flagged"/"vouched for" because they name a specific report;
+// here you're picking a category to filter by, not stating a fact
+// about one report, so the qualifier is redundant.
 const STATUS_FILTERS = [
-  { key: 'all', label: 'All reports', Icon: FileSearch },
-  { key: 'verified', label: 'Verified only', Icon: ShieldCheck },
-  { key: 'disputed', label: 'In court', Icon: AlertTriangle }
+  { key: 'all', label: 'All statuses' },
+  { key: 'verified', label: 'Verified' },
+  { key: 'disputed', label: 'In court' }
 ]
 
 const CATEGORY_FILTERS = [
-  { key: 'all', label: 'All categories' },
-  { key: 'land', label: TYPE_LABELS.land },
-  { key: 'agent', label: TYPE_LABELS.agent },
-  { key: 'house_agent', label: TYPE_LABELS.house_agent },
-  { key: 'landlord', label: TYPE_LABELS.landlord },
-  { key: 'estate', label: TYPE_LABELS.estate }
+  { key: 'land', label: 'Land dispute' },
+  { key: 'agent', label: 'Land agent' },
+  { key: 'house_agent', label: 'Rental agent' },
+  { key: 'landlord', label: 'Landlord' },
+  { key: 'estate', label: 'Estate/developer' }
 ]
 
 export default function SearchHome({ reports, setView, savedIds, onToggleSave, hasMore, onLoadMore }) {
@@ -37,15 +38,15 @@ export default function SearchHome({ reports, setView, savedIds, onToggleSave, h
   const [statusFilter, setStatusFilter] = useState('all')
   const [categoryFilter, setCategoryFilter] = useState('all')
   const [sortMode, setSortMode] = useState('newest')
+  const [showFilters, setShowFilters] = useState(false)
   const [showSuggestions, setShowSuggestions] = useState(false)
   const [activeIndex, setActiveIndex] = useState(-1)
   const blurTimer = useRef(null)
-  const trendingStripRef = useRef(null)
 
-  function scrollTrending(dir) {
-    const el = trendingStripRef.current
-    if (!el) return
-    el.scrollBy({ left: dir * (el.clientWidth * 0.8), behavior: 'smooth' })
+  const activeFilterCount = (statusFilter !== 'all' ? 1 : 0) + (categoryFilter !== 'all' ? 1 : 0)
+
+  function toggleCategoryFilter(key) {
+    setCategoryFilter((c) => (c === key ? 'all' : key))
   }
 
   const trendingLocations = useMemo(() => {
@@ -59,8 +60,6 @@ export default function SearchHome({ reports, setView, savedIds, onToggleSave, h
       .slice(0, 5)
       .map(([area]) => area)
   }, [reports])
-
-  const trendingReports = useMemo(() => sortByTrending(reports).slice(0, 5), [reports])
 
   const { locationOptions, nameOptions } = useMemo(() => {
     const locations = new Map()
@@ -271,74 +270,63 @@ export default function SearchHome({ reports, setView, savedIds, onToggleSave, h
       <StatsBar reports={reports} />
       <StatusLegend />
 
-      {trendingReports.length > 0 && (
-        <div className="trending-section">
-          <p className="trending-section-label">
-            <TrendingUp size={13} /> Trending now
-          </p>
-          <div className="trending-carousel">
-            <button
-              type="button"
-              className="trending-carousel-nav prev"
-              onClick={() => scrollTrending(-1)}
-              aria-label="Scroll trending left"
-            >
-              <ChevronLeft size={18} />
-            </button>
-            <div className="trending-strip" ref={trendingStripRef}>
-              {trendingReports.map((r) => (
-                <TrendingCard key={r.id} report={r} onClick={() => setView('detail', r)} />
-              ))}
-            </div>
-            <button
-              type="button"
-              className="trending-carousel-nav next"
-              onClick={() => scrollTrending(1)}
-              aria-label="Scroll trending right"
-            >
-              <ChevronRight size={18} />
-            </button>
-          </div>
-        </div>
-      )}
-
-      <div className="chip-row" style={{ marginTop: 0, marginBottom: 4 }}>
-        {KIND_FILTERS.map(({ key, label, Icon }) => (
-          <button
-            key={key}
-            className={`chip ${kindFilter === key ? 'active' : ''}`}
-            onClick={() => setKindFilter(key)}
-          >
-            <Icon /> {label}
-          </button>
-        ))}
-      </div>
-
-      {kindFilter !== 'endorsement' && (
-        <div className="chip-row" style={{ marginTop: 0, marginBottom: 4 }}>
-          {STATUS_FILTERS.map(({ key, label, Icon }) => (
-            <button
-              key={key}
-              className={`chip ${statusFilter === key ? 'active' : ''}`}
-              onClick={() => setStatusFilter(key)}
-            >
-              <Icon /> {label}
+      {/* Redesigned filter bar: one primary segmented view toggle
+          (kind — the thing you'd change most often) plus a single
+          expandable panel for the two secondary filters (status,
+          category), instead of three stacked pill rows that all looked
+          the same and made it unclear which filter mattered most. */}
+      <div className="filter-bar">
+        <div className="segmented-control">
+          {KIND_FILTERS.map(({ key, label }) => (
+            <button key={key} className={kindFilter === key ? 'active' : ''} onClick={() => setKindFilter(key)}>
+              {label}
             </button>
           ))}
         </div>
-      )}
 
-      <div className="chip-row" style={{ marginTop: 0, marginBottom: 4 }}>
-        {CATEGORY_FILTERS.map(({ key, label }) => (
-          <button
-            key={key}
-            className={`chip ${categoryFilter === key ? 'active' : ''}`}
-            onClick={() => setCategoryFilter(key)}
-          >
-            {label}
-          </button>
-        ))}
+        <button className={`filters-toggle ${showFilters ? 'active' : ''}`} onClick={() => setShowFilters((s) => !s)}>
+          <SlidersHorizontal size={13} />
+          Filters
+          {activeFilterCount > 0 && <span className="filters-count-badge">{activeFilterCount}</span>}
+          <ChevronDown size={13} style={{ transform: showFilters ? 'rotate(180deg)' : 'none', transition: 'transform 0.15s ease' }} />
+        </button>
       </div>
+
+      {showFilters && (
+        <div className="filters-panel">
+          {kindFilter !== 'endorsement' && (
+            <div className="filters-group">
+              <p className="filters-group-label">Status</p>
+              <div className="chip-row" style={{ marginTop: 0 }}>
+                {STATUS_FILTERS.map(({ key, label }) => (
+                  <button
+                    key={key}
+                    className={`chip ${statusFilter === key ? 'active' : ''}`}
+                    onClick={() => setStatusFilter(key)}
+                  >
+                    {label}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
+          <div className="filters-group">
+            <p className="filters-group-label">Category</p>
+            <div className="chip-row" style={{ marginTop: 0 }}>
+              {CATEGORY_FILTERS.map(({ key, label }) => (
+                <button
+                  key={key}
+                  className={`chip ${categoryFilter === key ? 'active' : ''}`}
+                  onClick={() => toggleCategoryFilter(key)}
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
 
       <div className="results-meta">
         <span>{results.length} report{results.length === 1 ? '' : 's'}</span>
