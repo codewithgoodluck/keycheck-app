@@ -21,7 +21,7 @@ const NON_LAND_TYPES = ['house', 'apartment', 'commercial', 'estate']
 
 function FactItem({ label, value }) {
   return (
-    <div style={{ background: 'var(--paper)', borderRadius: 10, padding: '10px 12px' }}>
+    <div className="fact-item" style={{ borderRadius: 10, padding: '10px 12px' }}>
       <p style={{ fontSize: 11, color: 'var(--ink-faint)', margin: '0 0 2px' }}>{label}</p>
       <p style={{ fontSize: 14, fontWeight: 700, margin: 0 }}>{value}</p>
     </div>

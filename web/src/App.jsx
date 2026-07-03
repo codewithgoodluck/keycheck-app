@@ -34,7 +34,7 @@ import { watchListerAuth } from './lib/listerAuth.js'
 import { getSeenIds, markSeen, getSeenListingIds, markListingsSeen, areaOf } from './lib/notifications.js'
 import { getWatchedTerms } from './lib/watches.js'
 import { getStoredPushToken, onForegroundPushMessage } from './lib/push.js'
-import { subscribeSiteBannerUrl } from './lib/siteSettings.js'
+import { subscribeSiteBannerImages, resolveBannerImage } from './lib/siteSettings.js'
 import { Bell, X } from 'lucide-react'
 
 // MVP starts with in-memory seeded data so the app is demoable with zero
@@ -81,16 +81,24 @@ export default function App() {
     setSavedIds(getSavedIds())
   }, [])
 
-  // Site-wide banner image, admin-controlled (see lib/siteSettings.js) —
+  // Per-page banner images, admin-controlled (see lib/siteSettings.js) —
   // applied as a single CSS custom property read by every banner class
   // (.hero, .page-banner, .saved-header, and their market variants)
   // rather than threaded as a prop through a dozen page components.
+  // Re-resolved whenever either the images themselves change (admin
+  // edits one) or the current view changes (a different page's banner
+  // needs a different image), falling back to bannerImages.default,
+  // then the plain gradient.
+  const [bannerImages, setBannerImages] = useState({})
   useEffect(() => {
-    const unsubscribe = subscribeSiteBannerUrl((url) => {
-      document.documentElement.style.setProperty('--banner-image', url ? `url("${url}")` : 'none')
-    })
+    const unsubscribe = subscribeSiteBannerImages(setBannerImages)
     return unsubscribe
   }, [])
+
+  useEffect(() => {
+    const url = resolveBannerImage(bannerImages, view)
+    document.documentElement.style.setProperty('--banner-image', url ? `url("${url}")` : 'none')
+  }, [bannerImages, view])
 
   useEffect(() => {
     savedIdsRef.current = savedIds

@@ -1486,6 +1486,33 @@ button { font-family: inherit; }
 .theme-market .submit-btn:hover { background: var(--coral-deep); }
 
 .theme-market .icon-btn.saved { color: var(--coral-deep); border-color: var(--coral); background: var(--coral-soft); }
+.theme-market .icon-btn:hover { border-color: var(--coral); color: var(--coral-deep); }
+
+/* Warms up the listing-detail content card itself — previously only the
+   banner/buttons picked up the coral Market identity, leaving the actual
+   card body (facts, verification, features) in the neutral fintech
+   white/grey used by the fraud-report side. Rounder corners, a soft
+   coral-tinted border/divider instead of plain grey, and coral section
+   labels bring the whole page into one consistent "browse a place to
+   live" feel instead of half-and-half. */
+.theme-market .detail-card {
+  border-radius: 28px;
+  border-color: var(--coral-soft);
+}
+
+.theme-market .detail-header { border-bottom-color: var(--coral-soft); }
+
+.theme-market .detail-section { border-bottom-color: var(--coral-soft); }
+
+.theme-market .detail-section h4 { color: var(--coral-deep); }
+
+.fact-item { background: var(--paper); }
+.theme-market .fact-item { background: var(--coral-soft); }
+
+.theme-market .verification-badge-unbacked {
+  background: var(--cream);
+  border-color: var(--coral-soft);
+}
 
 .theme-market .detail-card { border-radius: 28px; }
 
