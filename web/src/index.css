@@ -271,9 +271,21 @@ button { font-family: inherit; }
   overflow: hidden;
 }
 
+/* .hero itself is display:flex/column/align-items:center (see the base
+   .hero rule above), which used to center each banner child —
+   eyebrow/h1/p/search-wrap/chip-row — individually. Wrapping them all in
+   this one block-level div for the carousel's z-index stacking broke
+   that: text children still looked centered via inherited text-align,
+   but a width-constrained block child like .search-wrap (max-width:
+   640px, no auto margins) just sat flush left instead. Re-declaring the
+   same flex/column/center here on the wrapper restores per-child
+   centering exactly as it worked before the carousel was added. */
 .hero-content {
   position: relative;
   z-index: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
 
 .banner-carousel-bg {
