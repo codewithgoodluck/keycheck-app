@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { ArrowLeft, Share2, Bookmark, Users, MapPin, FileText, Link2, ShieldQuestion, Send, MessageSquareReply, Flag } from 'lucide-react'
 import { StampInline } from './Stamp.jsx'
 import { hasConfirmed, markConfirmed, getConfirmedIds } from '../lib/confirms.js'
@@ -21,6 +21,22 @@ export default function ReportDetail({ report, setView, saved, onToggleSave, onC
   const [replyText, setReplyText] = useState('')
   const [submittingReply, setSubmittingReply] = useState(false)
   const [replySubmitted, setReplySubmitted] = useState(false)
+
+  // This component doesn't remount when navigating from one report's
+  // detail page directly to another's (e.g. the "new match" watch alert's
+  // "View" button just changes the `report` prop while staying on the
+  // same 'detail' view) — without this, confirmed/reply state from the
+  // previous report would silently carry over onto the new one, making
+  // "I had this too" a no-op or showing a stale "reply submitted"
+  // message for a report the user never actually interacted with. Mirrors
+  // ListingDetail.jsx's identical fix for its saved/comparing state.
+  useEffect(() => {
+    setConfirmed(report ? hasConfirmed(report.id) : false)
+    setShowReplyForm(false)
+    setReplyRole('agent')
+    setReplyText('')
+    setReplySubmitted(false)
+  }, [report?.id])
 
   if (!report) {
     return (

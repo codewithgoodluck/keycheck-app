@@ -45,7 +45,7 @@ export default function CompareListings({ listings, setView }) {
 
   if (selected.length === 0) {
     return (
-      <div className="empty-state">
+      <div className="theme-market empty-state">
         <p>No listings selected to compare.</p>
         <button onClick={() => setView('listings')}>Browse listings</button>
       </div>
@@ -53,7 +53,7 @@ export default function CompareListings({ listings, setView }) {
   }
 
   return (
-    <>
+    <div className="theme-market">
       <button className="detail-back" onClick={() => setView('listings')}>
         <ArrowLeft size={15} /> Back to listings
       </button>
@@ -79,9 +79,9 @@ export default function CompareListings({ listings, setView }) {
                       <X size={12} />
                     </button>
                   </div>
-                  {l.photoUrl && (
+                  {(l.photoUrls?.[0] || l.photoUrl) && (
                     <img
-                      src={l.photoUrl}
+                      src={l.photoUrls?.[0] || l.photoUrl}
                       alt=""
                       style={{ width: '100%', height: 90, objectFit: 'cover', borderRadius: 'var(--radius-sm)', margin: '8px 0' }}
                     />
@@ -109,6 +109,6 @@ export default function CompareListings({ listings, setView }) {
           </tbody>
         </table>
       </div>
-    </>
+    </div>
   )
 }

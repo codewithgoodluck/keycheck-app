@@ -34,7 +34,7 @@ export default function ReportCard({ report, onClick, saved, onToggleSave }) {
             <MapPin /> {report.locationText}
           </span>
           <span>
-            <Clock /> {timeAgo(report.dateReported)}
+            <Clock /> {timeAgo(report.createdAt || report.dateReported)}
           </span>
           {report.upvotes > 0 && (
             <span>

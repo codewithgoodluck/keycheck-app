@@ -114,7 +114,7 @@ export default function MyListings({ listerUser, setView }) {
   }
 
   return (
-    <div style={{ padding: '0 0 60px' }}>
+    <div className="theme-market" style={{ padding: '0 0 60px' }}>
       <div className="page-banner page-banner-market">
         <h1>My listings</h1>
         <p>Signed in as {listerUser.email}</p>

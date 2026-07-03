@@ -1514,7 +1514,14 @@ button { font-family: inherit; }
   border-color: var(--coral-soft);
 }
 
-.theme-market .detail-card { border-radius: 28px; }
+/* .watch-alert is shared with the report side's "watching this area"
+   banner (green there, correctly); ListingsBrowse.jsx/CompareListings.jsx
+   reuse the same component for the compare-selection banner, which
+   should read as Market/coral instead. */
+.theme-market .watch-alert { background: var(--coral-soft); }
+.theme-market .watch-alert svg:first-child { color: var(--coral-deep); }
+.theme-market .watch-alert button { color: var(--coral-deep); }
+.theme-market .watch-alert button.dismiss { color: var(--ink-faint); }
 
 /* ---------- Listing grid + photo-forward card ---------- */
 

@@ -87,7 +87,7 @@ export default function BecomeBuyersAgent({ listerUser, setView }) {
   }
 
   return (
-    <div className="form-wrap">
+    <div className="theme-market form-wrap">
       <div className="page-banner page-banner-market">
         <h1>Offer buyer's-agent services</h1>
         <p>

@@ -188,7 +188,7 @@ export default function SubmitListing({ listerUser, setView }) {
   }
 
   return (
-    <div className="form-wrap">
+    <div className="theme-market form-wrap">
       <div className="page-banner page-banner-market">
         <h1>List a property</h1>
         <p>Every listing is reviewed before it goes live — this usually takes a moderator a short while.</p>
