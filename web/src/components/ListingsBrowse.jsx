@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { Search, FileSearch, Home, Plus, GitCompare, Users, History, X } from 'lucide-react'
+import { Search, FileSearch, Home, Plus, GitCompare, Users, History, X, SlidersHorizontal, ChevronDown } from 'lucide-react'
 import ListingCard from './ListingCard.jsx'
 import WatchAreaControls from './WatchAreaControls.jsx'
 import { PROPERTY_TYPE_LABELS, getPropertyTypeLabel } from '../data/propertyTypes.js'
@@ -24,6 +24,7 @@ export default function ListingsBrowse({ listings, setView, hasMore, onLoadMore,
   const [submittedQuery, setSubmittedQuery] = useState('')
   const [categoryFilter, setCategoryFilter] = useState('all')
   const [stateFilter, setStateFilter] = useState('all')
+  const [showFilters, setShowFilters] = useState(false)
   const [compareIds, setCompareIds] = useState(() => getCompareIds())
   const [savedIds, setSavedIds] = useState(() => getSavedListingIds())
   const [recentIds, setRecentIds] = useState(() => getRecentlyViewedIds())
@@ -160,24 +161,45 @@ export default function ListingsBrowse({ listings, setView, hasMore, onLoadMore,
         </div>
       )}
 
-      <div className="chip-row" style={{ marginTop: 0, marginBottom: 4 }}>
-        {CATEGORY_FILTERS.map(({ key, label }) => (
-          <button key={key} className={`chip ${categoryFilter === key ? 'active' : ''}`} onClick={() => setCategoryFilter(key)}>
-            {label}
-          </button>
-        ))}
+      {/* Same redesigned filter bar pattern as the home page: one
+          primary segmented toggle (category — the thing you'd change
+          most often) and a single expandable panel for the secondary
+          filter (state — 37 options is too many to keep permanently
+          visible as a stacked pill row). */}
+      <div className="filter-bar">
+        <div className="segmented-control">
+          {CATEGORY_FILTERS.map(({ key, label }) => (
+            <button key={key} className={categoryFilter === key ? 'active' : ''} onClick={() => setCategoryFilter(key)}>
+              {label}
+            </button>
+          ))}
+        </div>
+
+        <button className={`filters-toggle ${showFilters ? 'active' : ''}`} onClick={() => setShowFilters((s) => !s)}>
+          <SlidersHorizontal size={13} />
+          Filters
+          {stateFilter !== 'all' && <span className="filters-count-badge">1</span>}
+          <ChevronDown size={13} style={{ transform: showFilters ? 'rotate(180deg)' : 'none', transition: 'transform 0.15s ease' }} />
+        </button>
       </div>
 
-      <div className="chip-row" style={{ marginTop: 0, marginBottom: 4 }}>
-        <button className={`chip ${stateFilter === 'all' ? 'active' : ''}`} onClick={() => setStateFilter('all')}>
-          All states
-        </button>
-        {NIGERIAN_STATES.map((s) => (
-          <button key={s} className={`chip ${stateFilter === s ? 'active' : ''}`} onClick={() => setStateFilter(s)}>
-            {s}
-          </button>
-        ))}
-      </div>
+      {showFilters && (
+        <div className="filters-panel">
+          <div className="filters-group">
+            <p className="filters-group-label">State</p>
+            <div className="chip-row" style={{ marginTop: 0 }}>
+              <button className={`chip ${stateFilter === 'all' ? 'active' : ''}`} onClick={() => setStateFilter('all')}>
+                All states
+              </button>
+              {NIGERIAN_STATES.map((s) => (
+                <button key={s} className={`chip ${stateFilter === s ? 'active' : ''}`} onClick={() => setStateFilter(s)}>
+                  {s}
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
 
       <div className="results-meta">
         <span>{results.length} listing{results.length === 1 ? '' : 's'}</span>

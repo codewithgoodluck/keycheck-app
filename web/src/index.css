@@ -430,6 +430,7 @@ button { font-family: inherit; }
 
 .segmented-control {
   display: inline-flex;
+  flex-wrap: wrap;
   background: var(--surface);
   border: 1px solid var(--line);
   border-radius: 999px;
@@ -1475,6 +1476,11 @@ button { font-family: inherit; }
 
 .theme-market .chip.active { background: var(--coral); color: #fff; border-color: var(--coral); }
 .theme-market .chip:hover { border-color: var(--coral); color: var(--coral-deep); }
+
+.theme-market .segmented-control button.active { background: var(--coral); }
+.theme-market .filters-toggle:hover,
+.theme-market .filters-toggle.active { border-color: var(--coral); color: var(--coral-deep); }
+.theme-market .filters-count-badge { background: var(--coral); }
 
 .theme-market .submit-btn { background: var(--coral); border-radius: 999px; }
 .theme-market .submit-btn:hover { background: var(--coral-deep); }
