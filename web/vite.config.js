@@ -9,10 +9,10 @@ export default defineConfig({
       registerType: 'autoUpdate',
       includeAssets: ['favicon.svg', 'apple-touch-icon.png'],
       manifest: {
-        name: 'KeyCheck — Check before you buy or rent',
+        name: 'KeyCheck: Check before you buy or rent',
         short_name: 'KeyCheck',
         description:
-          'Community housing and land registry. Search before you buy or rent — check land, agents, landlords, and estates for reported fraud.',
+          'Community housing and land registry. Search before you buy or rent. Check land, agents, landlords, and estates for reported fraud.',
         theme_color: '#15211a',
         background_color: '#faf7ef',
         display: 'standalone',

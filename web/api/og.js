@@ -14,9 +14,9 @@
 // generic tags, nothing not already public is ever exposed here.
 
 const SITE_URL = 'https://f-kappa-one.vercel.app'
-const SITE_TITLE = 'KeyCheck — Check before you buy'
+const SITE_TITLE = 'KeyCheck: Check before you buy'
 const SITE_DESCRIPTION =
-  'Community housing and land registry. Search before you buy or rent — check land, agents, landlords, and estates for reported fraud.'
+  'Community housing and land registry. Search before you buy or rent. Check land, agents, landlords, and estates for reported fraud.'
 const SITE_IMAGE = `${SITE_URL}/icon-512.png`
 
 const TYPE_LABELS = {
@@ -97,7 +97,7 @@ export default async function handler(req, res) {
     const doc = await fetchDoc('listings', id)
     if (doc && doc.status === 'active') {
       og = {
-        title: `${TYPE_LABELS[doc.type] || 'Listing'} — ₦${Number(doc.price || 0).toLocaleString()}`,
+        title: `${TYPE_LABELS[doc.type] || 'Listing'}: ₦${Number(doc.price || 0).toLocaleString()}`,
         description: (doc.description || SITE_DESCRIPTION).slice(0, 200),
         image: doc.photoUrl || SITE_IMAGE,
         url: `${SITE_URL}/listing/${id}`
