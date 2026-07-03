@@ -302,17 +302,16 @@ button { font-family: inherit; }
   background-repeat: no-repeat;
   opacity: 0;
   transition: opacity 1.4s ease;
-  /* Mutes whatever gets uploaded — banner photos aren't curated for
-     "reads well behind white text" (a busy scan or a high-contrast
-     photo can otherwise fight with the heading no matter how strong the
-     scrim gradient on top is). saturate/brightness/contrast alone
-     weren't enough: a sharp-edged photo (fine print, hard lines) stays
-     legible to the eye even at a fairly low raw contrast delta, since
-     human vision reads edges, not just flat luminance. blur destroys
-     exactly that — fine detail turns to soft, unreadable texture —
-     while a real estate photo still reads fine as "a house" from a
-     couple pixels of softening. */
-  filter: saturate(0.55) brightness(1.1) contrast(0.85) blur(3px);
+  /* Mutes whatever gets uploaded just enough that fine print/hard edges
+     (a busy scan, a high-contrast document) can't stay legible enough to
+     fight with the heading text — blur is what actually does that (a
+     sharp edge stays readable to the eye at even a fairly low contrast
+     delta; blur destroys the edge itself). Tuned lighter than an
+     earlier pass that also went big on scrim opacity: combined, that
+     made an actual real-estate photo unrecognizable as a photo at all,
+     not just "diffuse." This is the more modest half of the fix — see
+     .theme-market .banner-carousel-scrim below for the other half. */
+  filter: saturate(0.75) brightness(1.05) contrast(0.95) blur(1.5px);
 }
 
 .banner-carousel-layer.active { opacity: 1; }
@@ -328,7 +327,12 @@ button { font-family: inherit; }
 }
 
 .theme-market .banner-carousel-scrim {
-  background-image: linear-gradient(180deg, rgba(250, 236, 231, 0.9) 0%, rgba(245, 196, 179, 0.96) 100%);
+  /* Dialed back from .9/.96 — that plus the blur above muted an actual
+     real-estate photo into invisibility, not just "readable behind
+     text." The blur is what carries the legibility guarantee now; this
+     just needs to be light enough that the uploaded photo still reads
+     as a photo. */
+  background-image: linear-gradient(180deg, rgba(250, 236, 231, 0.72) 0%, rgba(245, 196, 179, 0.82) 100%);
 }
 
 .banner-carousel-dots {
