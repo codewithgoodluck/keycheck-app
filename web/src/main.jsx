@@ -17,9 +17,21 @@ import { registerSW } from 'virtual:pwa-register'
 // gap. Reproduced exactly this: a fix that worked in every fresh test
 // still showed the old broken behavior in a session that had been open
 // since before the deploy.
+//
+// BUT 'controllerchange' also fires on the very first-ever activation —
+// a brand new visitor with no service worker yet, going from
+// controller === null to a controller. Reloading there isn't "picking
+// up an update," it's an unprompted reload of a page someone just
+// opened, capable of firing mid-interaction (e.g. right after a nav
+// click) and silently discarding whatever they were doing. Capturing
+// whether a controller already existed *before* this event distinguishes
+// "a real update happened" from "this tab's first-ever activation" —
+// reproduced this exact regression (a fresh page load immediately after
+// a deploy reloaded itself mid-navigation) before adding the guard.
+const hadControllerAlready = Boolean(navigator.serviceWorker?.controller)
 let reloaded = false
 navigator.serviceWorker?.addEventListener('controllerchange', () => {
-  if (reloaded) return
+  if (reloaded || !hadControllerAlready) return
   reloaded = true
   window.location.reload()
 })
