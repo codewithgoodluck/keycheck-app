@@ -135,6 +135,10 @@ export default function Market({ listings, reports, setView }) {
 
   return (
     <div className="theme-market">
+      <button className="detail-back" onClick={() => setView('listings')}>
+        <ArrowLeft size={15} /> Back to listings
+      </button>
+
       <section className="hero">
         <p className="eyebrow">
           <Compass size={13} /> Market

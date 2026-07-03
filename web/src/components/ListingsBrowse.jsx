@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { Search, FileSearch, Home, Plus, GitCompare, Users, History, X, SlidersHorizontal, ChevronDown } from 'lucide-react'
+import { Search, FileSearch, Home, Plus, GitCompare, Users, History, X, SlidersHorizontal, ChevronDown, Compass } from 'lucide-react'
 import ListingCard from './ListingCard.jsx'
 import WatchAreaControls from './WatchAreaControls.jsx'
 import { PROPERTY_TYPE_LABELS, getPropertyTypeLabel } from '../data/propertyTypes.js'
@@ -115,6 +115,9 @@ export default function ListingsBrowse({ listings, reports, setView, hasMore, on
           )}
           <button className="chip" onClick={() => setView('buyers-agent-directory')}>
             <Users /> Want someone repping you instead? Find a buyer's agent
+          </button>
+          <button className="chip" onClick={() => setView('market')}>
+            <Compass /> Not sure what you're looking for? Try guided search
           </button>
         </div>
       </section>
