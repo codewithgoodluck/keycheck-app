@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { ArrowLeft, MapPin, FileText, MessageCircle, Phone, Home, Clock, GitCompare, Share2, Bookmark, Flag, Users, ListChecks, ShieldAlert } from 'lucide-react'
+import { ArrowLeft, MapPin, FileText, MessageCircle, Phone, Home, Clock, GitCompare, Share2, Bookmark, Flag, Users, ListChecks, ShieldAlert, ShieldCheck, ShieldQuestion, AlertTriangle } from 'lucide-react'
 import { getPropertyTypeLabel } from '../data/propertyTypes.js'
 import { AMENITY_GROUPS } from '../data/listingFacts.js'
 import VerificationBadge from './VerificationBadge.jsx'
@@ -160,6 +160,18 @@ export default function ListingDetail({ listing, listings, reports, setView }) {
         <ArrowLeft size={15} /> Back to listings
       </button>
 
+      <div className="liability-banner">
+        <AlertTriangle size={16} />
+        <span>
+          Always verify in person before paying anything — KeyCheck does not verify transactions,
+          hold funds, or guarantee any listing, and is not liable for any loss. Read our{' '}
+          <a onClick={() => setView('terms')} style={{ cursor: 'pointer' }}>
+            Terms of Service
+          </a>
+          .
+        </span>
+      </div>
+
       {isBlocked && (
         <div className="fact-box" style={{ marginBottom: 16, background: 'var(--status-disputed-soft)', alignItems: 'flex-start' }}>
           <ShieldAlert size={18} color="var(--status-disputed)" style={{ flexShrink: 0, marginTop: 2 }} />
@@ -197,6 +209,10 @@ export default function ListingDetail({ listing, listings, reports, setView }) {
             <h1>
               {getPropertyTypeLabel(listing.type)} — ₦{Number(listing.price).toLocaleString()}
             </h1>
+            <span className={`lister-verified-badge ${verifiedLabel ? 'verified' : 'unverified'}`}>
+              {verifiedLabel ? <ShieldCheck size={13} /> : <ShieldQuestion size={13} />}
+              {verifiedLabel ? `Verified lister (${verifiedLabel})` : 'Not verified'}
+            </span>
           </div>
           <div className="detail-actions">
             <button className="icon-btn" onClick={handleShare} aria-label="Share">

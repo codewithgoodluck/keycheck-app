@@ -1439,6 +1439,54 @@ button { font-family: inherit; }
   .fab { padding: 13px; }
 }
 
+/* ---------- Liability warning banner ---------- */
+
+/* Full-bleed like .hero/.page-banner (same left:50%/-50vw technique),
+   but a flat, solid red — deliberately not the softer status-disputed
+   tint used elsewhere, since this needs to read as unmissable on every
+   listing regardless of verification status, not just a contextual
+   caution. Shown once, near the top of the listing page, not repeated
+   at point of contact like DueDiligenceReminder — this is a blanket
+   liability notice, not a per-lister assessment. */
+.liability-banner {
+  position: relative;
+  left: 50%;
+  right: 50%;
+  width: 100vw;
+  margin-left: -50vw;
+  margin-right: -50vw;
+  background: var(--status-disputed);
+  color: #fff;
+  padding: 12px 20px;
+  margin-bottom: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  text-align: center;
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.5;
+}
+
+.liability-banner svg { flex-shrink: 0; }
+
+.liability-banner a { color: #fff; text-decoration: underline; font-weight: 700; }
+
+.lister-verified-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 12px;
+  font-weight: 700;
+  padding: 4px 11px;
+  border-radius: 999px;
+  margin-top: 6px;
+}
+
+.lister-verified-badge.verified { background: var(--status-verified-soft); color: var(--status-verified); }
+.lister-verified-badge.unverified { background: var(--status-unverified-soft); color: var(--status-unverified); }
+
 /* ---------- Confirm dialog ---------- */
 
 .confirm-dialog-overlay {
