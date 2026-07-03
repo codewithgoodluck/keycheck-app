@@ -1426,6 +1426,50 @@ button { font-family: inherit; }
   .fab { padding: 13px; }
 }
 
+/* ---------- Confirm dialog ---------- */
+
+.confirm-dialog-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(21, 33, 26, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  z-index: 50;
+}
+
+.confirm-dialog {
+  background: var(--surface);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-lg);
+  padding: 26px;
+  max-width: 380px;
+  width: 100%;
+  text-align: center;
+}
+
+.confirm-dialog svg { color: var(--status-disputed); margin-bottom: 10px; }
+
+.confirm-dialog h3 { margin: 0 0 8px; font-size: 17px; font-weight: 700; }
+
+.confirm-dialog p { margin: 0 0 20px; font-size: 13.5px; color: var(--ink-soft); line-height: 1.5; }
+
+.confirm-dialog-actions { display: flex; gap: 10px; justify-content: center; }
+
+.confirm-dialog-danger {
+  background: var(--status-disputed);
+  color: #fff;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 999px;
+  font-size: 13.5px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.confirm-dialog-danger:hover { background: #872424; }
+
 /* ---------- Toasts ---------- */
 
 .toast-stack {

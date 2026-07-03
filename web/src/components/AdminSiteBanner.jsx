@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { Image, Upload, X } from 'lucide-react'
 import { BANNER_PAGES, subscribeSiteBannerImages, uploadSiteBannerImage, clearSiteBannerImage } from '../lib/siteSettings.js'
+import ConfirmDialog from './ConfirmDialog.jsx'
 
 // The one place a real photo can end up on any page's banner (see
 // index.css's --banner-image custom property, resolved per-page in
@@ -13,6 +14,7 @@ export default function AdminSiteBanner() {
   const [pageKey, setPageKey] = useState('default')
   const [uploading, setUploading] = useState(false)
   const [error, setError] = useState('')
+  const [confirmingClear, setConfirmingClear] = useState(false)
   const fileInputRef = useRef(null)
 
   useEffect(() => {
@@ -39,7 +41,7 @@ export default function AdminSiteBanner() {
   }
 
   async function handleClear() {
-    if (!confirm(`Remove the banner image for "${pageLabel}"?`)) return
+    setConfirmingClear(false)
     try {
       await clearSiteBannerImage(pageKey)
     } catch (err) {
@@ -76,7 +78,7 @@ export default function AdminSiteBanner() {
           <div style={{ borderRadius: 'var(--radius-sm)', overflow: 'hidden', marginBottom: 10 }}>
             <img src={currentUrl} alt="" style={{ width: '100%', maxHeight: 200, objectFit: 'cover', display: 'block' }} />
           </div>
-          <button className="chip" onClick={handleClear}>
+          <button className="chip" onClick={() => setConfirmingClear(true)}>
             <X size={13} /> Remove this page's banner image
           </button>
         </div>
@@ -93,6 +95,15 @@ export default function AdminSiteBanner() {
         <Upload size={12} style={{ verticalAlign: -2, marginRight: 4 }} />
         Max 10MB. Updates that page's banner immediately for everyone.
       </p>
+
+      <ConfirmDialog
+        open={confirmingClear}
+        title="Remove this banner image?"
+        message={`The banner image for "${pageLabel}" will be removed immediately for everyone.`}
+        confirmLabel="Remove"
+        onCancel={() => setConfirmingClear(false)}
+        onConfirm={handleClear}
+      />
     </div>
   )
 }

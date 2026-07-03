@@ -2,12 +2,30 @@ import { auth, db } from './firebase.js'
 import { signInWithEmailAndPassword, signOut, onAuthStateChanged } from 'firebase/auth'
 import { doc, updateDoc, deleteDoc, getDoc, collection, query, orderBy, limit, getDocs } from 'firebase/firestore'
 
+// Forces a fresh ID token on every admin-route auth check, not just on
+// sign-in. The Firebase JS SDK caches the ID token client-side and only
+// refreshes it naturally on its own schedule (roughly hourly) — a
+// moderator custom claim granted via scripts/set-moderator.js while
+// someone is *already signed in* (e.g. from a previous session, or
+// signed in via the regular lister/report flow with the same account)
+// won't take effect until that stale token is replaced. Without this,
+// every write silently fails with a generic storage/unauthorized or
+// permission-denied error that gives no hint the fix is just to
+// refresh the token — reproduced and confirmed this exact failure mode.
 export function watchAdminAuth(callback) {
   if (!auth) {
     callback(null)
     return () => {}
   }
-  return onAuthStateChanged(auth, (user) => callback(user))
+  return onAuthStateChanged(auth, async (user) => {
+    if (user) {
+      // Awaited so the admin panel doesn't become interactive on a
+      // stale token — a write attempted in the gap would fail anyway,
+      // but with a confusing generic error instead of just working.
+      await user.getIdToken(true).catch(() => {})
+    }
+    callback(user)
+  })
 }
 
 export async function adminLogin(email, password) {

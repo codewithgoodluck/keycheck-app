@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Star, Trash2, ShieldCheck } from 'lucide-react'
 import { listAllReviews, setReviewStatus, deleteReview } from '../lib/reviewsApi.js'
+import ConfirmDialog from './ConfirmDialog.jsx'
 
 // Reuses AdminPanel.jsx's list-management pattern (one-off fetch,
 // admin-only) — same as AdminListingFlags.jsx. Reviews are a bigger
@@ -11,6 +12,7 @@ export default function AdminReviews() {
   const [reviews, setReviews] = useState(null)
   const [filter, setFilter] = useState('unverified')
   const [busyId, setBusyId] = useState(null)
+  const [pendingDeleteId, setPendingDeleteId] = useState(null)
 
   useEffect(() => {
     refresh()
@@ -38,7 +40,7 @@ export default function AdminReviews() {
   }
 
   async function handleDelete(id) {
-    if (!confirm('Delete this review permanently?')) return
+    setPendingDeleteId(null)
     setBusyId(id)
     try {
       await deleteReview(id)
@@ -97,7 +99,7 @@ export default function AdminReviews() {
                   )}
                   <button
                     className="icon-btn"
-                    onClick={() => handleDelete(r.id)}
+                    onClick={() => setPendingDeleteId(r.id)}
                     disabled={busyId === r.id}
                     aria-label="Delete review"
                   >
@@ -112,6 +114,14 @@ export default function AdminReviews() {
           ))
         )}
       </div>
+
+      <ConfirmDialog
+        open={pendingDeleteId !== null}
+        title="Delete this review?"
+        message="This review will be permanently removed. This cannot be undone."
+        onCancel={() => setPendingDeleteId(null)}
+        onConfirm={() => handleDelete(pendingDeleteId)}
+      />
     </div>
   )
 }

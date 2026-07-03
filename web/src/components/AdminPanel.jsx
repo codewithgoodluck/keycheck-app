@@ -16,6 +16,7 @@ import AdminBuyersAgents from './AdminBuyersAgents.jsx'
 import AdminListingFlags from './AdminListingFlags.jsx'
 import AdminReviews from './AdminReviews.jsx'
 import AdminSiteBanner from './AdminSiteBanner.jsx'
+import ConfirmDialog from './ConfirmDialog.jsx'
 
 const STATUS_OPTIONS = ['unverified', 'disputed', 'verified']
 
@@ -24,6 +25,10 @@ export default function AdminPanel({ reports, adminEmail }) {
   const [busyId, setBusyId] = useState(null)
   const [sourceDrafts, setSourceDrafts] = useState({}) // reportId -> { label, url }
   const [searchMisses, setSearchMisses] = useState(null) // null = not loaded yet
+  // { type: 'report', id } | { type: 'reply', reportId, replyId } | null —
+  // drives ConfirmDialog below instead of window.confirm(), which
+  // browsers silently suppress after several dialogs in a row.
+  const [pendingDelete, setPendingDelete] = useState(null)
 
   const visible =
     filter === 'needs_review' ? reports.filter((r) => r.status !== 'verified' || r.replies?.length) : reports
@@ -76,8 +81,12 @@ export default function AdminPanel({ reports, adminEmail }) {
     }
   }
 
+  function confirmDeleteReport(reportId) {
+    setPendingDelete({ type: 'report', id: reportId })
+  }
+
   async function handleDeleteReport(reportId) {
-    if (!confirm('Delete this report permanently? This cannot be undone.')) return
+    setPendingDelete(null)
     setBusyId(reportId)
     try {
       await deleteReport(reportId)
@@ -104,8 +113,12 @@ export default function AdminPanel({ reports, adminEmail }) {
     }
   }
 
+  function confirmDeleteReply(reportId, replyId) {
+    setPendingDelete({ type: 'reply', reportId, replyId })
+  }
+
   async function handleDeleteReply(reportId, replyId) {
-    if (!confirm('Delete this reply permanently?')) return
+    setPendingDelete(null)
     try {
       await deleteReply(reportId, replyId)
     } catch (err) {
@@ -202,7 +215,7 @@ export default function AdminPanel({ reports, adminEmail }) {
               </div>
               <button
                 className="icon-btn"
-                onClick={() => handleDeleteReport(report.id)}
+                onClick={() => confirmDeleteReport(report.id)}
                 disabled={busyId === report.id}
                 aria-label="Delete report"
               >
@@ -320,7 +333,7 @@ export default function AdminPanel({ reports, adminEmail }) {
                       <button
                         className="icon-btn"
                         style={{ width: 30, height: 30, marginLeft: 'auto' }}
-                        onClick={() => handleDeleteReply(report.id, reply.id)}
+                        onClick={() => confirmDeleteReply(report.id, reply.id)}
                         aria-label="Delete reply"
                       >
                         <Trash2 size={13} />
@@ -340,6 +353,21 @@ export default function AdminPanel({ reports, adminEmail }) {
         )}
       </div>
       )}
+
+      <ConfirmDialog
+        open={pendingDelete !== null}
+        title={pendingDelete?.type === 'reply' ? 'Delete this reply?' : 'Delete this report?'}
+        message={
+          pendingDelete?.type === 'reply'
+            ? 'This reply will be permanently removed. This cannot be undone.'
+            : 'This report will be permanently removed. This cannot be undone.'
+        }
+        onCancel={() => setPendingDelete(null)}
+        onConfirm={() => {
+          if (pendingDelete?.type === 'reply') handleDeleteReply(pendingDelete.reportId, pendingDelete.replyId)
+          else if (pendingDelete?.type === 'report') handleDeleteReport(pendingDelete.id)
+        }}
+      />
     </div>
   )
 }
