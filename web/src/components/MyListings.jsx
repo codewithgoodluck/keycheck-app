@@ -114,27 +114,26 @@ export default function MyListings({ listerUser, setView }) {
   }
 
   return (
-    <div style={{ padding: '28px 0 60px' }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 20 }}>
-        <div>
-          <h1 style={{ fontWeight: 800, letterSpacing: '-0.02em', fontSize: 26, margin: '0 0 4px' }}>My listings</h1>
-          <p style={{ color: 'var(--ink-soft)', fontSize: 13.5, margin: 0 }}>Signed in as {listerUser.email}</p>
-        </div>
-        <div style={{ display: 'flex', gap: 8 }}>
-          <button className="chip active" onClick={() => setView('submit-listing')}>
-            <Plus size={13} /> New listing
-          </button>
-          <button className="chip" onClick={() => setView('become-buyers-agent')}>
-            <Users size={13} /> Offer buyer's-agent services
-          </button>
-          <button
-            className="icon-btn"
-            style={{ width: 'auto', padding: '0 14px', fontSize: 13, fontWeight: 600, gap: 6, display: 'flex', alignItems: 'center' }}
-            onClick={listerSignOut}
-          >
-            <LogOut size={15} /> Sign out
-          </button>
-        </div>
+    <div style={{ padding: '0 0 60px' }}>
+      <div className="page-banner page-banner-market">
+        <h1>My listings</h1>
+        <p>Signed in as {listerUser.email}</p>
+      </div>
+
+      <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8, marginBottom: 20 }}>
+        <button className="chip active" onClick={() => setView('submit-listing')}>
+          <Plus size={13} /> New listing
+        </button>
+        <button className="chip" onClick={() => setView('become-buyers-agent')}>
+          <Users size={13} /> Offer buyer's-agent services
+        </button>
+        <button
+          className="icon-btn"
+          style={{ width: 'auto', padding: '0 14px', fontSize: 13, fontWeight: 600, gap: 6, display: 'flex', alignItems: 'center' }}
+          onClick={listerSignOut}
+        >
+          <LogOut size={15} /> Sign out
+        </button>
       </div>
 
       <div className="report-list">

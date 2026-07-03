@@ -88,11 +88,13 @@ export default function BecomeBuyersAgent({ listerUser, setView }) {
 
   return (
     <div className="form-wrap">
-      <h1>Offer buyer's-agent services</h1>
-      <p className="subtitle">
-        List yourself in KeyCheck's buyer's-agent directory — for buyers who want someone whose fee is
-        paid by and loyalty is explicitly to them, not the seller.
-      </p>
+      <div className="page-banner page-banner-market">
+        <h1>Offer buyer's-agent services</h1>
+        <p>
+          List yourself in KeyCheck's buyer's-agent directory — for buyers who want someone whose fee is
+          paid by and loyalty is explicitly to them, not the seller.
+        </p>
+      </div>
 
       <div className="form-card">
         <form onSubmit={handleSubmit}>

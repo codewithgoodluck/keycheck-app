@@ -163,8 +163,10 @@ export default function SubmitReport({ addReport, setView }) {
 
   return (
     <div className="form-wrap">
-      <h1>{copy.heading}</h1>
-      <p className="subtitle">{copy.subtitle}</p>
+      <div className="page-banner">
+        <h1>{copy.heading}</h1>
+        <p>{copy.subtitle}</p>
+      </div>
 
       <div className="chip-row" style={{ marginBottom: 20 }}>
         <button type="button" className={`chip ${kind === 'flag' ? 'active' : ''}`} onClick={() => setKind('flag')}>

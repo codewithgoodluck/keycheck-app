@@ -28,7 +28,7 @@ export default function BuyersAgentDirectory({ setView }) {
   }, [entries, stateFilter])
 
   return (
-    <>
+    <div className="theme-market">
       <section className="hero">
         <p className="eyebrow">
           <Users size={13} /> Buyer's-agent directory
@@ -94,6 +94,6 @@ export default function BuyersAgentDirectory({ setView }) {
           <button onClick={() => setView('become-buyers-agent')}>Offer buyer's-agent services</button>
         </div>
       )}
-    </>
+    </div>
   )
 }

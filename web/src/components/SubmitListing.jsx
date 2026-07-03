@@ -189,8 +189,10 @@ export default function SubmitListing({ listerUser, setView }) {
 
   return (
     <div className="form-wrap">
-      <h1>List a property</h1>
-      <p className="subtitle">Every listing is reviewed before it goes live — this usually takes a moderator a short while.</p>
+      <div className="page-banner page-banner-market">
+        <h1>List a property</h1>
+        <p>Every listing is reviewed before it goes live — this usually takes a moderator a short while.</p>
+      </div>
 
       <div className="form-card">
         <form onSubmit={handleSubmit}>

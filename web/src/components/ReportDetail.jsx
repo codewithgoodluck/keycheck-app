@@ -86,7 +86,13 @@ export default function ReportDetail({ report, setView, saved, onToggleSave, onC
 
   return (
     <>
-      <button className="detail-back" onClick={() => setView('home')}>
+      <div className="page-banner" style={{ padding: '20px 20px 16px' }}>
+        <p className="eyebrow">
+          <ShieldQuestion size={13} /> Report
+        </p>
+      </div>
+
+      <button className="detail-back" onClick={() => setView('home')} style={{ marginTop: 0 }}>
         <ArrowLeft size={15} /> Back to search
       </button>
 

@@ -48,7 +48,16 @@
 * { box-sizing: border-box; }
 
 html, body, #root { height: 100%; }
-html, body { overflow-x: hidden; }
+/* Guard against the .hero/.page-banner 100vw full-bleed technique
+   introducing a horizontal scrollbar. Deliberately html-only, not body:
+   setting overflow-x on body while leaving its overflow-y at the
+   default `visible` triggers a CSS quirk where the browser force-
+   converts overflow-y to `auto` too, turning body into a second,
+   independently-scrollable box separate from the window/html scroll
+   position — window.scrollTo(0,0) (used on every view change in
+   App.jsx) stops actually scrolling the visible content when that
+   happens, since it targets the wrong scroll container. */
+html { overflow-x: hidden; }
 
 body {
   margin: 0;
@@ -146,7 +155,31 @@ button { font-family: inherit; }
 
 /* ---------- Hero ---------- */
 
-.hero { padding: 52px 0 34px; }
+/* Full-bleed, gradient-only — deliberately never a photo. An earlier
+   version pulled a real photo from a moderator-verified listing, but
+   nothing curates a photo for "suitable as the whole site's banner"
+   specifically (a verified listing's photo turned out to be a scanned
+   ID document), so this reverted to a solid gradient that can never
+   show unmoderated user content. Breaks out to the true viewport width
+   (both edges of the screen, not just .app's own 920px container) via
+   the standard left:50%/-50vw centering trick — html/body get
+   overflow-x: hidden as a guard against the 100vw calculation
+   introducing a horizontal scrollbar on scrollbar-width platforms.
+   Same treatment (see .page-banner below) is reused on every other page
+   for one consistent banner system across the whole app. */
+.hero {
+  position: relative;
+  left: 50%;
+  right: 50%;
+  width: 100vw;
+  margin-left: -50vw;
+  margin-right: -50vw;
+  padding: 52px 20px 34px;
+  background: linear-gradient(135deg, var(--ink) 0%, var(--green-deep) 100%);
+  border-radius: 0 0 32px 32px;
+  color: #fff;
+  margin-bottom: 28px;
+}
 
 .hero .eyebrow {
   display: inline-flex;
@@ -156,8 +189,8 @@ button { font-family: inherit; }
   font-size: 11.5px;
   text-transform: uppercase;
   letter-spacing: 0.08em;
-  color: var(--green);
-  background: var(--green-soft);
+  color: #fff;
+  background: rgba(255, 255, 255, 0.16);
   padding: 6px 12px;
   border-radius: 999px;
   margin: 0 0 16px;
@@ -170,54 +203,72 @@ button { font-family: inherit; }
   letter-spacing: -0.02em;
   margin: 0 0 12px;
   max-width: 18ch;
+  color: #fff;
 }
 
 .hero p {
-  color: var(--ink-soft);
+  color: rgba(255, 255, 255, 0.85);
   max-width: 54ch;
   line-height: 1.6;
   margin: 0 0 26px;
   font-size: 15.5px;
 }
 
-/* Full-bleed banner photo — a real photo from an active listing (see
-   SearchHome.jsx's heroPhoto), not stock imagery. Breaks out to the full
-   viewport width (both edges of the screen, not just .app's own 920px
-   container) via the standard left:50%/-50vw centering trick, while
-   height/padding stay exactly what they were — html/body get
-   overflow-x: hidden as a guard against the 100vw calculation
-   introducing a horizontal scrollbar on scrollbar-width platforms.
-   Dark gradient scrim keeps the white text readable regardless of what
-   the underlying photo looks like. Falls back to the plain gradient
-   .hero (no image, no bleed) when no listing has a photo yet. */
-.hero-photo {
+/* Every non-hero page's title block, upgraded from a plain text header
+   to the same full-bleed gradient banner as .hero above, so the whole
+   app has one consistent banner system instead of a patchwork of some
+   pages having a colored hero and others just a bare <h1>. .page-banner
+   is the smaller/slimmer variant (no search bar, no chip-row) used on
+   every other page; .page-banner-market swaps in the coral identity for
+   the listings/buyer's-agent side, matching .theme-market elsewhere. */
+.page-banner {
   position: relative;
   left: 50%;
   right: 50%;
   width: 100vw;
   margin-left: -50vw;
   margin-right: -50vw;
-  padding: 64px 20px 40px;
-  background-size: cover;
-  background-position: center;
-  border-radius: 0 0 32px 32px;
-  overflow: hidden;
-  isolation: isolate;
+  padding: 36px 20px 28px;
+  background: linear-gradient(135deg, var(--ink) 0%, var(--green-deep) 100%);
+  border-radius: 0 0 28px 28px;
+  color: #fff;
+  margin-bottom: 24px;
 }
 
-.hero-photo::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(180deg, rgba(15, 23, 18, 0.55) 0%, rgba(15, 23, 18, 0.86) 100%);
-  z-index: 0;
+.page-banner.page-banner-market {
+  background: linear-gradient(135deg, var(--coral-deep) 0%, var(--coral) 100%);
 }
 
-.hero-photo > * { position: relative; z-index: 1; }
+.page-banner .eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: #fff;
+  background: rgba(255, 255, 255, 0.16);
+  padding: 5px 11px;
+  border-radius: 999px;
+  margin: 0 0 10px;
+}
 
-.hero-photo .eyebrow { background: rgba(255, 255, 255, 0.16); color: #fff; }
-.hero-photo h1 { color: #fff; }
-.hero-photo p { color: rgba(255, 255, 255, 0.88); }
+.page-banner h1 {
+  font-size: 24px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  margin: 0 0 6px;
+  color: #fff;
+}
+
+.page-banner p {
+  color: rgba(255, 255, 255, 0.85);
+  margin: 0;
+  font-size: 13.5px;
+  max-width: 60ch;
+  line-height: 1.55;
+}
 
 .search-wrap { position: relative; }
 
@@ -871,13 +922,16 @@ button { font-family: inherit; }
 
 /* ---------- Submit form ---------- */
 
-.form-wrap { padding: 32px 0 60px; }
+.form-wrap { padding: 0 0 60px; }
 
-.form-wrap h1 {
+/* Legacy fallback — a couple of call sites still use a bare h1/p
+   instead of wrapping in .page-banner; kept so those aren't unstyled,
+   though every current .form-wrap page uses .page-banner now. */
+.form-wrap > h1 {
   font-size: 26px;
   font-weight: 800;
   letter-spacing: -0.02em;
-  margin: 0 0 6px;
+  margin: 32px 0 6px;
 }
 
 .form-wrap > p.subtitle {
@@ -1163,18 +1217,35 @@ button { font-family: inherit; }
   max-width: 60ch;
 }
 
-/* ---------- Saved view ---------- */
+/* ---------- Page title banner (Map, Saved, Profile, Area guide, Compare) ---------- */
 
-.saved-header { padding: 36px 0 8px; }
+/* Same full-bleed gradient banner system as .hero/.page-banner — kept
+   its original class name (.saved-header, used across five pages)
+   rather than renaming every call site, since the point was making the
+   whole app's banners consistent, not the specific class name. */
+.saved-header {
+  position: relative;
+  left: 50%;
+  right: 50%;
+  width: 100vw;
+  margin-left: -50vw;
+  margin-right: -50vw;
+  padding: 36px 20px 28px;
+  background: linear-gradient(135deg, var(--ink) 0%, var(--green-deep) 100%);
+  border-radius: 0 0 28px 28px;
+  color: #fff;
+  margin-bottom: 24px;
+}
 
 .saved-header h1 {
-  font-size: 28px;
+  font-size: 26px;
   font-weight: 800;
   letter-spacing: -0.02em;
   margin: 0 0 6px;
+  color: #fff;
 }
 
-.saved-header p { color: var(--ink-soft); margin: 0 0 24px; font-size: 14.5px; }
+.saved-header p { color: rgba(255, 255, 255, 0.85); margin: 0; font-size: 13.5px; }
 
 /* ---------- Floating action button ---------- */
 
@@ -1312,12 +1383,24 @@ button { font-family: inherit; }
    closer to Jiji/Airbnb than a compliance tool.
    ========================================================================== */
 
+/* Overrides only background/padding/margin-bottom — left/right/width/
+   margin-left/margin-right (the actual true-viewport-width full-bleed)
+   are inherited from the base .hero rule above, same technique, so the
+   Market/Listings banner reaches both edges of the screen exactly like
+   every other page's banner now does. */
 .theme-market .hero {
   background: linear-gradient(180deg, var(--cream) 0%, var(--cream-deep) 100%);
-  margin: 0 -20px 28px;
+  margin-bottom: 28px;
   padding: 36px 20px 32px;
   border-radius: 0 0 32px 32px;
+  color: var(--ink);
 }
+
+/* Base .hero now defaults to white text for its dark gradient — this
+   background is light (cream), so text needs to go back to dark ink,
+   not inherit white from the base rule. */
+.theme-market .hero h1 { color: var(--ink); }
+.theme-market .hero p { color: var(--ink-soft); }
 
 .theme-market .hero .eyebrow {
   font-family: var(--font-display);

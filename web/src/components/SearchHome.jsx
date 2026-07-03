@@ -30,7 +30,7 @@ const CATEGORY_FILTERS = [
   { key: 'estate', label: TYPE_LABELS.estate }
 ]
 
-export default function SearchHome({ reports, listings = [], setView, savedIds, onToggleSave, hasMore, onLoadMore }) {
+export default function SearchHome({ reports, setView, savedIds, onToggleSave, hasMore, onLoadMore }) {
   const [query, setQuery] = useState('')
   const [submittedQuery, setSubmittedQuery] = useState('')
   const [kindFilter, setKindFilter] = useState('all')
@@ -41,22 +41,6 @@ export default function SearchHome({ reports, listings = [], setView, savedIds, 
   const [activeIndex, setActiveIndex] = useState(-1)
   const blurTimer = useRef(null)
   const trendingStripRef = useRef(null)
-
-  // Real photos from active listings, not stock imagery — the banner
-  // shows an actual property already on the platform. Gated to
-  // moderator-checked listings (lasreraVerified/cacVerified — see
-  // AdminListings.jsx's "mark as checked" actions), not just any active
-  // listing: nothing curates a photo for "suitable as the whole site's
-  // banner" specifically, so this at least limits it to listings a
-  // moderator has actually looked at, rather than anything a lister
-  // uploaded going straight onto the homepage unmoderated. Falls back to
-  // the plain gradient hero (no image) when nothing qualifies yet.
-  const heroPhoto = useMemo(() => {
-    const withPhoto = listings.find(
-      (l) => l.status === 'active' && (l.lasreraVerified || l.cacVerified) && (l.photoUrls?.[0] || l.photoUrl)
-    )
-    return withPhoto ? withPhoto.photoUrls?.[0] || withPhoto.photoUrl : null
-  }, [listings])
 
   function scrollTrending(dir) {
     const el = trendingStripRef.current
@@ -179,10 +163,7 @@ export default function SearchHome({ reports, listings = [], setView, savedIds, 
 
   return (
     <>
-      <section
-        className={`hero ${heroPhoto ? 'hero-photo' : ''}`}
-        style={heroPhoto ? { backgroundImage: `url(${heroPhoto})` } : undefined}
-      >
+      <section className="hero">
         <p className="eyebrow">
           <ShieldCheck size={13} /> Community housing &amp; land registry
         </p>

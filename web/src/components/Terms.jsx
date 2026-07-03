@@ -11,18 +11,17 @@ import { ArrowLeft, AlertTriangle, ScrollText } from 'lucide-react'
 export default function Terms({ setView }) {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 16, maxWidth: 720 }}>
-      <button className="detail-back" onClick={() => setView('home')}>
+      <div className="page-banner">
+        <p className="eyebrow">
+          <ScrollText size={13} /> Legal
+        </p>
+        <h1>Terms of Service</h1>
+        <p>Covers both KeyCheck's fraud-report registry and its listings marketplace.</p>
+      </div>
+
+      <button className="detail-back" onClick={() => setView('home')} style={{ margin: 0 }}>
         <ArrowLeft size={15} /> Back
       </button>
-
-      <div className="detail-card" style={{ padding: '16px 20px' }}>
-        <p style={{ fontWeight: 700, margin: '0 0 4px', display: 'flex', alignItems: 'center', gap: 6 }}>
-          <ScrollText size={16} /> Terms of Service
-        </p>
-        <p style={{ fontSize: 12.5, color: 'var(--ink-faint)', margin: 0 }}>
-          Covers both KeyCheck's fraud-report registry and its listings marketplace.
-        </p>
-      </div>
 
       <div className="fact-box">
         <AlertTriangle size={18} />

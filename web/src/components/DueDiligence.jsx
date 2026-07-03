@@ -45,11 +45,13 @@ export default function DueDiligence({ setView }) {
 
   return (
     <div className="form-wrap">
-      <h1>Before you pay</h1>
-      <p className="subtitle">
-        A checklist and a quick risk check, built from patterns in real reported fraud cases —
-        use these before you commit to anything, not just after something's gone wrong.
-      </p>
+      <div className="page-banner">
+        <h1>Before you pay</h1>
+        <p>
+          A checklist and a quick risk check, built from patterns in real reported fraud cases —
+          use these before you commit to anything, not just after something's gone wrong.
+        </p>
+      </div>
 
       {!category && !showSchemes && !showDiaspora ? (
         <div className="form-card">

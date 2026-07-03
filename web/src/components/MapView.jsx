@@ -110,8 +110,8 @@ export default function MapView({ reports, listings = [], setView }) {
   }
 
   return (
-    <div style={{ padding: '28px 0 0' }}>
-      <div className="saved-header" style={{ padding: '0 0 8px' }}>
+    <div>
+      <div className="saved-header">
         <h1>Map</h1>
         <p>
           {layer === 'reports'

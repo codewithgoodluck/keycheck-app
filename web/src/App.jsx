@@ -486,7 +486,6 @@ export default function App() {
       {view === 'home' && (
         <SearchHome
           reports={reports}
-          listings={listings}
           setView={setView}
           savedIds={savedIds}
           onToggleSave={handleToggleSave}

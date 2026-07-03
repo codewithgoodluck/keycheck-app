@@ -126,7 +126,13 @@ export default function ListingDetail({ listing, listings, setView }) {
 
   return (
     <div className="theme-market">
-      <button className="detail-back" onClick={() => setView('listings')}>
+      <div className="page-banner page-banner-market" style={{ padding: '20px 20px 16px' }}>
+        <p className="eyebrow">
+          <Home size={13} /> Listing
+        </p>
+      </div>
+
+      <button className="detail-back" onClick={() => setView('listings')} style={{ marginTop: 0 }}>
         <ArrowLeft size={15} /> Back to listings
       </button>
 
