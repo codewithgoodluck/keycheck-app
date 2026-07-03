@@ -1248,38 +1248,36 @@ button { font-family: inherit; }
 
 .saved-header p { color: rgba(255, 255, 255, 0.85); margin: 0; font-size: 13.5px; }
 
-/* Every banner's content centers on mobile — eyebrow chip, heading,
-   subtitle, and (on .hero specifically) the search bar and trending-
-   location chip row all switch from left-aligned to centered, since a
-   left-aligned block reads awkwardly on a narrow full-bleed banner.
-   Desktop stays left-aligned, unchanged. */
-@media (max-width: 640px) {
-  .hero,
-  .page-banner,
-  .saved-header {
-    text-align: center;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-  }
-
-  .hero .eyebrow,
-  .page-banner .eyebrow {
-    margin-left: auto;
-    margin-right: auto;
-  }
-
-  .hero h1,
-  .hero p,
-  .page-banner h1,
-  .page-banner p {
-    max-width: none;
-  }
-
-  .hero .search-wrap { width: 100%; }
-
-  .hero .chip-row { justify-content: center; }
+/* Every banner's content is centered — eyebrow chip, heading, subtitle,
+   and (on .hero specifically) the search bar and trending-location chip
+   row are all centered within the full-bleed banner, at every screen
+   size, not just mobile. */
+.hero,
+.page-banner,
+.saved-header {
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
+
+.hero .eyebrow,
+.page-banner .eyebrow {
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.hero h1,
+.hero p,
+.page-banner h1,
+.page-banner p {
+  max-width: 60ch;
+}
+
+.hero .search-wrap { width: 100%; max-width: 640px; }
+
+.hero .chip-row,
+.page-banner .chip-row { justify-content: center; }
 
 /* ---------- Floating action button ---------- */
 
