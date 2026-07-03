@@ -22,6 +22,25 @@ export async function checkAgentFlagged(name) {
   return snap.docs.some((d) => ['disputed', 'verified'].includes(d.data().status))
 }
 
+// Live counterpart to checkAgentFlagged, for pages that already hold the
+// whole reports feed in memory (App.jsx's onSnapshot subscription) —
+// avoids a fresh Firestore query per listing. Exists so a listing's
+// "verified" standing isn't just a one-time decision made at activation:
+// checkAgentFlagged only runs once, when a moderator activates a listing,
+// so a lister who gets a disputed/verified report *afterward* would
+// otherwise keep showing as active/verified indefinitely, with nothing
+// ever re-checking. getEffectiveStatus (below) uses this set to catch
+// that case reactively, on every render, with no backend job required.
+export function getFlaggedAgentNames(reports) {
+  const names = new Set()
+  for (const r of reports) {
+    if (r.agentName && ['disputed', 'verified'].includes(r.status)) {
+      names.add(r.agentName.trim())
+    }
+  }
+  return names
+}
+
 // Admin-only direct creation (Milestone 1 path — still supported).
 // Unlike self-serve creation, this runs the agent-flag check at creation
 // time since the admin client is already the trust boundary.
@@ -180,8 +199,15 @@ export function isPastExpiry(listing) {
   return Boolean(listing.expiresAt) && new Date(listing.expiresAt) < new Date()
 }
 
-export function getEffectiveStatus(listing) {
+// flaggedAgentNames is optional (a Set from getFlaggedAgentNames) — omit
+// it for call sites that don't have the reports feed in memory (e.g. an
+// admin one-off fetch); they just fall back to the stored status, same
+// as before this existed.
+export function getEffectiveStatus(listing, flaggedAgentNames) {
   if (listing.status === 'active' && isPastExpiry(listing)) return 'expired'
+  if (listing.status === 'active' && flaggedAgentNames && listing.listerName && flaggedAgentNames.has(listing.listerName.trim())) {
+    return 'blocked'
+  }
   return listing.status
 }
 

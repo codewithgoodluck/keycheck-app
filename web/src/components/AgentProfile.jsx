@@ -3,7 +3,22 @@ import { ShieldAlert, ArrowLeft, Home } from 'lucide-react'
 import ReportCard from './ReportCard.jsx'
 import VerificationBadge from './VerificationBadge.jsx'
 import Reviews from './Reviews.jsx'
+import DueDiligenceReminder from './DueDiligenceReminder.jsx'
 import { getListingsByListerName } from '../lib/listingsApi.js'
+
+// The safe default when nothing is loaded yet (or this name has no
+// listings at all) is "unverified" wording — encourages caution rather
+// than implying a check that hasn't actually happened.
+function describeVerification(listings) {
+  if (!listings?.length) return null
+  const checks = new Set()
+  for (const l of listings) {
+    if (l.lasreraVerified) checks.add('LASRERA')
+    if (l.cacVerified) checks.add('CAC')
+    if (l.titleDocumentVerified) checks.add('title document')
+  }
+  return checks.size > 0 ? [...checks].join(' and ') : null
+}
 
 // Groups reports by an exact agentName match. Names in the data are free
 // text (sometimes with aliases appended, e.g. "X / Y Ltd"), so this is a
@@ -58,6 +73,10 @@ export default function AgentProfile({ reports, name, setView, savedIds, onToggl
         <div className="stat-card"><div className="num">{verifiedCount}</div><div className="label">Court-verified</div></div>
         <div className="stat-card"><div className="num">{disputedCount}</div><div className="label">In court</div></div>
         <div className="stat-card"><div className="num">{totalConfirmations}</div><div className="label">Confirmations</div></div>
+      </div>
+
+      <div style={{ marginBottom: 20 }}>
+        <DueDiligenceReminder verifiedLabel={describeVerification(listings)} />
       </div>
 
       {listings?.length > 0 && (

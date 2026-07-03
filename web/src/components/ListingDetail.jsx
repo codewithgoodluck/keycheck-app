@@ -1,12 +1,12 @@
-import { useEffect, useState } from 'react'
-import { ArrowLeft, MapPin, FileText, MessageCircle, Phone, Home, Clock, GitCompare, Share2, Bookmark, Flag, Users, ListChecks } from 'lucide-react'
+import { useEffect, useMemo, useState } from 'react'
+import { ArrowLeft, MapPin, FileText, MessageCircle, Phone, Home, Clock, GitCompare, Share2, Bookmark, Flag, Users, ListChecks, ShieldAlert } from 'lucide-react'
 import { getPropertyTypeLabel } from '../data/propertyTypes.js'
 import { AMENITY_GROUPS } from '../data/listingFacts.js'
 import VerificationBadge from './VerificationBadge.jsx'
 import TrustSignals from './TrustSignals.jsx'
 import FeeComplianceNote from './FeeComplianceNote.jsx'
 import MarketPriceIndicator from './MarketPriceIndicator.jsx'
-import { getEffectiveStatus, logListingView } from '../lib/listingsApi.js'
+import { getEffectiveStatus, getFlaggedAgentNames, logListingView } from '../lib/listingsApi.js'
 import { getCompareIds, isComparing, toggleCompare, MAX_COMPARE } from '../lib/compareList.js'
 import { isListingSaved, toggleSavedListing } from '../lib/listingWatchlist.js'
 import { flagListing, FLAG_REASON_LABELS } from '../lib/listingFlagsApi.js'
@@ -15,9 +15,22 @@ import { areaOf } from '../lib/notifications.js'
 import { timeAgo } from '../lib/time.js'
 import { showToast } from '../lib/toast.js'
 import InquiryForm from './InquiryForm.jsx'
+import DueDiligenceReminder from './DueDiligenceReminder.jsx'
 
 const SIZE_TYPES = ['land', 'estate']
 const NON_LAND_TYPES = ['house', 'apartment', 'commercial', 'estate']
+
+// Same set of checks the "LISTED BY"/verification section already
+// displays individually — collapsed into one label so the reminder can
+// name what was actually checked instead of a bare "verified".
+function describeVerification(listing) {
+  const checks = []
+  if (listing.lasreraVerified) checks.push('LASRERA')
+  if (listing.cacVerified) checks.push('CAC')
+  if (listing.titleDocumentVerified) checks.push('title document')
+  if (checks.length === 0) return null
+  return checks.join(' and ')
+}
 
 function FactItem({ label, value }) {
   return (
@@ -32,9 +45,11 @@ function FactItem({ label, value }) {
 // confirm/reply/dispute flows, those are report-specific. Contact is
 // WhatsApp plus the lightweight InquiryForm below, shown side by side —
 // a choice, not one replacing the other.
-export default function ListingDetail({ listing, listings, setView }) {
+export default function ListingDetail({ listing, listings, reports, setView }) {
   // Hooks must run unconditionally (before the early return below), so
   // the "no listing" guard lives inside each effect body instead.
+  const flaggedAgentNames = useMemo(() => getFlaggedAgentNames(reports || []), [reports])
+
   useEffect(() => {
     if (!listing) return
     logListingView(listing.id, listing.listerId)
@@ -120,7 +135,16 @@ export default function ListingDetail({ listing, listings, setView }) {
   }
 
   const waNumber = (listing.listerPhone || '').replace(/[^0-9]/g, '')
-  const isExpired = getEffectiveStatus(listing) === 'expired'
+  const effectiveStatus = getEffectiveStatus(listing, flaggedAgentNames)
+  const isExpired = effectiveStatus === 'expired'
+  // A fraud report can land against this lister *after* their listing
+  // went live — checkAgentFlagged only ran once, at activation, so
+  // nothing else would ever re-catch this without a live check here.
+  // Contact is suppressed below rather than just shown with a caveat:
+  // an active dispute is a materially different, more urgent situation
+  // than a merely stale (expired) listing.
+  const isBlocked = effectiveStatus === 'blocked'
+  const verifiedLabel = describeVerification(listing)
   const photos = listing.photoUrls?.length > 0 ? listing.photoUrls : listing.photoUrl ? [listing.photoUrl] : []
   const waMessage = `Hi, I'm interested in your listing: ${getPropertyTypeLabel(listing.type)} in ${listing.locationText} — is it still available?`
 
@@ -136,7 +160,27 @@ export default function ListingDetail({ listing, listings, setView }) {
         <ArrowLeft size={15} /> Back to listings
       </button>
 
-      {isExpired && (
+      {isBlocked && (
+        <div className="fact-box" style={{ marginBottom: 16, background: 'var(--status-disputed-soft)', alignItems: 'flex-start' }}>
+          <ShieldAlert size={18} color="var(--status-disputed)" style={{ flexShrink: 0, marginTop: 2 }} />
+          <div>
+            <strong>This listing is suspended.</strong> A disputed or verified fraud report has been
+            filed against {listing.listerName || 'this lister'} since this listing went live — contact
+            details are hidden until this is resolved.{' '}
+            {listing.listerName && (
+              <button
+                className="chip"
+                style={{ marginTop: 8, display: 'inline-flex' }}
+                onClick={() => setView('profile', listing.listerName)}
+              >
+                View the report on {listing.listerName}'s KeyCheck profile
+              </button>
+            )}
+          </div>
+        </div>
+      )}
+
+      {!isBlocked && isExpired && (
         <div className="fact-box" style={{ marginBottom: 16, background: 'var(--status-disputed-soft)' }}>
           <Clock size={18} color="var(--status-disputed)" />
           <div>
@@ -302,6 +346,9 @@ export default function ListingDetail({ listing, listings, setView }) {
               dualRepresentation={listing.dualRepresentation}
             />
           </div>
+          <div style={{ marginTop: 12 }}>
+            <DueDiligenceReminder verifiedLabel={verifiedLabel} />
+          </div>
         </div>
 
         {SIZE_TYPES.includes(listing.type) && listing.sizeSqm > 0 && (
@@ -328,25 +375,28 @@ export default function ListingDetail({ listing, listings, setView }) {
           </div>
         )}
 
-        {waNumber && (
-          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 20 }}>
-            <a
-              href={`https://wa.me/${waNumber}?text=${encodeURIComponent(waMessage)}`}
-              target="_blank"
-              rel="noreferrer"
-              className="submit-btn"
-              style={{ textDecoration: 'none', display: 'inline-flex' }}
-            >
-              <MessageCircle size={15} /> WhatsApp {listing.listerName || 'lister'}
-            </a>
-            <a href={`tel:${waNumber}`} className="chip" style={{ textDecoration: 'none', fontSize: 13.5, padding: '10px 18px' }}>
-              <Phone size={14} /> Call
-            </a>
-          </div>
+        {waNumber && !isBlocked && (
+          <>
+            <DueDiligenceReminder verifiedLabel={verifiedLabel} compact />
+            <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginTop: 12, marginBottom: 20 }}>
+              <a
+                href={`https://wa.me/${waNumber}?text=${encodeURIComponent(waMessage)}`}
+                target="_blank"
+                rel="noreferrer"
+                className="submit-btn"
+                style={{ textDecoration: 'none', display: 'inline-flex' }}
+              >
+                <MessageCircle size={15} /> WhatsApp {listing.listerName || 'lister'}
+              </a>
+              <a href={`tel:${waNumber}`} className="chip" style={{ textDecoration: 'none', fontSize: 13.5, padding: '10px 18px' }}>
+                <Phone size={14} /> Call
+              </a>
+            </div>
+          </>
         )}
       </div>
 
-      {listing.listerId ? (
+      {isBlocked ? null : listing.listerId ? (
         <div style={{ marginTop: 16 }}>
           <InquiryForm listing={listing} />
         </div>

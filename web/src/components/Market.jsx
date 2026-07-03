@@ -3,11 +3,11 @@ import { Compass, ArrowLeft, ArrowRight, Search, Eye, EyeOff, BellRing } from 'l
 import ListingCard from './ListingCard.jsx'
 import { PROPERTY_TYPE_LABELS } from '../data/propertyTypes.js'
 import { NIGERIAN_STATES } from '../data/verificationRules.js'
-import { getEffectiveStatus } from '../lib/listingsApi.js'
+import { getEffectiveStatus, getFlaggedAgentNames } from '../lib/listingsApi.js'
 import { getReviewAggregate, getReviewsForLister } from '../lib/reviewsApi.js'
 import { getCompareIds, toggleCompare, MAX_COMPARE } from '../lib/compareList.js'
 import { getSavedListingIds, toggleSavedListing } from '../lib/listingWatchlist.js'
-import { addWatch, removeWatch, isWatching } from '../lib/watches.js'
+import { addListingWatch, removeListingWatch, isWatchingListingIntent } from '../lib/listingWatches.js'
 import { enablePushNotifications, syncWatchedTermsIfSubscribed, getStoredPushToken } from '../lib/push.js'
 
 const CATEGORY_STEPS = Object.entries(PROPERTY_TYPE_LABELS).map(([key, label]) => ({ key, label }))
@@ -19,7 +19,8 @@ const EMPTY_INTENT = { category: null, transactionType: 'rent', state: 'all', lo
 // someone who already knows what they're looking at; this answers "I don't
 // have a specific target yet, help me find one" — a guided intake instead
 // of a filter bar assuming the visitor already knows what to configure.
-export default function Market({ listings, setView }) {
+export default function Market({ listings, reports, setView }) {
+  const flaggedAgentNames = useMemo(() => getFlaggedAgentNames(reports), [reports])
   const [step, setStep] = useState('category') // 'category' | 'location' | 'budget' | 'results'
   const [intent, setIntent] = useState(EMPTY_INTENT)
   const [compareIds, setCompareIds] = useState(() => getCompareIds())
@@ -31,13 +32,27 @@ export default function Market({ listings, setView }) {
 
   const watchTerm = intent.locationText.trim()
 
+  // Human-readable stand-in for the whole saved intent (category +
+  // transaction type + location + budget), shown on the watch-toggle
+  // button so it's clear what's actually being matched, not just the
+  // location — same fields lib/listingWatches.js's listingMatchesIntent
+  // checks.
+  const intentSummary = [
+    PROPERTY_TYPE_LABELS[intent.category]?.toLowerCase(),
+    intent.transactionType === 'rent' ? 'to rent' : 'for sale',
+    watchTerm && `in ${watchTerm}`,
+    intent.budgetMax && `under ₦${Number(intent.budgetMax).toLocaleString()}`
+  ]
+    .filter(Boolean)
+    .join(' ')
+
   useEffect(() => {
-    if (step === 'results') setWatching(isWatching(watchTerm))
-  }, [step, watchTerm])
+    if (step === 'results') setWatching(isWatchingListingIntent(intent))
+  }, [step, intent])
 
   const results = useMemo(() => {
     if (step !== 'results') return []
-    let list = listings.filter((l) => getEffectiveStatus(l) === 'active')
+    let list = listings.filter((l) => getEffectiveStatus(l, flaggedAgentNames) === 'active')
     if (intent.category) list = list.filter((l) => l.type === intent.category)
     list = list.filter((l) => l.transactionType === intent.transactionType)
     if (intent.state !== 'all') list = list.filter((l) => l.state === intent.state)
@@ -49,7 +64,7 @@ export default function Market({ listings, setView }) {
       list = list.filter((l) => Number(l.price) <= Number(intent.budgetMax))
     }
     return list
-  }, [step, listings, intent, watchTerm])
+  }, [step, listings, intent, watchTerm, flaggedAgentNames])
 
   // Batched, same eager-but-cheap pattern MyListings.jsx uses for view
   // counts — one aggregate per unique lister among the current results,
@@ -84,18 +99,18 @@ export default function Market({ listings, setView }) {
     setSavedIds(toggleSavedListing(id))
   }
 
-  // The intent itself becomes the standing alert, generated from what the
-  // wizard already collected — location is the one field lib/watches.js's
-  // simple substring matching (see App.jsx's matching effect) can actually
-  // act on, so that's what gets watched; category/budget shaped this
-  // results view but aren't part of the underlying match today.
+  // The intent itself becomes the standing alert — category, transaction
+  // type, and budget ceiling all carry over into the saved watch (see
+  // lib/listingWatches.js), not just the location step. Category will
+  // always be set by the time someone reaches 'results' (the wizard
+  // requires picking one first), so there's always at least one real
+  // criterion to watch even if locationText is left blank.
   function toggleWatch() {
-    if (!watchTerm) return
     if (watching) {
-      removeWatch(watchTerm)
+      removeListingWatch(intent)
       setWatching(false)
     } else {
-      addWatch(watchTerm)
+      addListingWatch(intent)
       setWatching(true)
     }
     syncWatchedTermsIfSubscribed()
@@ -228,18 +243,17 @@ export default function Market({ listings, setView }) {
             </button>
           </div>
 
-          {watchTerm && (
-            <div className="chip-row" style={{ marginTop: 0, marginBottom: 14 }}>
-              <button className={`chip ${watching ? 'active' : ''}`} onClick={toggleWatch}>
-                {watching ? <EyeOff /> : <Eye />} {watching ? 'Stop watching' : `Save this search — notify me about new ${watchTerm} listings`}
+          <div className="chip-row" style={{ marginTop: 0, marginBottom: 14 }}>
+            <button className={`chip ${watching ? 'active' : ''}`} onClick={toggleWatch}>
+              {watching ? <EyeOff /> : <Eye />}{' '}
+              {watching ? 'Stop watching' : `Save this search — notify me about new ${intentSummary} listings`}
+            </button>
+            {watching && !pushEnabled && (
+              <button className="chip" onClick={handleEnablePush} disabled={pushBusy}>
+                <BellRing /> {pushBusy ? 'Requesting...' : 'Also notify me on this device'}
               </button>
-              {watching && !pushEnabled && (
-                <button className="chip" onClick={handleEnablePush} disabled={pushBusy}>
-                  <BellRing /> {pushBusy ? 'Requesting...' : 'Also notify me on this device'}
-                </button>
-              )}
-            </div>
-          )}
+            )}
+          </div>
 
           {results.length > 0 ? (
             <div className="listing-grid">

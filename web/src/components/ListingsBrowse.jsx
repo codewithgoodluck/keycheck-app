@@ -4,7 +4,7 @@ import ListingCard from './ListingCard.jsx'
 import WatchAreaControls from './WatchAreaControls.jsx'
 import { PROPERTY_TYPE_LABELS, getPropertyTypeLabel } from '../data/propertyTypes.js'
 import { NIGERIAN_STATES } from '../data/verificationRules.js'
-import { getEffectiveStatus } from '../lib/listingsApi.js'
+import { getEffectiveStatus, getFlaggedAgentNames } from '../lib/listingsApi.js'
 import { getCompareIds, toggleCompare, MAX_COMPARE } from '../lib/compareList.js'
 import { getSavedListingIds, toggleSavedListing } from '../lib/listingWatchlist.js'
 import { getRecentlyViewedIds, clearRecentlyViewed } from '../lib/recentlyViewed.js'
@@ -19,7 +19,8 @@ const CATEGORY_FILTERS = [
 // autocomplete/trending, those stay report-specific, but watch/push now
 // reuses WatchAreaControls (see App.jsx's parallel listings-matching
 // effect for the other half of this feature).
-export default function ListingsBrowse({ listings, setView, hasMore, onLoadMore, listerUser }) {
+export default function ListingsBrowse({ listings, reports, setView, hasMore, onLoadMore, listerUser }) {
+  const flaggedAgentNames = useMemo(() => getFlaggedAgentNames(reports), [reports])
   const [query, setQuery] = useState('')
   const [submittedQuery, setSubmittedQuery] = useState('')
   const [categoryFilter, setCategoryFilter] = useState('all')
@@ -57,10 +58,11 @@ export default function ListingsBrowse({ listings, setView, hasMore, onLoadMore,
 
   const results = useMemo(() => {
     // Query already fetches status == 'active' server-side, but there's
-    // no scheduled job to flip status to 'expired' at the 30-day mark —
-    // filter that out here (see lib/listingsApi.js's getEffectiveStatus)
-    // rather than needing a composite index on expiresAt.
-    let list = listings.filter((l) => getEffectiveStatus(l) !== 'expired')
+    // no scheduled job to flip status to 'expired' at the 30-day mark, or
+    // to catch a lister whose fraud report landed *after* their listing
+    // was activated — filter both out here (see lib/listingsApi.js's
+    // getEffectiveStatus) rather than needing a scheduled backend job.
+    let list = listings.filter((l) => !['expired', 'blocked'].includes(getEffectiveStatus(l, flaggedAgentNames)))
     if (submittedQuery.trim()) {
       const q = submittedQuery.toLowerCase()
       list = list.filter((l) => l.locationText?.toLowerCase().includes(q) || l.description?.toLowerCase().includes(q))
@@ -72,7 +74,7 @@ export default function ListingsBrowse({ listings, setView, hasMore, onLoadMore,
       list = list.filter((l) => l.state === stateFilter)
     }
     return list
-  }, [submittedQuery, categoryFilter, stateFilter, listings])
+  }, [submittedQuery, categoryFilter, stateFilter, listings, flaggedAgentNames])
 
   function handleSearch(e) {
     e.preventDefault()

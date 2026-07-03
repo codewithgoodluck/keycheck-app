@@ -33,6 +33,7 @@ import { watchAdminAuth } from './lib/adminApi.js'
 import { watchListerAuth } from './lib/listerAuth.js'
 import { getSeenIds, markSeen, getSeenListingIds, markListingsSeen, areaOf } from './lib/notifications.js'
 import { getWatchedTerms } from './lib/watches.js'
+import { getListingWatches, listingMatchesIntent } from './lib/listingWatches.js'
 import { getStoredPushToken, onForegroundPushMessage } from './lib/push.js'
 import { subscribeSiteBannerImages, resolveBannerImage } from './lib/siteSettings.js'
 import { Bell, X } from 'lucide-react'
@@ -162,10 +163,12 @@ export default function App() {
 
   // Same idea as the report-matching effect above, applied to listings —
   // its own baseline ref since reports and listings hit their Firestore
-  // baseline independently. Only the freeform watched-terms list applies
-  // here (no "watched agent" equivalent — that's specific to fraud
-  // reports' saved-report pattern, and there's no "saved listings"
-  // concept in this app), matched against locationText only.
+  // baseline independently. Checks both the freeform watched-terms list
+  // (MapView's plain-string area watches, matched against locationText
+  // only) and Market.jsx's richer saved intents (category/transaction
+  // type/budget, via lib/listingWatches.js) — no "watched agent"
+  // equivalent for either, since there's no "saved listings" concept in
+  // this app the way there's a "saved report" one.
   useEffect(() => {
     if (listings.length === 0) return
 
@@ -174,10 +177,12 @@ export default function App() {
 
     if (listingsBaselineRef.current && freshListings.length > 0) {
       const watchedTerms = getWatchedTerms()
-      if (watchedTerms.length > 0) {
+      const listingWatches = getListingWatches()
+      if (watchedTerms.length > 0 || listingWatches.length > 0) {
         const matches = freshListings.filter((l) => {
           const loc = l.locationText?.toLowerCase() || ''
-          return watchedTerms.some((term) => loc.includes(term))
+          if (watchedTerms.some((term) => loc.includes(term))) return true
+          return listingWatches.some((intent) => listingMatchesIntent(l, intent))
         })
         if (matches.length > 0) {
           setNewMatches((prev) => {
@@ -558,6 +563,7 @@ export default function App() {
       {view === 'listings' && (
         <ListingsBrowse
           listings={listings}
+          reports={reports}
           setView={setView}
           hasMore={hasMoreListings}
           onLoadMore={loadMoreListings}
@@ -566,7 +572,9 @@ export default function App() {
       )}
       {view === 'buyers-agent-directory' && <BuyersAgentDirectory setView={setView} />}
       {view === 'become-buyers-agent' && <BecomeBuyersAgent listerUser={listerUser} setView={setView} />}
-      {view === 'listing-detail' && <ListingDetail listing={activeListing} listings={listings} setView={setView} />}
+      {view === 'listing-detail' && (
+        <ListingDetail listing={activeListing} listings={listings} reports={reports} setView={setView} />
+      )}
       {view === 'compare-listings' && <CompareListings listings={listings} setView={setView} />}
       {view === 'submit-listing' && <SubmitListing listerUser={listerUser} setView={setView} />}
       {view === 'my-listings' && <MyListings listerUser={listerUser} setView={setView} />}
@@ -576,7 +584,7 @@ export default function App() {
       )}
       {view === 'settings' && <Settings listerUser={listerUser} setView={setView} />}
       {view === 'terms' && <Terms setView={setView} />}
-      {view === 'market' && <Market listings={listings} setView={setView} />}
+      {view === 'market' && <Market listings={listings} reports={reports} setView={setView} />}
 
       {view !== 'submit' && <FloatingReportButton onClick={() => setView('submit')} />}
       <footer className="site-footer">

@@ -8,7 +8,7 @@ import { addWatch, removeWatch, isWatching } from '../lib/watches.js'
 import { syncWatchedTermsIfSubscribed } from '../lib/push.js'
 import { resolveStampKey } from './Stamp.jsx'
 import StatusLegend from './StatusLegend.jsx'
-import { getEffectiveStatus } from '../lib/listingsApi.js'
+import { getEffectiveStatus, getFlaggedAgentNames } from '../lib/listingsApi.js'
 
 // Distinct from STATUS_COLOR (reports) so a listing pin never reads as a
 // fraud-status color — listings aren't on the unverified/disputed/verified
@@ -60,13 +60,15 @@ export default function MapView({ reports, listings = [], setView }) {
   }
 
   const geotagged = useMemo(() => reports.filter((r) => r.lat && r.lng), [reports])
+  const flaggedAgentNames = useMemo(() => getFlaggedAgentNames(reports), [reports])
 
   // Active-only, same rule ListingsBrowse.jsx applies — a pending/rejected
-  // listing has no business showing up on the public map, and an expired
-  // one is stale (see lib/listingsApi.js's getEffectiveStatus).
+  // listing has no business showing up on the public map, and neither
+  // does an expired one or one whose lister has since been flagged (see
+  // lib/listingsApi.js's getEffectiveStatus).
   const geotaggedListings = useMemo(
-    () => listings.filter((l) => l.lat && l.lng && getEffectiveStatus(l) === 'active'),
-    [listings]
+    () => listings.filter((l) => l.lat && l.lng && getEffectiveStatus(l, flaggedAgentNames) === 'active'),
+    [listings, flaggedAgentNames]
   )
 
   const visible = useMemo(() => {
@@ -119,7 +121,7 @@ export default function MapView({ reports, listings = [], setView }) {
       <p style={{ fontSize: 13, color: 'var(--ink-soft)', margin: '0 0 14px' }}>
         {layer === 'reports'
           ? `${geotagged.length} of ${reports.length} reports are area-tagged. Pins mark the general neighbourhood reported, not an exact plot, since locations come from witness descriptions.`
-          : `${geotaggedListings.length} of ${listings.filter((l) => getEffectiveStatus(l) === 'active').length} active listings are area-tagged.`}
+          : `${geotaggedListings.length} of ${listings.filter((l) => getEffectiveStatus(l, flaggedAgentNames) === 'active').length} active listings are area-tagged.`}
       </p>
 
       <div className="chip-row" style={{ marginTop: 0, marginBottom: 14 }}>
