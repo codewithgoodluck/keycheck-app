@@ -1,6 +1,7 @@
-import { Search, Bookmark, Map, ClipboardCheck, Home } from 'lucide-react'
+import { Search, Bookmark, Map, ClipboardCheck, Home, UserCircle } from 'lucide-react'
 
-const LISTING_VIEWS = ['listings', 'listing-detail', 'submit-listing', 'my-listings', 'lister-auth']
+const LISTING_VIEWS = ['listings', 'listing-detail', 'submit-listing', 'my-listings']
+const PROFILE_VIEWS = ['my-profile', 'settings', 'lister-auth']
 
 // Mirrors Header.jsx's nav items, but this is a genuinely different
 // layout (icon-over-label tab bar, not a horizontal pill) so it's a
@@ -8,7 +9,7 @@ const LISTING_VIEWS = ['listings', 'listing-detail', 'submit-listing', 'my-listi
 // mounted alongside Header in App.jsx — visibility is CSS-only (see
 // .bottom-nav's media query in index.css) to avoid a resize-triggered
 // remount. Market and Report tabs removed — see Header.jsx's comment.
-export default function BottomNav({ view, setView, savedCount }) {
+export default function BottomNav({ view, setView, savedCount, listerUser }) {
   return (
     <nav className="bottom-nav">
       <button className={view === 'home' ? 'active' : ''} onClick={() => setView('home')}>
@@ -30,6 +31,13 @@ export default function BottomNav({ view, setView, savedCount }) {
       <button className={view === 'saved' ? 'active' : ''} onClick={() => setView('saved')}>
         <Bookmark size={19} />
         <span>Saved{savedCount > 0 ? ` (${savedCount})` : ''}</span>
+      </button>
+      <button
+        className={PROFILE_VIEWS.includes(view) ? 'active' : ''}
+        onClick={() => setView(listerUser ? 'my-profile' : 'lister-auth')}
+      >
+        <UserCircle size={19} />
+        <span>{listerUser ? 'Profile' : 'Sign in'}</span>
       </button>
     </nav>
   )

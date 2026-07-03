@@ -1,13 +1,16 @@
-import { Search, Bookmark, ShieldCheck, Map, ClipboardCheck, Home } from 'lucide-react'
+import { Search, Bookmark, ShieldCheck, Map, ClipboardCheck, Home, UserCircle } from 'lucide-react'
 
-const LISTING_VIEWS = ['listings', 'listing-detail', 'submit-listing', 'my-listings', 'lister-auth']
+const LISTING_VIEWS = ['listings', 'listing-detail', 'submit-listing', 'my-listings']
+const PROFILE_VIEWS = ['my-profile', 'settings', 'lister-auth']
 
 // Market and the Report tab were removed from primary nav — Market has
 // no other entry point right now (deep-link only), and Report is
 // covered by FloatingReportButton.jsx, which stays visible on every
 // page except the submit form itself; keeping both a nav tab and a
-// floating button for the same action was redundant.
-export default function Header({ view, setView, savedCount }) {
+// floating button for the same action was redundant. The profile icon
+// routes to MyProfile.jsx when signed in, or straight to sign-in when
+// not — one entry point either way, rather than a dead tab.
+export default function Header({ view, setView, savedCount, listerUser }) {
   return (
     <header className="site-header">
       <div className="site-header-inner">
@@ -37,6 +40,13 @@ export default function Header({ view, setView, savedCount }) {
           <button className={view === 'saved' ? 'active' : ''} onClick={() => setView('saved')}>
             <Bookmark size={15} />
             <span className="label">Saved{savedCount > 0 ? ` (${savedCount})` : ''}</span>
+          </button>
+          <button
+            className={PROFILE_VIEWS.includes(view) ? 'active' : ''}
+            onClick={() => setView(listerUser ? 'my-profile' : 'lister-auth')}
+          >
+            <UserCircle size={15} />
+            <span className="label">{listerUser ? 'Profile' : 'Sign in'}</span>
           </button>
         </nav>
       </div>

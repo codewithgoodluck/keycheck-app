@@ -17,6 +17,8 @@ import ListingDetail from './components/ListingDetail.jsx'
 import SubmitListing from './components/SubmitListing.jsx'
 import MyListings from './components/MyListings.jsx'
 import ListerAuth from './components/ListerAuth.jsx'
+import MyProfile from './components/MyProfile.jsx'
+import Settings from './components/Settings.jsx'
 import CompareListings from './components/CompareListings.jsx'
 import AreaGuide from './components/AreaGuide.jsx'
 import BuyersAgentDirectory from './components/BuyersAgentDirectory.jsx'
@@ -493,7 +495,7 @@ export default function App() {
           </div>
         </div>
       )}
-      <Header view={view} setView={setView} savedCount={savedIds.length} />
+      <Header view={view} setView={setView} savedCount={savedIds.length} listerUser={listerUser} />
 
       {view === 'home' && (
         <SearchHome
@@ -517,6 +519,7 @@ export default function App() {
           onToggleSave={handleToggleSave}
           onConfirm={handleConfirm}
           onAddReply={handleAddReply}
+          listerUser={listerUser}
         />
       )}
       {view === 'profile' && (
@@ -539,7 +542,7 @@ export default function App() {
         />
       )}
       {view === 'diligence' && <DueDiligence setView={setView} />}
-      {view === 'submit' && <SubmitReport addReport={addReport} setView={setView} />}
+      {view === 'submit' && <SubmitReport addReport={addReport} setView={setView} listerUser={listerUser} />}
       {view === 'saved' && (
         <SavedReports reports={reports} savedIds={savedIds} setView={setView} onToggleSave={handleToggleSave} listings={listings} />
       )}
@@ -560,6 +563,10 @@ export default function App() {
       {view === 'submit-listing' && <SubmitListing listerUser={listerUser} setView={setView} />}
       {view === 'my-listings' && <MyListings listerUser={listerUser} setView={setView} />}
       {view === 'lister-auth' && <ListerAuth setView={setView} />}
+      {view === 'my-profile' && (
+        <MyProfile listerUser={listerUser} setView={setView} savedIds={savedIds} onToggleSave={handleToggleSave} />
+      )}
+      {view === 'settings' && <Settings listerUser={listerUser} setView={setView} />}
       {view === 'terms' && <Terms setView={setView} />}
       {view === 'market' && <Market listings={listings} setView={setView} />}
 
@@ -567,7 +574,7 @@ export default function App() {
       <footer className="site-footer">
         <button onClick={() => setView('terms')}>Terms of Service</button>
       </footer>
-      <BottomNav view={view} setView={setView} savedCount={savedIds.length} />
+      <BottomNav view={view} setView={setView} savedCount={savedIds.length} listerUser={listerUser} />
     </div>
   )
 }

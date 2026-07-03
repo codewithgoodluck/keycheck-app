@@ -7,9 +7,11 @@ import {
   updateDoc,
   increment,
   query,
+  where,
   orderBy,
   limit,
-  arrayUnion
+  arrayUnion,
+  getDocs
 } from 'firebase/firestore'
 import { ref, uploadBytes } from 'firebase/storage'
 
@@ -85,6 +87,20 @@ export async function addReportToFirestore(report) {
   const payload = { ...report, upvotes: 0, createdAt: new Date().toISOString() }
   const ref = await addDoc(collection(db, COLLECTION), payload)
   return { id: ref.id, ...payload }
+}
+
+// One-off fetch for the Profile page's "My reports" — reports now
+// require being signed in to submit (see firestore.rules), so every
+// report going forward carries the submitter's own uid. Sorted
+// client-side rather than orderBy('createdAt') to avoid needing a new
+// composite index, same reasoning as inquiriesApi.js's
+// getInquiriesForListing.
+export async function getReportsBySubmitter(uid) {
+  const q = query(collection(db, COLLECTION), where('submitterId', '==', uid))
+  const snap = await getDocs(q)
+  return snap.docs
+    .map((d) => ({ id: d.id, ...d.data() }))
+    .sort((a, b) => new Date(b.createdAt || b.dateReported) - new Date(a.createdAt || a.dateReported))
 }
 
 export async function confirmReportInFirestore(id) {

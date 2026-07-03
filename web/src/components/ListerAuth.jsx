@@ -1,10 +1,14 @@
 import { useState } from 'react'
-import { Home, LogIn, UserPlus } from 'lucide-react'
+import { ShieldCheck, LogIn, UserPlus } from 'lucide-react'
 import { listerSignIn, listerSignUp } from '../lib/listerAuth.js'
 
 // Mirrors AdminLogin.jsx's layout, but with a sign-up/sign-in toggle —
-// unlike moderators (created manually in the Firebase Console), listers
-// self-register.
+// unlike moderators (created manually in the Firebase Console), regular
+// users self-register. Originally lister-only (hence the file/prop
+// names — see lib/listerAuth.js), now the general account gate for
+// reporting, commenting, and listing alike: a "user" account isn't a
+// different thing from a "lister" account, just the same Firebase Auth
+// user used for a different action.
 export default function ListerAuth({ setView }) {
   const [mode, setMode] = useState('signup')
   const [email, setEmail] = useState('')
@@ -22,9 +26,9 @@ export default function ListerAuth({ setView }) {
       } else {
         await listerSignIn(email, password)
       }
-      setView('my-listings')
+      setView('my-profile')
     } catch (err) {
-      console.error('Lister auth failed:', err)
+      console.error('Account auth failed:', err)
       setError(`${mode === 'signup' ? 'Sign-up' : 'Sign-in'} failed: ${err.message}`)
     } finally {
       setLoading(false)
@@ -47,14 +51,14 @@ export default function ListerAuth({ setView }) {
             marginBottom: 14
           }}
         >
-          <Home size={20} />
+          <ShieldCheck size={20} />
         </span>
         <h1 style={{ fontWeight: 800, letterSpacing: '-0.02em', fontSize: 22, margin: '0 0 6px' }}>
-          {mode === 'signup' ? 'Create a lister account' : 'Lister sign-in'}
+          {mode === 'signup' ? 'Create an account' : 'Sign in'}
         </h1>
         <p style={{ color: 'var(--ink-soft)', fontSize: 13.5, margin: 0 }}>
-          List a property and manage your listings. Every listing is reviewed before it
-          appears publicly.
+          Needed to report a problem, comment, or list a property. Search and browsing stay free
+          for anyone, no account required.
         </p>
       </div>
 

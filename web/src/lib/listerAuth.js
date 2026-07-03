@@ -1,5 +1,11 @@
 import { auth } from './firebase.js'
-import { createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged } from 'firebase/auth'
+import {
+  createUserWithEmailAndPassword,
+  signInWithEmailAndPassword,
+  signOut,
+  onAuthStateChanged,
+  sendPasswordResetEmail
+} from 'firebase/auth'
 
 // Mirrors lib/adminApi.js's auth functions exactly, same `auth` instance
 // — a lister is just any authenticated user without the moderator custom
@@ -25,4 +31,13 @@ export async function listerSignIn(email, password) {
 
 export async function listerSignOut() {
   await signOut(auth)
+}
+
+// Simpler than an in-app change-password flow (which needs a recent-
+// login re-auth prompt to satisfy Firebase Auth's security requirement)
+// — sends a reset link to the account's own email instead, same pattern
+// most small apps use for this.
+export async function sendAccountPasswordReset(email) {
+  if (!auth) throw new Error('Firebase is not configured — add your config to web/.env first.')
+  await sendPasswordResetEmail(auth, email)
 }

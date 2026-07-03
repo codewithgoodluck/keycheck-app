@@ -22,7 +22,7 @@ const MIN_DESCRIPTION_FOR_NO_EVIDENCE = 60
 const COPY = {
   flag: {
     heading: 'Report a problem',
-    subtitle: 'Describe what happened. Your report is reviewed before it appears publicly, and you can stay anonymous.',
+    subtitle: 'Describe what happened. Your report is reviewed before it appears publicly — your account isn\'t shown to other visitors, only used to attribute the report to you internally.',
     descriptionLabel: 'What happened',
     descriptionPlaceholder: 'Briefly describe the dispute, double-sale, or fraud you experienced or know about.',
     submitLabel: 'Submit for review',
@@ -42,7 +42,7 @@ const COPY = {
   }
 }
 
-export default function SubmitReport({ addReport, setView }) {
+export default function SubmitReport({ addReport, setView, listerUser }) {
   const [kind, setKind] = useState('flag')
   const [form, setForm] = useState({
     type: 'land',
@@ -137,6 +137,7 @@ export default function SubmitReport({ addReport, setView }) {
         evidenceUrls,
         attestedAccuracy: true,
         upvotes: 0,
+        submitterId: listerUser.uid,
         lat: pin ? pin[0] : null,
         lng: pin ? pin[1] : null,
         dateReported: new Date().toISOString().slice(0, 10)
@@ -147,6 +148,24 @@ export default function SubmitReport({ addReport, setView }) {
     } finally {
       setSubmitting(false)
     }
+  }
+
+  if (!listerUser) {
+    return (
+      <div className="form-wrap">
+        <div className="page-banner">
+          <h1>Sign in to continue</h1>
+          <p>Reporting a problem or vouching for a clean transaction now requires an account.</p>
+        </div>
+        <div className="empty-state">
+          <p>
+            An account attributes reports to you internally (so a moderator can follow up if needed)
+            and keeps a simple spam deterrent in place — it's never shown to other visitors.
+          </p>
+          <button onClick={() => setView('lister-auth')}>Sign in</button>
+        </div>
+      </div>
+    )
   }
 
   if (submittedCount !== null) {

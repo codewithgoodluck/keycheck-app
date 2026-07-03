@@ -14,7 +14,7 @@ import FeeCapFactBox from './FeeCapFactBox.jsx'
 // matters for notice-and-takedown-style legal posture even if rarely used.
 const DISPUTE_EMAIL = 'goodluckmordi44@gmail.com'
 
-export default function ReportDetail({ report, setView, saved, onToggleSave, onConfirm, onAddReply }) {
+export default function ReportDetail({ report, setView, saved, onToggleSave, onConfirm, onAddReply, listerUser }) {
   const [confirmed, setConfirmed] = useState(() => (report ? hasConfirmed(report.id) : false))
   const [showReplyForm, setShowReplyForm] = useState(false)
   const [replyRole, setReplyRole] = useState('agent')
@@ -53,10 +53,10 @@ export default function ReportDetail({ report, setView, saved, onToggleSave, onC
 
   async function handleSubmitReply(e) {
     e.preventDefault()
-    if (!replyText.trim() || submittingReply) return
+    if (!replyText.trim() || submittingReply || !listerUser) return
     setSubmittingReply(true)
     try {
-      await onAddReply(report.id, { role: replyRole, text: replyText.trim() })
+      await onAddReply(report.id, { role: replyRole, text: replyText.trim(), authorId: listerUser.uid })
       setReplyText('')
       setShowReplyForm(false)
       setReplySubmitted(true)
@@ -298,9 +298,21 @@ export default function ReportDetail({ report, setView, saved, onToggleSave, onC
                 Replying from WhatsApp instead carries more weight, since it's tied to a
                 real phone number rather than a typed name.
               </p>
-              <button className="confirm-btn" style={{ marginTop: 4 }} onClick={() => setShowReplyForm(true)}>
-                <MessageSquareReply size={14} /> Submit a reply
-              </button>
+              {listerUser ? (
+                <button className="confirm-btn" style={{ marginTop: 4 }} onClick={() => setShowReplyForm(true)}>
+                  <MessageSquareReply size={14} /> Submit a reply
+                </button>
+              ) : (
+                <>
+                  <p style={{ fontSize: 13, color: 'var(--ink-soft)', marginTop: 4 }}>
+                    Replying now requires an account — it's never shown publicly, just used to
+                    attribute the reply to you internally.
+                  </p>
+                  <button className="confirm-btn" style={{ marginTop: 4 }} onClick={() => setView('lister-auth')}>
+                    <MessageSquareReply size={14} /> Sign in to reply
+                  </button>
+                </>
+              )}
             </>
           )}
         </div>

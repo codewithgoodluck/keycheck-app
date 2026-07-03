@@ -40,9 +40,14 @@ service cloud.firestore {
       // Anyone can read reports — this is a public registry.
       allow read: if true;
 
-      // Anyone can submit a new report, but only with safe defaults:
-      // status must start "unverified" and upvotes must start at 0, so a
-      // submitter can't mark their own report verified or pre-inflate it.
+      // Submitting a report or a reply ("comment") now requires being
+      // signed in — a deliberate policy change from the original
+      // fully-anonymous design, made explicitly by the project owner.
+      // Confirming ("I had this too") deliberately stays open to anyone:
+      // it was never in scope for this change, and it doesn't create new
+      // content the way a report or reply does. submitterId must match
+      // the caller's own uid — can't be spoofed to attribute a report to
+      // someone else.
       //
       // Also requires a minimum evidentiary bar, enforced here (not just
       // client-side) because client-side checks are trivially bypassable
@@ -54,15 +59,16 @@ service cloud.firestore {
       // deliberate policy decision to reduce baseless accusations going
       // live with zero substantiation — see the moderation policy
       // discussion this was built from.
-      allow create: if request.resource.data.status == 'unverified'
+      allow create: if request.auth != null
+                    && request.resource.data.submitterId == request.auth.uid
+                    && request.resource.data.status == 'unverified'
                     && request.resource.data.upvotes == 0
                     && request.resource.data.attestedAccuracy == true
                     && hasMinimumEvidence();
 
-      // Public updates are allowed ONLY for the two actions regular users
-      // take: confirming ("I had this too") and adding a reply. Both are
-      // restricted to changing just those fields — nothing else.
-      allow update: if isOnlyConfirming() || isOnlyAddingReply();
+      // Confirming stays open to anyone; adding a reply now requires
+      // being signed in (see the create-rule comment above).
+      allow update: if isOnlyConfirming() || (request.auth != null && isOnlyAddingReply());
 
       // Status changes, deleting a report, and editing existing replies
       // (e.g. marking identityVerified) are admin-only. A report can only
