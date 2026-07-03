@@ -75,23 +75,37 @@ button { font-family: inherit; }
 .app {
   max-width: 920px;
   margin: 0 auto;
-  padding: 0 20px 100px;
+  padding: 79px 20px 100px;
 }
 
 /* ---------- Header ---------- */
 
+/* Fixed (not sticky) — pinned to the viewport regardless of scroll,
+   and spans the true screen width (not just .app's own 920px column)
+   so the background/blur reach both edges, same full-bleed technique
+   as the page banners. The actual nav content is centered inside via
+   .site-header-inner, matching .app's own max-width so it lines up
+   with the page content below. Removed from normal flow, so .app gets
+   a top padding (--header-height) equal to the header's rendered
+   height to keep content from starting underneath it. */
 .site-header {
-  position: sticky;
+  position: fixed;
   top: 0;
-  z-index: 20;
+  left: 0;
+  right: 0;
+  z-index: 30;
+  background: rgba(250, 247, 239, 0.9);
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid var(--line);
+}
+
+.site-header-inner {
+  max-width: 920px;
+  margin: 0 auto;
   display: flex;
   align-items: center;
   justify-content: space-between;
   padding: 18px 20px;
-  margin: 0 -20px 0;
-  background: rgba(250, 247, 239, 0.82);
-  backdrop-filter: blur(10px);
-  border-bottom: 1px solid var(--line);
 }
 
 .site-header .wordmark {
