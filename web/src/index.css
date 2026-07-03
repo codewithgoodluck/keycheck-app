@@ -177,9 +177,15 @@ button { font-family: inherit; }
   color: var(--brand);
 }
 
-@media (max-width: 540px) {
-  .site-header nav button span.label { display: none; }
-  .site-header nav button { padding: 9px; }
+/* Hides the header's own nav in favor of .bottom-nav (same breakpoint
+   it appears at, below) rather than shrinking it to icon-only — with
+   six items (Search/Map/Check/Listings/Saved/Profile) plus the
+   wordmark, even icon-only buttons don't reliably fit next to the logo
+   on narrow phones (this caused real horizontal-scroll overflow at
+   320-375px widths). Showing navigation in exactly one place on mobile
+   also avoids the redundancy of both bars being visible at once. */
+@media (max-width: 600px) {
+  .site-header nav { display: none; }
 }
 
 /* ---------- Hero ---------- */
@@ -376,6 +382,7 @@ button { font-family: inherit; }
 
 .search-bar input {
   flex: 1;
+  min-width: 0;
   border: none;
   background: transparent;
   padding: 12px 0;
@@ -702,8 +709,9 @@ button { font-family: inherit; }
 .report-card .card-meta {
   margin-top: 12px;
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
-  gap: 14px;
+  gap: 6px 14px;
   font-size: 12px;
   color: var(--ink-faint);
   font-variant-numeric: tabular-nums;
@@ -1406,7 +1414,16 @@ button { font-family: inherit; }
   .detail-actions { align-self: flex-end; }
   .app { padding-bottom: 88px; }
   .bottom-nav { display: flex; }
-  .fab { display: none; }
+  /* Repositioned above the bottom nav bar, not hidden — reporting a
+     problem has no equivalent entry in the bottom nav's tab list, so
+     hiding the FAB here would make the action unreachable on phones
+     entirely, not just less convenient. */
+  .fab { bottom: calc(70px + env(safe-area-inset-bottom, 0px)); right: 16px; padding: 13px 18px; font-size: 13px; }
+}
+
+@media (max-width: 360px) {
+  .fab .label { display: none; }
+  .fab { padding: 13px; }
 }
 
 /* ---------- Toasts ---------- */
