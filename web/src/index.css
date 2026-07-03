@@ -213,14 +213,6 @@ button { font-family: inherit; }
   margin-left: -50vw;
   margin-right: -50vw;
   padding: 52px 20px 34px;
-  /* Every page with a search bar (Home, Listings/Market) shares this
-     class, but their actual text content (subtitle length, number of
-     suggestion chips) isn't the same length — without a fixed height
-     the banner would visibly shrink/grow between pages. justify-content
-     centers the shorter page's content within the same box rather than
-     leaving empty space stacked at the bottom. */
-  min-height: 384px;
-  justify-content: center;
   background-color: var(--ink);
   background-image: linear-gradient(135deg, rgba(21, 33, 26, 0.72) 0%, rgba(113, 43, 19, 0.86) 100%), var(--banner-image, none);
   background-size: cover, cover;
@@ -1302,7 +1294,13 @@ button { font-family: inherit; }
 /* Every banner's content is centered — eyebrow chip, heading, subtitle,
    and (on .hero specifically) the search bar and trending-location chip
    row are all centered within the full-bleed banner, at every screen
-   size, not just mobile. */
+   size, not just mobile. Same min-height across all three banner
+   variants (previously just .hero) so Map/Check/Saved/etc. render at
+   the same height as the Home/Listings search banner instead of
+   looking noticeably shorter just because their content (a plain
+   heading + subtitle, no search bar) is naturally shorter.
+   justify-content centers that shorter content within the shared
+   height rather than leaving empty space stacked at the bottom. */
 .hero,
 .page-banner,
 .saved-header {
@@ -1310,6 +1308,8 @@ button { font-family: inherit; }
   display: flex;
   flex-direction: column;
   align-items: center;
+  justify-content: center;
+  min-height: 384px;
 }
 
 .hero .eyebrow,
@@ -1418,7 +1418,11 @@ button { font-family: inherit; }
 
 @media (max-width: 600px) {
   .hero h1 { font-size: 27px; }
-  .hero { min-height: 575px; }
+  .hero,
+  .page-banner,
+  .saved-header {
+    min-height: 575px;
+  }
   .detail-header { flex-direction: column; }
   .detail-actions { align-self: flex-end; }
   .app { padding-bottom: 88px; }
