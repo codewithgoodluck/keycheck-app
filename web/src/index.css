@@ -257,6 +257,87 @@ button { font-family: inherit; }
   font-size: 15.5px;
 }
 
+/* Carousel variant (currently just Listings/Market browse — see
+   CAROUSEL_BANNER_PAGES in lib/siteSettings.js). Turns off the plain
+   --banner-image background so the rotating <BannerCarousel> layers
+   (painted by its own component below) are the only photo, and clips
+   them to the hero's rounded corners since absolutely-positioned
+   children ignore a parent's border-radius by default. hero-content
+   wraps the existing text/search/chip children so they stack above the
+   carousel's photo + scrim layers without every child needing its own
+   z-index. */
+.hero.hero-carousel {
+  background-image: none;
+  overflow: hidden;
+}
+
+.hero-content {
+  position: relative;
+  z-index: 1;
+}
+
+.banner-carousel-bg {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+}
+
+.banner-carousel-layer {
+  position: absolute;
+  inset: 0;
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  opacity: 0;
+  transition: opacity 1.4s ease;
+}
+
+.banner-carousel-layer.active { opacity: 1; }
+
+/* Same gradient as .hero's own scrim, but as a sibling layer instead of
+   a background-image so it paints above the photo layers instead of
+   below them. .theme-market below swaps in the lighter coral gradient
+   to match .theme-market .hero. */
+.banner-carousel-scrim {
+  position: absolute;
+  inset: 0;
+  background-image: linear-gradient(135deg, rgba(21, 33, 26, 0.72) 0%, rgba(113, 43, 19, 0.86) 100%);
+}
+
+.theme-market .banner-carousel-scrim {
+  background-image: linear-gradient(180deg, rgba(250, 236, 231, 0.75) 0%, rgba(245, 196, 179, 0.88) 100%);
+}
+
+.banner-carousel-dots {
+  position: absolute;
+  right: 20px;
+  bottom: 14px;
+  display: flex;
+  gap: 6px;
+  z-index: 1;
+}
+
+.banner-carousel-dot {
+  width: 7px;
+  height: 7px;
+  padding: 0;
+  border: none;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.45);
+  cursor: pointer;
+  transition: background 0.15s ease, transform 0.15s ease;
+}
+
+.banner-carousel-dot:hover { background: rgba(255, 255, 255, 0.7); }
+.banner-carousel-dot.active { background: #fff; transform: scale(1.15); }
+
+/* .theme-market's scrim is light (coral, not dark ink), so the default
+   white dots would wash out — same reasoning as .theme-market .hero h1
+   switching to dark text above. */
+.theme-market .banner-carousel-dot { background: rgba(113, 43, 19, 0.35); }
+.theme-market .banner-carousel-dot:hover { background: rgba(113, 43, 19, 0.55); }
+.theme-market .banner-carousel-dot.active { background: var(--brand-hover); }
+
 /* Every non-hero page's title block, upgraded from a plain text header
    to the same full-bleed gradient banner as .hero above, so the whole
    app has one consistent banner system instead of a patchwork of some

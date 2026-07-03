@@ -39,6 +39,21 @@ export const BANNER_PAGES = [
   { key: 'lister-auth', label: 'Sign in / Sign up' }
 ]
 
+// Pages whose banner rotates through all of its uploaded images as a
+// carousel instead of just showing one — currently just Listings/Market
+// browse, since that's the only banner spot that asked for it. Every
+// other page keeps the simpler "one image, uploading replaces it"
+// behavior. A page's stored value is a plain string until it's given a
+// second image, at which point it becomes an array — normalizeBannerList
+// below is what lets every reader treat both shapes the same way.
+export const CAROUSEL_BANNER_PAGES = new Set(['listings'])
+
+function normalizeBannerList(value) {
+  if (Array.isArray(value)) return value.filter(Boolean)
+  if (value) return [value]
+  return []
+}
+
 export function subscribeSiteBannerImages(callback) {
   if (!db) {
     callback({})
@@ -76,9 +91,20 @@ export async function getSiteBannerImages() {
 
 // Falls back to the page's own image, then the site-wide default, then
 // null (the plain gradient) — never a photo that wasn't deliberately
-// chosen for that specific spot.
+// chosen for that specific spot. Always a single URL, even for carousel
+// pages (their first image), for the CSS-var-driven pages that only
+// ever show one photo.
 export function resolveBannerImage(bannerImages, view) {
-  return bannerImages?.[view] || bannerImages?.default || null
+  const resolved = bannerImages?.[view] || bannerImages?.default
+  return normalizeBannerList(resolved)[0] || null
+}
+
+// Same fallback order as resolveBannerImage, but returns every image for
+// that page — only meaningful for CAROUSEL_BANNER_PAGES entries, but
+// safe to call for any page (just comes back as a 0-or-1-length array).
+export function resolveBannerImages(bannerImages, view) {
+  const resolved = bannerImages?.[view] || bannerImages?.default
+  return normalizeBannerList(resolved)
 }
 
 export async function uploadSiteBannerImage(pageKey, file) {
@@ -92,15 +118,32 @@ export async function uploadSiteBannerImage(pageKey, file) {
   const fileRef = ref(storage, path)
   await uploadBytes(fileRef, file, { contentType: file.type })
   const url = await getDownloadURL(fileRef)
-  // merge:true deep-merges nested map fields in Firestore, so this only
-  // touches bannerImages.<pageKey> — every other page's image is untouched.
-  await setDoc(doc(db, SETTINGS_DOC), { bannerImages: { [pageKey]: url } }, { merge: true })
+  if (CAROUSEL_BANNER_PAGES.has(pageKey)) {
+    // Appends rather than replaces, so a second upload grows the
+    // carousel instead of clobbering the first image. Read-modify-write
+    // instead of arrayUnion since the field itself may not exist yet.
+    const existing = await getSiteBannerImages()
+    const current = normalizeBannerList(existing[pageKey])
+    await setDoc(doc(db, SETTINGS_DOC), { bannerImages: { [pageKey]: [...current, url] } }, { merge: true })
+  } else {
+    // merge:true deep-merges nested map fields in Firestore, so this only
+    // touches bannerImages.<pageKey> — every other page's image is untouched.
+    await setDoc(doc(db, SETTINGS_DOC), { bannerImages: { [pageKey]: url } }, { merge: true })
+  }
   return url
 }
 
 // Doesn't delete the previous Storage object automatically — left for
 // manual cleanup in the Storage console if ever needed, same reasoning
-// as the single-image version of this feature.
-export async function clearSiteBannerImage(pageKey) {
+// as the single-image version of this feature. For carousel pages, pass
+// the specific `url` to remove just that image; omit it (or call on a
+// non-carousel page) to clear the whole page back to nothing.
+export async function clearSiteBannerImage(pageKey, url) {
+  if (url && CAROUSEL_BANNER_PAGES.has(pageKey)) {
+    const existing = await getSiteBannerImages()
+    const current = normalizeBannerList(existing[pageKey]).filter((u) => u !== url)
+    await setDoc(doc(db, SETTINGS_DOC), { bannerImages: { [pageKey]: current } }, { merge: true })
+    return
+  }
   await setDoc(doc(db, SETTINGS_DOC), { bannerImages: { [pageKey]: null } }, { merge: true })
 }

@@ -1,13 +1,15 @@
 import { useEffect, useMemo, useState } from 'react'
-import { Search, FileSearch, Home, Plus, GitCompare, Users, History, X, SlidersHorizontal, ChevronDown, Compass } from 'lucide-react'
+import { Search, FileSearch, Home, Plus, GitCompare, Users, History, X, SlidersHorizontal, ChevronDown, Compass, AlertTriangle } from 'lucide-react'
 import ListingCard from './ListingCard.jsx'
 import WatchAreaControls from './WatchAreaControls.jsx'
+import BannerCarousel from './BannerCarousel.jsx'
 import { PROPERTY_TYPE_LABELS, getPropertyTypeLabel } from '../data/propertyTypes.js'
 import { NIGERIAN_STATES } from '../data/verificationRules.js'
 import { getEffectiveStatus, getFlaggedAgentNames } from '../lib/listingsApi.js'
 import { getCompareIds, toggleCompare, MAX_COMPARE } from '../lib/compareList.js'
 import { getSavedListingIds, toggleSavedListing } from '../lib/listingWatchlist.js'
 import { getRecentlyViewedIds, clearRecentlyViewed } from '../lib/recentlyViewed.js'
+import { subscribeSiteBannerImages, resolveBannerImages } from '../lib/siteSettings.js'
 
 const CATEGORY_FILTERS = [
   { key: 'all', label: 'All categories' },
@@ -29,6 +31,14 @@ export default function ListingsBrowse({ listings, reports, setView, hasMore, on
   const [compareIds, setCompareIds] = useState(() => getCompareIds())
   const [savedIds, setSavedIds] = useState(() => getSavedListingIds())
   const [recentIds, setRecentIds] = useState(() => getRecentlyViewedIds())
+  const [bannerImages, setBannerImages] = useState({})
+
+  useEffect(() => {
+    const unsubscribe = subscribeSiteBannerImages(setBannerImages)
+    return unsubscribe
+  }, [])
+
+  const carouselImages = useMemo(() => resolveBannerImages(bannerImages, 'listings'), [bannerImages])
 
   // Session memory without requiring login — re-read whenever the
   // listings feed itself changes, since that's the only signal this
@@ -83,42 +93,57 @@ export default function ListingsBrowse({ listings, reports, setView, hasMore, on
 
   return (
     <div className="theme-market">
-      <section className="hero">
-        <p className="eyebrow">
-          <Home size={13} /> Verified listings
-        </p>
-        <h1>Find your next home, already checked.</h1>
-        <p>
-          Every listing here is tied to a real profile — see the track record before you ever pick
-          up the phone.
-        </p>
-        <div className="search-wrap">
-          <form className="search-bar" onSubmit={handleSearch}>
-            <Search size={18} />
-            <input
-              type="text"
-              placeholder="Search by location, e.g. 'Lekki Phase 2'"
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-            />
-            <button type="submit">Search</button>
-          </form>
-        </div>
-        <div className="chip-row">
-          <button className="chip active" onClick={() => setView('submit-listing')}>
-            <Plus /> List a property
-          </button>
-          {listerUser && (
-            <button className="chip" onClick={() => setView('my-listings')}>
-              <Home /> My listings
+      <div className="liability-banner">
+        <AlertTriangle size={16} />
+        <span>
+          Always verify in person before paying anything — KeyCheck does not verify transactions,
+          hold funds, or guarantee any listing, and is not liable for any loss. Read our{' '}
+          <a onClick={() => setView('terms')} style={{ cursor: 'pointer' }}>
+            Terms of Service
+          </a>
+          .
+        </span>
+      </div>
+
+      <section className={`hero${carouselImages.length > 0 ? ' hero-carousel' : ''}`}>
+        {carouselImages.length > 0 && <BannerCarousel images={carouselImages} />}
+        <div className="hero-content">
+          <p className="eyebrow">
+            <Home size={13} /> Verified listings
+          </p>
+          <h1>Find your next home, already checked.</h1>
+          <p>
+            Every listing here is tied to a real profile — see the track record before you ever pick
+            up the phone.
+          </p>
+          <div className="search-wrap">
+            <form className="search-bar" onSubmit={handleSearch}>
+              <Search size={18} />
+              <input
+                type="text"
+                placeholder="Search by location, e.g. 'Lekki Phase 2'"
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+              />
+              <button type="submit">Search</button>
+            </form>
+          </div>
+          <div className="chip-row">
+            <button className="chip active" onClick={() => setView('submit-listing')}>
+              <Plus /> List a property
             </button>
-          )}
-          <button className="chip" onClick={() => setView('buyers-agent-directory')}>
-            <Users /> Want someone repping you instead? Find a buyer's agent
-          </button>
-          <button className="chip" onClick={() => setView('market')}>
-            <Compass /> Not sure what you're looking for? Try guided search
-          </button>
+            {listerUser && (
+              <button className="chip" onClick={() => setView('my-listings')}>
+                <Home /> My listings
+              </button>
+            )}
+            <button className="chip" onClick={() => setView('buyers-agent-directory')}>
+              <Users /> Want someone repping you instead? Find a buyer's agent
+            </button>
+            <button className="chip" onClick={() => setView('market')}>
+              <Compass /> Not sure what you're looking for? Try guided search
+            </button>
+          </div>
         </div>
       </section>
 
