@@ -62,7 +62,7 @@ export default function TransactionGuide({ category, checked, onToggle }) {
 
             {stageSchemes.map((scheme) => (
               <p key={scheme.id} className="fee-note fee-note-warning" style={{ margin: '0 0 4px' }}>
-                <AlertTriangle size={13} /> Known scam at this stage: <strong>{scheme.name}</strong> — {scheme.summary}
+                <AlertTriangle size={13} /> Known scam at this stage: <strong>{scheme.name}</strong>. {scheme.summary}
               </p>
             ))}
           </div>

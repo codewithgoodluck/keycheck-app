@@ -27,7 +27,7 @@ export default function TrustSignals({
       {titleDocLabel && (
         <span className={`verification-badge ${titleDocumentVerified ? 'verification-badge-backed' : 'verification-badge-unbacked'}`}>
           <FileCheck size={13} />
-          {titleDocumentVerified ? `${titleDocLabel} — moderator-checked` : `${titleDocLabel} (self-reported, not independently verified)`}
+          {titleDocumentVerified ? `${titleDocLabel} (moderator-checked)` : `${titleDocLabel} (self-reported, not independently verified)`}
         </span>
       )}
       {titleDocLabel && encumbranceFreeDeclared && (
@@ -39,13 +39,13 @@ export default function TrustSignals({
       {cacNumber && (
         <span className={`verification-badge ${cacVerified ? 'verification-badge-backed' : 'verification-badge-unbacked'}`}>
           <Building2 size={13} />
-          {cacVerified ? `CAC #${cacNumber} — moderator-checked` : `CAC #${cacNumber} (self-reported, not independently verified)`}
+          {cacVerified ? `CAC #${cacNumber} (moderator-checked)` : `CAC #${cacNumber} (self-reported, not independently verified)`}
         </span>
       )}
       {professionalIndemnityInsurance && (
         <span className="verification-badge verification-badge-unbacked">
           <ShieldCheck size={13} />
-          Carries professional indemnity insurance (self-declared, voluntary — not a legal requirement in Nigeria)
+          Carries professional indemnity insurance (self-declared, voluntary; not a legal requirement in Nigeria)
         </span>
       )}
     </div>

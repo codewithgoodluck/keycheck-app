@@ -173,7 +173,7 @@ export const seedReports = [
   },
   {
     type: 'land',
-    locationText: 'Lagos State (multiple LGAs — citywide pattern)',
+    locationText: 'Lagos State (multiple LGAs, citywide pattern)',
     agentName: null,
     status: 'unverified',
     description:
@@ -187,7 +187,7 @@ export const seedReports = [
   },
   {
     type: 'land',
-    locationText: 'Lagos and Ogun States — construction-stage extortion pattern',
+    locationText: 'Lagos and Ogun States: construction-stage extortion pattern',
     agentName: null,
     status: 'unverified',
     description:
@@ -201,7 +201,7 @@ export const seedReports = [
   },
   {
     type: 'land',
-    locationText: 'Federal Capital Territory — fake company allocation pattern',
+    locationText: 'Federal Capital Territory: fake company allocation pattern',
     agentName: null,
     status: 'unverified',
     description:
@@ -327,7 +327,7 @@ export const seedReports = [
   },
   {
     type: 'house_agent',
-    locationText: 'Lagos State (citywide) — rental and estate agency pattern',
+    locationText: 'Lagos State (citywide): rental and estate agency pattern',
     agentName: null,
     status: 'unverified',
     description:
@@ -341,7 +341,7 @@ export const seedReports = [
   },
   {
     type: 'house_agent',
-    locationText: 'Ikoyi and Lekki, Lagos — shortlet rental pattern',
+    locationText: 'Ikoyi and Lekki, Lagos: shortlet rental pattern',
     agentName: null,
     status: 'unverified',
     description:

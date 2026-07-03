@@ -11,7 +11,7 @@ const ROWS = [
   { label: 'Price', render: (l) => `₦${Number(l.price).toLocaleString()}` },
   {
     label: 'Price/sqm',
-    render: (l) => (SIZE_TYPES.includes(l.type) && l.sizeSqm > 0 ? `₦${Math.round(l.price / l.sizeSqm).toLocaleString()}` : '—')
+    render: (l) => (SIZE_TYPES.includes(l.type) && l.sizeSqm > 0 ? `₦${Math.round(l.price / l.sizeSqm).toLocaleString()}` : 'N/A')
   },
   { label: 'Location', render: (l) => `${l.locationText}, ${l.state}` },
   { label: 'For sale/rent', render: (l) => (l.transactionType === 'rent' ? 'Rent' : 'Sale') },
@@ -61,7 +61,7 @@ export default function CompareListings({ listings, setView }) {
       <div className="saved-header">
         <h1>Compare listings</h1>
         <p>
-          {selected.length} listing{selected.length === 1 ? '' : 's'} side by side — price, location,
+          {selected.length} listing{selected.length === 1 ? '' : 's'} side by side: price, location,
           verification, and fee compliance, so you're not juggling separate tabs.
         </p>
       </div>

@@ -12,7 +12,7 @@ export default function FeeCapFactBox() {
       <div>
         <strong>Lagos State rent rules:</strong> agency fees are capped at{' '}
         <strong>10% of the total rent</strong>, and a landlord cannot legally demand more than{' '}
-        <strong>1 year's rent upfront</strong> — Lagos State Tenancy Law 2011. Both are routinely
+        <strong>1 year's rent upfront</strong> (Lagos State Tenancy Law 2011). Both are routinely
         ignored; you're allowed to say no.
       </div>
     </div>

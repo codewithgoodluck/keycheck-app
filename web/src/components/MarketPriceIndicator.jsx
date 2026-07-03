@@ -20,16 +20,16 @@ export default function MarketPriceIndicator({ listing, listings }) {
     body = (
       <span className="fee-note fee-note-warning">
         <AlertTriangle size={13} />
-        ₦{Math.round(comparison.pricePerSqm).toLocaleString()}/sqm — well below the ₦
+        ₦{Math.round(comparison.pricePerSqm).toLocaleString()}/sqm. That's well below the ₦
         {Math.round(comparison.median).toLocaleString()}/sqm median across {comparison.comparableCount} similar
-        listings on KeyCheck. Unusually low prices are a common scam pattern — verify carefully before paying.
+        listings on KeyCheck. Unusually low prices are a common scam pattern. Verify carefully before paying.
       </span>
     )
   } else {
     body = (
       <span className="fee-note fee-note-ok">
         <Info size={13} />
-        ₦{Math.round(comparison.pricePerSqm).toLocaleString()}/sqm — in line with {comparison.comparableCount} similar
+        ₦{Math.round(comparison.pricePerSqm).toLocaleString()}/sqm. That's in line with {comparison.comparableCount} similar
         listings on KeyCheck (median ₦{Math.round(comparison.median).toLocaleString()}/sqm).
       </span>
     )
@@ -39,7 +39,7 @@ export default function MarketPriceIndicator({ listing, listings }) {
     <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
       {body}
       <span className="fee-note fee-note-neutral" style={{ fontStyle: 'italic' }}>
-        Informal market price indicator based on community listing data — not a professional valuation.
+        Informal market price indicator based on community listing data. Not a professional valuation.
       </span>
     </div>
   )

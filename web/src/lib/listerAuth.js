@@ -20,12 +20,12 @@ export function watchListerAuth(callback) {
 }
 
 export async function listerSignUp(email, password) {
-  if (!auth) throw new Error('Firebase is not configured — add your config to web/.env first.')
+  if (!auth) throw new Error('Firebase is not configured. Add your config to web/.env first.')
   await createUserWithEmailAndPassword(auth, email, password)
 }
 
 export async function listerSignIn(email, password) {
-  if (!auth) throw new Error('Firebase is not configured — add your config to web/.env first.')
+  if (!auth) throw new Error('Firebase is not configured. Add your config to web/.env first.')
   await signInWithEmailAndPassword(auth, email, password)
 }
 
@@ -38,6 +38,6 @@ export async function listerSignOut() {
 // — sends a reset link to the account's own email instead, same pattern
 // most small apps use for this.
 export async function sendAccountPasswordReset(email) {
-  if (!auth) throw new Error('Firebase is not configured — add your config to web/.env first.')
+  if (!auth) throw new Error('Firebase is not configured. Add your config to web/.env first.')
   await sendPasswordResetEmail(auth, email)
 }

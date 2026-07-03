@@ -29,7 +29,7 @@ export function watchAdminAuth(callback) {
 }
 
 export async function adminLogin(email, password) {
-  if (!auth) throw new Error('Firebase is not configured — add your config to web/.env first.')
+  if (!auth) throw new Error('Firebase is not configured. Add your config to web/.env first.')
   await signInWithEmailAndPassword(auth, email, password)
 }
 

@@ -39,7 +39,7 @@ export const TRANSACTION_STAGES = {
 // generic practical advice, not a legal claim requiring a source, so it
 // doesn't need the same per-item sourcing checklists.js items have.
 export const AFTER_PAYMENT_TIPS = [
-  'Keep every receipt and signed document somewhere safe — you may need them for years.',
+  'Keep every receipt and signed document somewhere safe. You may need them for years.',
   "Follow up on registering the transfer or tenancy agreement promptly, don't let it sit unfinished.",
-  "If anything about the transaction doesn't match what you were told, report it on KeyCheck — it helps warn the next buyer."
+  "If anything about the transaction doesn't match what you were told, report it on KeyCheck. It helps warn the next buyer."
 ]

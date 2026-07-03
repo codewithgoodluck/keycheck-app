@@ -96,7 +96,7 @@ export default function ListingsBrowse({ listings, reports, setView, hasMore, on
       <div className="liability-banner">
         <AlertTriangle size={16} />
         <span>
-          Always verify in person before paying anything — KeyCheck does not verify transactions,
+          Always verify in person before paying anything. KeyCheck does not verify transactions,
           hold funds, or guarantee any listing, and is not liable for any loss. Read our{' '}
           <a onClick={() => setView('terms')} style={{ cursor: 'pointer' }}>
             Terms of Service
@@ -113,7 +113,7 @@ export default function ListingsBrowse({ listings, reports, setView, hasMore, on
           </p>
           <h1>Find your next home, already checked.</h1>
           <p>
-            Every listing here is tied to a real profile — see the track record before you ever pick
+            Every listing here is tied to a real profile. See the track record before you ever pick
             up the phone.
           </p>
           <div className="search-wrap">

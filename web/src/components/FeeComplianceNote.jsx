@@ -21,14 +21,14 @@ export default function FeeComplianceNote({ state, transactionType, agencyFeePer
     feeNote = (
       <span className="fee-note fee-note-ok">
         <CheckCircle2 size={13} />
-        {agencyFeePercent}% fee — within the Lagos {capInfo.cap}% cap
+        {agencyFeePercent}% fee (within the Lagos {capInfo.cap}% cap)
       </span>
     )
   } else {
     feeNote = (
       <span className="fee-note fee-note-neutral">
         <HelpCircle size={13} />
-        {agencyFeePercent}% fee — no enforceable cap for this location
+        {agencyFeePercent}% fee (no enforceable cap for this location)
       </span>
     )
   }

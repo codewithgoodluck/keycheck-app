@@ -28,7 +28,7 @@ export default function AdminBuyersAgents() {
     try {
       const result = await activateBuyersAgentEntry(entry.id, entry.listerName)
       if (!result.activated) {
-        alert(`Not activated: "${entry.listerName}" has an active disputed/verified fraud report — the entry was rejected instead.`)
+        alert(`Not activated: "${entry.listerName}" has an active disputed/verified fraud report. The entry was rejected instead.`)
       }
       refresh()
     } catch (err) {

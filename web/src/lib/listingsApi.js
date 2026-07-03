@@ -120,7 +120,7 @@ export async function activateListing(listingId, listerName) {
   if (flagged) {
     await updateDoc(doc(db, LISTINGS, listingId), {
       status: 'rejected',
-      blockedReason: `"${listerName}" has an active disputed or verified fraud report on KeyCheck — cannot be activated.`
+      blockedReason: `"${listerName}" has an active disputed or verified fraud report on KeyCheck. Cannot be activated.`
     })
     return { activated: false }
   }

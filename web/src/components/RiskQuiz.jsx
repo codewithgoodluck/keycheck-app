@@ -32,7 +32,7 @@ export default function RiskQuiz() {
         </p>
         <p>{message}</p>
         <p className="disclaimer">
-          This isn't legal advice — it's a pattern check based on real reported cases. If in
+          This isn't legal advice. It's a pattern check based on real reported cases. If in
           doubt, verify independently (LASRERA, the Land Registry, or a lawyer) before you pay.
         </p>
         <button onClick={reset}>Take it again</button>

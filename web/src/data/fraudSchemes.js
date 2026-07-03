@@ -28,7 +28,7 @@ export const FRAUD_SCHEMES = [
     id: 'forged-cofo',
     name: 'Forged or altered Certificate of Occupancy',
     category: 'land',
-    summary: 'A fabricated or tampered C of O is presented as genuine — sometimes copying a real registered document\'s layout with altered details.',
+    summary: 'A fabricated or tampered C of O is presented as genuine, sometimes copying a real registered document\'s layout with altered details.',
     howItWorks:
       'Because a C of O looks official at a glance, victims often accept a photocopy or a convincing-looking scan without checking it against the actual Land Registry record.',
     redFlags: [
@@ -45,7 +45,7 @@ export const FRAUD_SCHEMES = [
     category: 'agent',
     summary: 'Someone with no real authorization poses as an agent for a property or plot, often using a real listing\'s photos or a real agent\'s name without their knowledge.',
     howItWorks:
-      'The impersonator collects an inspection fee, caution fee, or deposit, then becomes unreachable — the property they "showed" may not even be for sale.',
+      'The impersonator collects an inspection fee, caution fee, or deposit, then becomes unreachable. The property they "showed" may not even be for sale.',
     redFlags: [
       'They avoid an in-person meeting at the actual property',
       'No verifiable registration or business address',
@@ -58,7 +58,7 @@ export const FRAUD_SCHEMES = [
     id: 'fake-landlord',
     name: 'Fake landlord / subletting scam',
     category: 'landlord',
-    summary: 'Someone who is not the actual landlord — sometimes a current tenant, sometimes a stranger with no connection to the property — collects rent or a deposit for a unit they don\'t own or control.',
+    summary: 'Someone who is not the actual landlord, sometimes a current tenant, sometimes a stranger with no connection to the property, collects rent or a deposit for a unit they don\'t own or control.',
     howItWorks:
       'The scammer shows the property (sometimes with a spare key or during the real tenant\'s absence), collects payment, and disappears before the real landlord or tenant discovers what happened.',
     redFlags: [
@@ -75,7 +75,7 @@ export const FRAUD_SCHEMES = [
     category: 'estate',
     summary: 'A developer collects payment for units or plots in a development that\'s never completed, sometimes because it was never legally viable to begin with.',
     howItWorks:
-      'Pre-launch or "early bird" pricing pressures buyers to commit before construction starts or before the developer has secured proper title — by the time delays become obvious, funds are already gone.',
+      'Pre-launch or "early bird" pricing pressures buyers to commit before construction starts or before the developer has secured proper title. By the time delays become obvious, funds are already gone.',
     redFlags: [
       'Heavy pre-launch discounting with payment deadlines',
       'No verifiable Certificate of Occupancy or Governor\'s Consent for the land itself',
@@ -88,12 +88,12 @@ export const FRAUD_SCHEMES = [
     id: 'upfront-fee-scam',
     name: 'Upfront agency-fee scam',
     category: 'house_agent',
-    summary: '"Agent" collects an inspection fee, caution fee, or agreement fee upfront, then becomes unreachable — the property may not exist or may not actually be available.',
+    summary: '"Agent" collects an inspection fee, caution fee, or agreement fee upfront, then becomes unreachable. The property may not exist or may not actually be available.',
     howItWorks:
       'Because a small upfront fee feels low-risk, victims pay without verifying the agent or the listing first, and the scam only becomes obvious once the agent stops responding.',
     redFlags: [
       'Payment is requested before any physical inspection',
-      'Urgency tactics — "someone else is about to take it"',
+      'Urgency tactics: "someone else is about to take it"',
       'No official receipt offered for the fee'
     ],
     catchCategory: 'house_agent',
@@ -118,7 +118,7 @@ export const FRAUD_SCHEMES = [
     id: 'remote-no-inspection',
     name: 'Remote / no-inspection scam',
     category: 'land',
-    summary: 'A buyer, often based abroad, is pressured into paying without ever physically inspecting the property — sometimes using doctored photos or videos of a different plot entirely.',
+    summary: 'A buyer, often based abroad, is pressured into paying without ever physically inspecting the property, sometimes using doctored photos or videos of a different plot entirely.',
     howItWorks:
       'Distance and trust in a relative or "trusted contact" back home substitute for the buyer\'s own verification, which the scammer relies on to avoid ever being physically checked.',
     redFlags: [

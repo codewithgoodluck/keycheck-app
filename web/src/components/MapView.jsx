@@ -261,7 +261,7 @@ export default function MapView({ reports, listings = [], setView }) {
               <Popup>
                 <div style={{ fontFamily: 'Inter, sans-serif', maxWidth: 220 }}>
                   <strong style={{ fontSize: 13.5 }}>
-                    {getPropertyTypeLabel(l.type)} — ₦{Number(l.price).toLocaleString()}
+                    {getPropertyTypeLabel(l.type)}: ₦{Number(l.price).toLocaleString()}
                   </strong>
                   <p style={{ fontSize: 12.5, color: '#5b6358', margin: '6px 0 10px' }}>
                     {l.locationText}, {l.state}

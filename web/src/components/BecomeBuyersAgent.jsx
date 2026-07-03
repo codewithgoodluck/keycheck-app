@@ -68,7 +68,7 @@ export default function BecomeBuyersAgent({ listerUser, setView }) {
       <div className="empty-state">
         <p>
           You already have a buyer's-agent entry ({existing.status}
-          {existing.blockedReason ? ` — ${existing.blockedReason}` : ''}).
+          {existing.blockedReason ? `: ${existing.blockedReason}` : ''}).
         </p>
         <button onClick={() => setView('buyers-agent-directory')}>View directory</button>
       </div>
@@ -79,7 +79,7 @@ export default function BecomeBuyersAgent({ listerUser, setView }) {
     return (
       <div className="form-wrap">
         <div className="empty-state">
-          <p>Submitted — it's now pending review and will appear in the directory once a moderator approves it.</p>
+          <p>Submitted. It's now pending review and will appear in the directory once a moderator approves it.</p>
           <button onClick={() => setView('buyers-agent-directory')}>View directory</button>
         </div>
       </div>
@@ -91,7 +91,7 @@ export default function BecomeBuyersAgent({ listerUser, setView }) {
       <div className="page-banner page-banner-market">
         <h1>Offer buyer's-agent services</h1>
         <p>
-          List yourself in KeyCheck's buyer's-agent directory — for buyers who want someone whose fee is
+          List yourself in KeyCheck's buyer's-agent directory, for buyers who want someone whose fee is
           paid by and loyalty is explicitly to them, not the seller.
         </p>
       </div>
@@ -131,7 +131,7 @@ export default function BecomeBuyersAgent({ listerUser, setView }) {
               value={form.feeNote}
               onChange={(e) => update('feeNote', e.target.value)}
             />
-            <p className="field-hint">Shown to buyers browsing the directory — describe your fee structure in your own words.</p>
+            <p className="field-hint">Shown to buyers browsing the directory. Describe your fee structure in your own words.</p>
           </div>
 
           {error && <p style={{ color: 'var(--status-disputed)', fontSize: 13, fontWeight: 600, margin: '0 0 12px' }}>{error}</p>}

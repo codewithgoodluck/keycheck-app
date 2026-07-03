@@ -146,7 +146,7 @@ export default function Reviews({ listerName }) {
             <input
               id="rev-proof"
               type="text"
-              placeholder="Helps show this was a real transaction — kept as a note, not verified automatically"
+              placeholder="Helps show this was a real transaction. Kept as a note, not verified automatically"
               value={verifiedProofNote}
               onChange={(e) => setVerifiedProofNote(e.target.value)}
             />
@@ -157,7 +157,7 @@ export default function Reviews({ listerName }) {
           </button>
           <p className="disclaimer">
             Reviews are marked "unverified" until a moderator checks the transaction note, but appear
-            immediately — same standard as reports.
+            immediately. Same standard as reports.
           </p>
         </form>
       )}

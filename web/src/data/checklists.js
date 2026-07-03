@@ -9,7 +9,7 @@ const LAND_ITEMS = [
   { id: 'cofo', text: 'You have seen the original Certificate of Occupancy (C of O), not just a photocopy.' },
   {
     id: 'cofo-verify',
-    text: 'The C of O has been verified at the state Land Registry — for Lagos, use the eGIS portal.',
+    text: 'The C of O has been verified at the state Land Registry. For Lagos, use the eGIS portal.',
     externalLink: { label: 'Lagos eGIS land search', url: 'https://landonline.lagosstate.gov.ng/' },
     lagosOnly: true
   },
@@ -20,18 +20,18 @@ const LAND_ITEMS = [
     externalLink: { label: 'Find an independent surveyor (NIESV Lagos)', url: 'https://www.niesvlagos.org/' },
     lagosOnly: true
   },
-  { id: 'consent', text: 'Governor’s Consent has actually been obtained — "in process" is not the same as obtained.' },
+  { id: 'consent', text: 'Governor’s Consent has actually been obtained. "In process" is not the same as obtained.' },
   { id: 'search', text: 'You’ve searched the seller/agent’s name and this exact address on KeyCheck.' },
   {
     id: 'cac',
-    text: 'If dealing with a company (not a private individual), you’ve confirmed it’s a real, registered company at the Corporate Affairs Commission — not just a name on a signboard.'
+    text: 'If dealing with a company (not a private individual), you’ve confirmed it’s a real, registered company at the Corporate Affairs Commission, not just a name on a signboard.'
   },
   {
     id: 'scuml',
-    text: 'If dealing with a real-estate firm, you’ve asked to see their SCUML registration — real-estate firms are legally required to register as Designated Non-Financial Businesses under Nigeria’s anti-money-laundering law.'
+    text: 'If dealing with a real-estate firm, you’ve asked to see their SCUML registration. Real-estate firms are legally required to register as Designated Non-Financial Businesses under Nigeria’s anti-money-laundering law.'
   },
   { id: 'inspect', text: 'You will physically inspect the plot, with the document originals in hand, before paying in full.' },
-  { id: 'receipt', text: 'You will get an official receipt for every payment — no "family receipt only" arrangements.' }
+  { id: 'receipt', text: 'You will get an official receipt for every payment, no "family receipt only" arrangements.' }
 ]
 
 const RENTAL_ITEMS = [
@@ -53,7 +53,7 @@ const RENTAL_ITEMS = [
   },
   {
     id: 'scuml',
-    text: 'If dealing with a real-estate firm, you’ve asked to see their SCUML registration — required for real-estate firms under Nigeria’s anti-money-laundering law.'
+    text: 'If dealing with a real-estate firm, you’ve asked to see their SCUML registration. This is required for real-estate firms under Nigeria’s anti-money-laundering law.'
   }
 ]
 
@@ -67,10 +67,10 @@ const ESTATE_ITEMS = [
   },
   {
     id: 'scuml',
-    text: 'You’ve asked to see the developer’s SCUML registration — required for real-estate firms under Nigeria’s anti-money-laundering law.'
+    text: 'You’ve asked to see the developer’s SCUML registration. This is required for real-estate firms under Nigeria’s anti-money-laundering law.'
   },
   { id: 'inspect', text: 'You will physically inspect the unit before paying in full.' },
-  { id: 'payment', text: 'Payment terms are in writing — not a verbal promise or a cheque you haven’t confirmed clears.' }
+  { id: 'payment', text: 'Payment terms are in writing, not a verbal promise or a cheque you haven’t confirmed clears.' }
 ]
 
 export const CHECKLISTS = {

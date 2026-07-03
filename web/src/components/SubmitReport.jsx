@@ -29,24 +29,24 @@ const COPY = {
     // that one clause for what's actually true: honest about certainty
     // is the guideline's own rule.
     subtitle:
-      "Two minutes now can save someone else a lifetime's savings. Your account isn't shown to other visitors — the warning still counts.",
+      "Two minutes now can save someone else a lifetime's savings. Your account isn't shown to other visitors. The warning still counts.",
     descriptionLabel: 'What happened',
     descriptionPlaceholder: 'Briefly describe the dispute, double-sale, or fraud you experienced or know about.',
     submitLabel: 'Submit for review',
     disclaimer:
       'Reports are marked "unverified" until reviewed and require supporting evidence before they\'re marked "verified." Naming someone publicly carries legal weight, please only report what you can support.',
-    confirmationLabel: (n) => `Report submitted — you've now helped submit ${n} report${n === 1 ? '' : 's'}.`
+    confirmationLabel: (n) => `Report submitted. You've now helped submit ${n} report${n === 1 ? '' : 's'}.`
   },
   endorsement: {
     heading: "Give credit where it's earned.",
     subtitle:
       'Had a good experience? Say so. Trustworthy agents deserve a track record too, not just a search that comes up empty.',
     descriptionLabel: 'What happened',
-    descriptionPlaceholder: 'Describe your positive experience — what you bought/rented, roughly when, and any details others would find reassuring.',
+    descriptionPlaceholder: 'Describe your positive experience. What you bought/rented, roughly when, and any details others would find reassuring.',
     submitLabel: 'Submit vouch',
     disclaimer:
-      'Vouches are marked "unverified" until reviewed, same as reports — this keeps the standard consistent in both directions.',
-    confirmationLabel: (n) => `Vouch submitted — you've now helped submit ${n} report${n === 1 ? '' : 's'}.`
+      'Vouches are marked "unverified" until reviewed, same as reports. This keeps the standard consistent in both directions.',
+    confirmationLabel: (n) => `Vouch submitted. You've now helped submit ${n} report${n === 1 ? '' : 's'}.`
   }
 }
 
@@ -100,7 +100,7 @@ export default function SubmitReport({ addReport, setView, listerUser }) {
     if (honeypot.trim()) return // bot filled the hidden field — drop silently, no error to tip it off
 
     if (Date.now() - mountedAt.current < MIN_FILL_MS) {
-      setError('That was fast — please take a moment to review before submitting.')
+      setError('That was fast. Please take a moment to review before submitting.')
       return
     }
 
@@ -168,7 +168,7 @@ export default function SubmitReport({ addReport, setView, listerUser }) {
         <div className="empty-state">
           <p>
             An account attributes reports to you internally (so a moderator can follow up if needed)
-            and keeps a simple spam deterrent in place — it's never shown to other visitors.
+            and keeps a simple spam deterrent in place. It's never shown to other visitors.
           </p>
           <button onClick={() => setView('lister-auth')}>Sign in</button>
         </div>
@@ -295,7 +295,7 @@ export default function SubmitReport({ addReport, setView, listerUser }) {
           </div>
 
           <div className="field">
-            <label>Supporting evidence — photo or document (optional)</label>
+            <label>Supporting evidence: photo or document (optional)</label>
             {evidenceFile ? (
               <div className="evidence-picked">
                 <Paperclip size={14} /> {evidenceFile.name}
@@ -307,7 +307,7 @@ export default function SubmitReport({ addReport, setView, listerUser }) {
               <input ref={fileInputRef} type="file" accept="image/*,application/pdf" onChange={handleFileChange} />
             )}
             <p className="field-hint">
-              A photo, receipt, or document (max 10MB). Kept private — visible only to moderators, never shown publicly.
+              A photo, receipt, or document (max 10MB). Kept private. Visible only to moderators, never shown publicly.
             </p>
           </div>
 

@@ -145,7 +145,7 @@ export default function Market({ listings, reports, setView }) {
         </p>
         <h1>Don't have a specific listing in mind yet? Tell us what you're after.</h1>
         <p>
-          A few quick questions instead of a filter bar — for when you're starting a search, not
+          A few quick questions instead of a filter bar. For when you're starting a search, not
           checking a specific plot or agent you already know about.
         </p>
       </section>
@@ -250,7 +250,7 @@ export default function Market({ listings, reports, setView }) {
           <div className="chip-row" style={{ marginTop: 0, marginBottom: 14 }}>
             <button className={`chip ${watching ? 'active' : ''}`} onClick={toggleWatch}>
               {watching ? <EyeOff /> : <Eye />}{' '}
-              {watching ? 'Stop watching' : `Save this search — notify me about new ${intentSummary} listings`}
+              {watching ? 'Stop watching' : `Save this search: notify me about new ${intentSummary} listings`}
             </button>
             {watching && !pushEnabled && (
               <button className="chip" onClick={handleEnablePush} disabled={pushBusy}>

@@ -112,7 +112,7 @@ export default function ListingDetail({ listing, listings, reports, setView }) {
   // into WhatsApp/Twitter/Facebook, not the generic site card.
   async function handleShare() {
     const url = `${window.location.origin}/listing/${listing.id}`
-    const shareData = { title: 'KeyCheck listing', text: `${getPropertyTypeLabel(listing.type)} — ₦${Number(listing.price).toLocaleString()}`, url }
+    const shareData = { title: 'KeyCheck listing', text: `${getPropertyTypeLabel(listing.type)}: ₦${Number(listing.price).toLocaleString()}`, url }
     if (navigator.share) {
       try {
         await navigator.share(shareData)
@@ -146,7 +146,7 @@ export default function ListingDetail({ listing, listings, reports, setView }) {
   const isBlocked = effectiveStatus === 'blocked'
   const verifiedLabel = describeVerification(listing)
   const photos = listing.photoUrls?.length > 0 ? listing.photoUrls : listing.photoUrl ? [listing.photoUrl] : []
-  const waMessage = `Hi, I'm interested in your listing: ${getPropertyTypeLabel(listing.type)} in ${listing.locationText} — is it still available?`
+  const waMessage = `Hi, I'm interested in your listing: ${getPropertyTypeLabel(listing.type)} in ${listing.locationText}. Is it still available?`
 
   return (
     <div className="theme-market">
@@ -163,7 +163,7 @@ export default function ListingDetail({ listing, listings, reports, setView }) {
       <div className="liability-banner">
         <AlertTriangle size={16} />
         <span>
-          Always verify in person before paying anything — KeyCheck does not verify transactions,
+          Always verify in person before paying anything. KeyCheck does not verify transactions,
           hold funds, or guarantee any listing, and is not liable for any loss. Read our{' '}
           <a onClick={() => setView('terms')} style={{ cursor: 'pointer' }}>
             Terms of Service
@@ -177,7 +177,7 @@ export default function ListingDetail({ listing, listings, reports, setView }) {
           <ShieldAlert size={18} color="var(--status-disputed)" style={{ flexShrink: 0, marginTop: 2 }} />
           <div>
             <strong>This listing is suspended.</strong> A disputed or verified fraud report has been
-            filed against {listing.listerName || 'this lister'} since this listing went live — contact
+            filed against {listing.listerName || 'this lister'} since this listing went live. Contact
             details are hidden until this is resolved.{' '}
             {listing.listerName && (
               <button
@@ -197,7 +197,7 @@ export default function ListingDetail({ listing, listings, reports, setView }) {
           <Clock size={18} color="var(--status-disputed)" />
           <div>
             <strong>This listing has expired.</strong> It's no longer being actively promoted by the
-            lister — the details below may be out of date. Contact the lister to confirm availability.
+            lister. The details below may be out of date. Contact the lister to confirm availability.
           </div>
         </div>
       )}
@@ -207,7 +207,7 @@ export default function ListingDetail({ listing, listings, reports, setView }) {
           <div>
             <p className="card-id">#{listing.id}</p>
             <h1>
-              {getPropertyTypeLabel(listing.type)} — ₦{Number(listing.price).toLocaleString()}
+              {getPropertyTypeLabel(listing.type)}: ₦{Number(listing.price).toLocaleString()}
             </h1>
             <span className={`lister-verified-badge ${verifiedLabel ? 'verified' : 'unverified'}`}>
               {verifiedLabel ? <ShieldCheck size={13} /> : <ShieldQuestion size={13} />}
@@ -420,7 +420,7 @@ export default function ListingDetail({ listing, listings, reports, setView }) {
         waNumber && (
           <p style={{ fontSize: 12, color: 'var(--ink-faint)', marginTop: 12 }}>
             This listing was created directly by a moderator and has no lister account attached, so
-            in-app messaging isn't available for it — use WhatsApp above to get in touch.
+            in-app messaging isn't available for it. Use WhatsApp above to get in touch.
           </p>
         )
       )}
@@ -428,7 +428,7 @@ export default function ListingDetail({ listing, listings, reports, setView }) {
       <div style={{ marginTop: 20, textAlign: 'center' }}>
         {flagSubmitted ? (
           <p style={{ fontSize: 12.5, color: 'var(--ink-soft)' }}>
-            Thanks — this listing has been flagged for a moderator to review.
+            Thanks. This listing has been flagged for a moderator to review.
           </p>
         ) : showFlagForm ? (
           <form onSubmit={handleSubmitFlag} className="form-card" style={{ textAlign: 'left' }}>

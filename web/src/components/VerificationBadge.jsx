@@ -19,7 +19,7 @@ export default function VerificationBadge({ state, lasreraNumber, lasreraVerifie
       return (
         <span className="verification-badge verification-badge-backed">
           <BadgeCheck size={13} />
-          LASRERA #{lasreraNumber} — moderator-checked
+          LASRERA #{lasreraNumber}: moderator-checked
         </span>
       )
     }
@@ -36,7 +36,7 @@ export default function VerificationBadge({ state, lasreraNumber, lasreraVerifie
   return (
     <span className="verification-badge verification-badge-unbacked">
       <ShieldQuestion size={13} />
-      No state registry for {state || 'this location'} yet — community-checked only
+      No state registry for {state || 'this location'} yet: community-checked only
     </span>
   )
 }

@@ -150,7 +150,7 @@ export default function AdminListings() {
     try {
       const result = await activateListing(listing.id, listing.listerName)
       if (!result.activated) {
-        alert(`Not activated: "${listing.listerName}" has an active disputed/verified fraud report — the listing was rejected instead.`)
+        alert(`Not activated: "${listing.listerName}" has an active disputed/verified fraud report. The listing was rejected instead.`)
       }
       refresh()
     } catch (err) {
@@ -361,7 +361,7 @@ export default function AdminListings() {
             <input
               id="listing-lister"
               type="text"
-              placeholder="Agent, landlord, or company name — checked against fraud reports automatically"
+              placeholder="Agent, landlord, or company name, checked against fraud reports automatically"
               value={form.listerName}
               onChange={(e) => update('listerName', e.target.value)}
               required
@@ -480,7 +480,7 @@ export default function AdminListings() {
                       onClick={() => handleToggleLasreraVerified(listing)}
                     >
                       <BadgeCheck size={13} />
-                      {listing.lasreraVerified ? 'LASRERA checked — mark unchecked' : 'Mark LASRERA # as checked'}
+                      {listing.lasreraVerified ? 'LASRERA checked: mark unchecked' : 'Mark LASRERA # as checked'}
                     </button>
                   )}
                   {listing.cacNumber && (
@@ -490,7 +490,7 @@ export default function AdminListings() {
                       onClick={() => handleToggleCacVerified(listing)}
                     >
                       <BadgeCheck size={13} />
-                      {listing.cacVerified ? 'CAC checked — mark unchecked' : 'Mark CAC # as checked'}
+                      {listing.cacVerified ? 'CAC checked: mark unchecked' : 'Mark CAC # as checked'}
                     </button>
                   )}
                   {listing.titleDocumentType && listing.titleDocumentType !== 'none_yet' && (
@@ -500,7 +500,7 @@ export default function AdminListings() {
                       onClick={() => handleToggleTitleDocVerified(listing)}
                     >
                       <BadgeCheck size={13} />
-                      {listing.titleDocumentVerified ? 'Title doc checked — mark unchecked' : 'Mark title document as checked'}
+                      {listing.titleDocumentVerified ? 'Title doc checked: mark unchecked' : 'Mark title document as checked'}
                     </button>
                   )}
                 </div>

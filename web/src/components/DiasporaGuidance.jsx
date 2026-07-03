@@ -21,7 +21,7 @@ export default function DiasporaGuidance({ setView }) {
         <p style={{ fontSize: 13, color: 'var(--ink-soft)', margin: '0 0 12px' }}>
           A regular agent typically represents the seller or landlord, even when dealing directly
           with you. KeyCheck's buyer's-agent directory lists agents whose fee is paid by and
-          loyalty is explicitly to the buyer — vetted against the same fraud registry as listings.
+          loyalty is explicitly to the buyer. They're vetted against the same fraud registry as listings.
         </p>
         <button className="chip active" onClick={() => setView('buyers-agent-directory')}>
           <Users size={13} /> Browse buyer's agents
@@ -30,7 +30,7 @@ export default function DiasporaGuidance({ setView }) {
 
       <div className="detail-card" style={{ padding: '16px 20px' }}>
         <p style={{ fontWeight: 700, margin: '0 0 4px', display: 'flex', alignItems: 'center', gap: 6 }}>
-          <ScrollText size={16} /> Power of Attorney — what it actually means
+          <ScrollText size={16} /> Power of Attorney: what it actually means
         </p>
         <p style={{ fontSize: 13, color: 'var(--ink-soft)', margin: '0 0 14px' }}>
           If you're buying from abroad, you'll likely need someone in Nigeria acting on your
@@ -74,7 +74,7 @@ export default function DiasporaGuidance({ setView }) {
 
         {remoteScamScheme && (
           <p className="fee-note fee-note-warning" style={{ margin: 0 }}>
-            <AlertTriangle size={13} /> Known scam pattern: <strong>{remoteScamScheme.name}</strong> —{' '}
+            <AlertTriangle size={13} /> Known scam pattern: <strong>{remoteScamScheme.name}</strong>.{' '}
             {remoteScamScheme.summary}
           </p>
         )}

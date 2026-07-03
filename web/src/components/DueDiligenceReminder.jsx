@@ -26,13 +26,13 @@ export default function DueDiligenceReminder({ verifiedLabel, compact = false })
         {verified ? (
           <>
             <strong>This lister passed a {verifiedLabel} check.</strong> Still confirm current
-            documents yourself before paying anything — registration doesn't guarantee this specific
+            documents yourself before paying anything. Registration doesn't guarantee this specific
             transaction is safe.
           </>
         ) : (
           <>
             <strong>This lister hasn't been checked against any official registry.</strong> Verify
-            independently before proceeding — physically visit the property, confirm documents at
+            independently before proceeding. Physically visit the property, confirm documents at
             the official registry, never pay in full before inspection.
           </>
         )}

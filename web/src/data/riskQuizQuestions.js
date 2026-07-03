@@ -45,7 +45,7 @@ export function scoreRisk(answers) {
 export const RISK_BAND_COPY = {
   low: {
     label: 'Low risk signals',
-    message: 'None of the strongest red flags showed up. That’s reassuring, but it isn’t proof — still work through the due diligence checklist before you pay.'
+    message: 'None of the strongest red flags showed up. That’s reassuring, but it isn’t proof. Still work through the due diligence checklist before you pay.'
   },
   medium: {
     label: 'Some red flags',
@@ -53,6 +53,6 @@ export const RISK_BAND_COPY = {
   },
   high: {
     label: 'Multiple red flags',
-    message: 'This matches several patterns seen in real reported fraud cases. Strongly consider not paying until you’ve independently verified the seller/agent and the property — through LASRERA, the Land Registry, or an independent surveyor, not just this person’s word.'
+    message: 'This matches several patterns seen in real reported fraud cases. Strongly consider not paying until you’ve independently verified the seller/agent and the property, through LASRERA, the Land Registry, or an independent surveyor, not just this person’s word.'
   }
 }

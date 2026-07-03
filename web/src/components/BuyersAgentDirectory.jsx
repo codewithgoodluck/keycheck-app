@@ -35,7 +35,7 @@ export default function BuyersAgentDirectory({ setView }) {
         </p>
         <h1>Agents who represent you, not the seller.</h1>
         <p>
-          Every agent here works for and is paid by the buyer — a different relationship than the
+          Every agent here works for and is paid by the buyer. That's a different relationship than the
           agent listing a property, who typically represents the seller or landlord. Each entry has
           been reviewed and checked against KeyCheck's fraud registry before appearing here.
         </p>

@@ -73,7 +73,7 @@ export default function AdminPanel({ reports, adminEmail }) {
     } catch (err) {
       const hint =
         status === 'verified'
-          ? ' A report can only be marked "verified" once it has a sourceUrl or at least one additional source attached — add one below first.'
+          ? ' A report can only be marked "verified" once it has a sourceUrl or at least one additional source attached. Add one below first.'
           : ' (is Firebase configured?)'
       alert('Failed to update status: ' + err.message + hint)
     } finally {

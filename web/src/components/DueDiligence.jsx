@@ -48,8 +48,8 @@ export default function DueDiligence({ setView }) {
       <div className="page-banner">
         <h1>Before you pay</h1>
         <p>
-          A checklist and a quick risk check, built from patterns in real reported fraud cases —
-          use these before you commit to anything, not just after something's gone wrong.
+          A checklist and a quick risk check, built from patterns in real reported fraud cases.
+          Use these before you commit to anything, not just after something's gone wrong.
         </p>
       </div>
 

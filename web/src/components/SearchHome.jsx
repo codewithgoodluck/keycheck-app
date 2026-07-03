@@ -169,7 +169,7 @@ export default function SearchHome({ reports, setView, savedIds, onToggleSave, h
         <h1>Know before you owe.</h1>
         <p>
           Search any agent, landlord, or plot in seconds. Every red flag traces back to a real
-          court filing or news report — every clean record means nobody's found a reason to worry.
+          court filing or news report. Every clean record means nobody's found a reason to worry.
         </p>
         <div className="search-wrap">
           <form

@@ -28,7 +28,7 @@ export default function InquiryForm({ listing }) {
     if (honeypot.trim()) return // bot filled the hidden field — drop silently
 
     if (Date.now() - mountedAt.current < MIN_FILL_MS) {
-      setError('That was fast — please take a moment to review before sending.')
+      setError('That was fast. Please take a moment to review before sending.')
       return
     }
 
@@ -57,7 +57,7 @@ export default function InquiryForm({ listing }) {
   if (sent) {
     return (
       <div className="form-card" style={{ textAlign: 'center' }}>
-        <p style={{ margin: 0 }}>Message sent — the lister will see it on their dashboard.</p>
+        <p style={{ margin: 0 }}>Message sent. The lister will see it on their dashboard.</p>
       </div>
     )
   }

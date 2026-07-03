@@ -57,7 +57,7 @@ export default function LocationPicker({ value, onChange }) {
         <span style={{ fontSize: 12.5, color: 'var(--ink-soft)' }}>
           {value ? (
             <>
-              <MapPin size={13} style={{ verticalAlign: -2 }} /> Pin placed — tap the map to move it
+              <MapPin size={13} style={{ verticalAlign: -2 }} /> Pin placed. Tap the map to move it.
             </>
           ) : (
             'Tap the map to drop a pin on the plot (optional, but helps others find it)'

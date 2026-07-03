@@ -24,7 +24,7 @@ export default function SavedReports({ reports, savedIds, setView, onToggleSave,
       <div className="saved-header">
         <h1>Keep an eye on what matters to you.</h1>
         <p>
-          Track the plots and people you're watching — come back anytime to see what's changed.
+          Track the plots and people you're watching. Come back anytime to see what's changed.
           Saved locally to this device.
         </p>
       </div>

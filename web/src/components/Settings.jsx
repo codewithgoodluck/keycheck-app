@@ -60,7 +60,7 @@ export default function Settings({ listerUser, setView }) {
         <p style={{ fontSize: 13, color: 'var(--ink-soft)', margin: '0 0 16px' }}>{listerUser.email}</p>
 
         <button className="chip" onClick={handleResetPassword} disabled={resetSent}>
-          <KeyRound size={13} /> {resetSent ? 'Reset link sent — check your email' : 'Send password reset link'}
+          <KeyRound size={13} /> {resetSent ? 'Reset link sent. Check your email' : 'Send password reset link'}
         </button>
         {resetError && <p style={{ color: 'var(--status-disputed)', fontSize: 12.5, fontWeight: 600, marginTop: 8 }}>{resetError}</p>}
       </div>

@@ -6,7 +6,7 @@ const FLAGS = 'listing_flags'
 export const FLAG_REASON_LABELS = {
   fake: 'This listing looks fake',
   duplicate: 'Duplicate of another listing',
-  already_taken: 'Already let/sold — no longer available',
+  already_taken: 'Already let/sold, no longer available',
   other: 'Something else'
 }
 

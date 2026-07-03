@@ -79,7 +79,7 @@ export default function AdminReviews() {
               <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12, alignItems: 'flex-start' }}>
                 <div>
                   <p style={{ fontWeight: 700, margin: '0 0 4px' }}>
-                    {r.listerName} — {r.rating}★ ({r.transactionType})
+                    {r.listerName}: {r.rating}★ ({r.transactionType})
                   </p>
                   <p style={{ fontSize: 13, color: 'var(--ink-soft)', margin: '0 0 6px' }}>{r.text}</p>
                   {r.verifiedProofNote && (

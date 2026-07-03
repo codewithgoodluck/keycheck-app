@@ -23,7 +23,7 @@ export async function activateBuyersAgentEntry(entryId, listerName) {
   if (flagged) {
     await updateDoc(doc(db, BUYERS_AGENTS, entryId), {
       status: 'rejected',
-      blockedReason: `"${listerName}" has an active disputed or verified fraud report on KeyCheck — cannot be activated.`
+      blockedReason: `"${listerName}" has an active disputed or verified fraud report on KeyCheck. It cannot be activated.`
     })
     return { activated: false }
   }

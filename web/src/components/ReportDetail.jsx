@@ -53,7 +53,7 @@ export default function ReportDetail({ report, setView, saved, onToggleSave, onC
   const showRentalNudge = isRentalType && isLagos
 
   const disputeMailto = `mailto:${DISPUTE_EMAIL}?subject=${encodeURIComponent(
-    `Dispute report #${report.id} — ${title}`
+    `Dispute report #${report.id}: ${title}`
   )}&body=${encodeURIComponent(
     `I am requesting review/removal of KeyCheck report #${report.id} (${title}).\n\nLink: ${window.location.origin}/?report=${report.id}\n\nReason:\n`
   )}`
@@ -63,7 +63,7 @@ export default function ReportDetail({ report, setView, saved, onToggleSave, onC
     markConfirmed(report.id)
     setConfirmed(true)
     const count = getConfirmedIds().length
-    showToast(`Thanks — you've confirmed ${count} report${count === 1 ? '' : 's'}, helping warn others.`, 'success')
+    showToast(`Thanks. You've confirmed ${count} report${count === 1 ? '' : 's'}, helping warn others.`, 'success')
     onConfirm(report.id)
   }
 
@@ -252,7 +252,7 @@ export default function ReportDetail({ report, setView, saved, onToggleSave, onC
                         Sent via WhatsApp number ending •••{reply.phoneLast4 || '????'}
                       </span>
                     ) : (
-                      <span className="stamp-inline unverified">Identity not verified — submitted via web form</span>
+                      <span className="stamp-inline unverified">Identity not verified. Submitted via web form</span>
                     )}
                   </div>
                 </div>
@@ -321,7 +321,7 @@ export default function ReportDetail({ report, setView, saved, onToggleSave, onC
               ) : (
                 <>
                   <p style={{ fontSize: 13, color: 'var(--ink-soft)', marginTop: 4 }}>
-                    Replying now requires an account — it's never shown publicly, just used to
+                    Replying now requires an account. It's never shown publicly, just used to
                     attribute the reply to you internally.
                   </p>
                   <button className="confirm-btn" style={{ marginTop: 4 }} onClick={() => setView('lister-auth')}>

@@ -116,7 +116,7 @@ export default function SubmitListing({ listerUser, setView }) {
     if (honeypot.trim()) return // bot filled the hidden field — drop silently, no error to tip it off
 
     if (Date.now() - mountedAt.current < MIN_FILL_MS) {
-      setError('That was fast — please take a moment to review before submitting.')
+      setError('That was fast. Please take a moment to review before submitting.')
       return
     }
 
@@ -159,7 +159,7 @@ export default function SubmitListing({ listerUser, setView }) {
       setSubmitted(true)
     } catch (err) {
       const hint = err.message.toLowerCase().includes('permission')
-        ? " If you're signed in as a KeyCheck moderator/admin account, that account can't submit through this public form by design — use the admin panel's Listings tab instead, or sign out here and create a separate lister account."
+        ? " If you're signed in as a KeyCheck moderator/admin account, that account can't submit through this public form by design. Use the admin panel's Listings tab instead, or sign out here and create a separate lister account."
         : ''
       setError('Failed to submit listing: ' + err.message + hint)
     } finally {
@@ -180,7 +180,7 @@ export default function SubmitListing({ listerUser, setView }) {
     return (
       <div className="form-wrap">
         <div className="empty-state">
-          <p>Listing submitted — it's now pending review and will appear publicly once a moderator approves it.</p>
+          <p>Listing submitted. It's now pending review and will appear publicly once a moderator approves it.</p>
           <button onClick={() => setView('my-listings')}>View my listings</button>
         </div>
       </div>
@@ -191,7 +191,7 @@ export default function SubmitListing({ listerUser, setView }) {
     <div className="theme-market form-wrap">
       <div className="page-banner page-banner-market">
         <h1>List a property</h1>
-        <p>Every listing is reviewed before it goes live — this usually takes a moderator a short while.</p>
+        <p>Every listing is reviewed before it goes live. This usually takes a moderator a short while.</p>
       </div>
 
       <div className="form-card">
@@ -327,7 +327,7 @@ export default function SubmitListing({ listerUser, setView }) {
               ))}
             </select>
             <p className="field-hint">
-              Self-reported — a moderator can mark this checked after reviewing the actual document,
+              Self-reported. A moderator can mark this checked after reviewing the actual document,
               same as the LASRERA/CAC numbers below. This is not a title search or legal guarantee.
             </p>
           </div>
@@ -461,7 +461,7 @@ export default function SubmitListing({ listerUser, setView }) {
               onChange={(e) => update('professionalIndemnityInsurance', e.target.checked)}
             />
             <span>
-              I carry professional indemnity insurance. Voluntary — Nigerian law doesn't currently
+              I carry professional indemnity insurance. Voluntary. Nigerian law doesn't currently
               require this for real-estate practice, unlike some other countries.
             </span>
           </label>

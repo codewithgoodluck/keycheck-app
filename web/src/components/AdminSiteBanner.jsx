@@ -79,9 +79,9 @@ export default function AdminSiteBanner() {
       </p>
       <p style={{ fontSize: 13, color: 'var(--ink-soft)', margin: '0 0 16px' }}>
         Each page can have its own banner photo, shown behind a dark/coral scrim. Pages without
-        their own image use "Default." Nothing is pulled automatically from listings or reports —
-        this is the only way a photo can appear on any banner.
-        {isCarousel && ' This page rotates through every image below as a carousel — upload more than one to enable it.'}
+        their own image use "Default." Nothing is pulled automatically from listings or reports.
+        This is the only way a photo can appear on any banner.
+        {isCarousel && ' This page rotates through every image below as a carousel. Upload more than one to enable it.'}
       </p>
 
       <div className="field">
@@ -117,7 +117,7 @@ export default function AdminSiteBanner() {
           </div>
         ) : (
           <p style={{ fontSize: 13, color: 'var(--ink-faint)', marginBottom: 16 }}>
-            No images set for "{pageLabel}" — currently showing the plain gradient.
+            No images set for "{pageLabel}". Currently showing the plain gradient.
           </p>
         )
       ) : currentUrl ? (
@@ -131,7 +131,7 @@ export default function AdminSiteBanner() {
         </div>
       ) : (
         <p style={{ fontSize: 13, color: 'var(--ink-faint)', marginBottom: 16 }}>
-          No image set for "{pageLabel}" {pageKey !== 'default' && bannerImages?.default ? '— currently showing the Default image.' : '— currently showing the plain gradient.'}
+          No image set for "{pageLabel}". {pageKey !== 'default' && bannerImages?.default ? 'Currently showing the Default image.' : 'Currently showing the plain gradient.'}
         </p>
       )}
 

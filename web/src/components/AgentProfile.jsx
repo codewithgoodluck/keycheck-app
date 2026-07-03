@@ -58,11 +58,11 @@ export default function AgentProfile({ reports, name, setView, savedIds, onToggl
       <div className="saved-header">
         <h1>{name}</h1>
         <p>
-          The full picture, in one place — every report, every vouch, every reply, all under this
+          The full picture, in one place: every report, every vouch, every reply, all under this
           name instead of scattered across separate pages. {endorsements.length} confirmed clean
           transaction{endorsements.length === 1 ? '' : 's'}, {flags.length} flagged report
           {flags.length === 1 ? '' : 's'} filed under this exact name. Names are free text, entered
-          by whoever filed the report — this page only groups exact matches, so the same person or
+          by whoever filed the report. This page only groups exact matches, so the same person or
           company under a slightly different spelling won't appear here.
         </p>
       </div>
