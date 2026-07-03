@@ -74,7 +74,7 @@ export default function AdminBuyersAgents() {
                 </span>
               </div>
               {entry.blockedReason && (
-                <p style={{ fontSize: 12.5, color: 'var(--red)', margin: '0 0 8px' }}>{entry.blockedReason}</p>
+                <p style={{ fontSize: 12.5, color: 'var(--status-disputed)', margin: '0 0 8px' }}>{entry.blockedReason}</p>
               )}
               {entry.feeNote && <p style={{ fontSize: 13, margin: '0 0 8px' }}>{entry.feeNote}</p>}
               {entry.status === 'pending' && (

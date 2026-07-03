@@ -137,8 +137,8 @@ export default function ListingDetail({ listing, listings, setView }) {
       </button>
 
       {isExpired && (
-        <div className="fact-box" style={{ marginBottom: 16, background: 'var(--red-soft)' }}>
-          <Clock size={18} color="var(--red)" />
+        <div className="fact-box" style={{ marginBottom: 16, background: 'var(--status-disputed-soft)' }}>
+          <Clock size={18} color="var(--status-disputed)" />
           <div>
             <strong>This listing has expired.</strong> It's no longer being actively promoted by the
             lister — the details below may be out of date. Contact the lister to confirm availability.
@@ -212,7 +212,7 @@ export default function ListingDetail({ listing, listings, setView }) {
                       borderRadius: 10,
                       cursor: 'pointer',
                       flexShrink: 0,
-                      border: i === activePhoto ? '2px solid var(--coral)' : '2px solid transparent',
+                      border: i === activePhoto ? '2px solid var(--brand)' : '2px solid transparent',
                       opacity: i === activePhoto ? 1 : 0.75
                     }}
                   />

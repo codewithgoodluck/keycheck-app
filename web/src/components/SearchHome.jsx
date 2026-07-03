@@ -166,11 +166,10 @@ export default function SearchHome({ reports, setView, savedIds, onToggleSave, h
         <p className="eyebrow">
           <ShieldCheck size={13} /> Community housing &amp; land registry
         </p>
-        <h1>Check before you buy or rent. Warn others after.</h1>
+        <h1>Know before you owe.</h1>
         <p>
-          Search a location, agent, landlord, or developer name to see whether others have
-          reported a problem — or vouched for a clean transaction. Free, and you don't need
-          an account to search.
+          Search any agent, landlord, or plot in seconds. Every red flag traces back to a real
+          court filing or news report — every clean record means nobody's found a reason to worry.
         </p>
         <div className="search-wrap">
           <form

@@ -466,7 +466,7 @@ export default function SubmitListing({ listerUser, setView }) {
             </span>
           </label>
 
-          {error && <p style={{ color: 'var(--red)', fontSize: 13, fontWeight: 600, margin: '0 0 12px' }}>{error}</p>}
+          {error && <p style={{ color: 'var(--status-disputed)', fontSize: 13, fontWeight: 600, margin: '0 0 12px' }}>{error}</p>}
 
           <button className="submit-btn" type="submit" disabled={submitting}>
             <Send size={15} /> {submitting ? 'Submitting...' : 'Submit for review'}

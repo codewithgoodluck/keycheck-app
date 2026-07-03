@@ -88,7 +88,7 @@ export default function ListerAuth({ setView }) {
               required
             />
           </div>
-          {error && <p style={{ color: 'var(--red)', fontSize: 13, marginTop: -8, marginBottom: 16 }}>{error}</p>}
+          {error && <p style={{ color: 'var(--status-disputed)', fontSize: 13, marginTop: -8, marginBottom: 16 }}>{error}</p>}
           <button className="submit-btn" type="submit" disabled={loading} style={{ width: '100%', justifyContent: 'center' }}>
             {mode === 'signup' ? <UserPlus size={15} /> : <LogIn size={15} />}
             {loading ? 'Please wait...' : mode === 'signup' ? 'Create account' : 'Sign in'}

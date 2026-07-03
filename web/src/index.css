@@ -6,43 +6,58 @@
   --ink-faint: #9a9685;
   --line: #e9e2d0;
 
-  /* Fintech-style color-coded status system — punchier/more saturated
-     than a muted editorial palette on purpose, since color is the primary
-     way a Chime/Robinhood-style UI signals data category at a glance.
-     `clean` (endorsements) gets its own teal token instead of reusing
-     green — a proven fraud case (verified) and a positive vouch (clean)
-     mean very different things and shouldn't look identical. */
-  --green: #16a34a;
-  --green-deep: #0f7a37;
-  --green-soft: #e3f9ec;
-  --red: #ef4444;
-  --red-soft: #fee2e2;
-  --gold: #eaa50d;
-  --gold-soft: #fef3d6;
+  /* One brand hue (coral) at two calibrated intensities — not two
+     different colors. --brand/--brand-hover resolve to the deep
+     intensity by default (trust/verification contexts: Home, Report,
+     Saved, Agent/landlord profile, Admin, Map) and to the bright
+     intensity inside .theme-market (Market/browsing contexts: Market,
+     Listings, Vouch) via the override below. Almost every rule in this
+     file should reference --brand, never --brand-deep/--brand-bright
+     directly, so it automatically picks up the right intensity for
+     whatever page it's rendered on. The two tint tokens are shared
+     as-is across both intensities (per the brand guideline) rather than
+     also switching, since they're backgrounds/placeholders, not the
+     brand statement itself. */
+  --brand-deep: #712b13;
+  --brand-deep-hover: #591f0d;
+  --brand-bright: #d85a30;
+  --brand-bright-hover: #b8481f;
+  --brand-tint-light: #faece7;
+  --brand-tint-mid: #f5c4b3;
+  --brand: var(--brand-deep);
+  --brand-hover: var(--brand-deep-hover);
+
+  /* Status colors are deliberately NOT brand color, ever, on any page.
+     Brand color says "this is KeyCheck." Status color says "here's the
+     actual finding." A verified report stays this exact green whether
+     it's shown on a deep or bright page — mixing the two would blur the
+     one distinction that matters most on this site. `clean` (a positive
+     vouch) keeps its own teal rather than reusing verified-green — a
+     proven fraud case and a positive endorsement mean very different
+     things and shouldn't look identical. */
+  --status-verified: #3b6d11;
+  --status-verified-soft: #eaf3de;
+  --status-disputed: #a32d2d;
+  --status-disputed-soft: #fcebeb;
+  --status-unverified: #633806;
+  --status-unverified-soft: #faeeda;
   --teal: #0d9488;
   --teal-soft: #e0f7f4;
 
   --font-body: 'Inter', system-ui, sans-serif;
   --font-mono: 'JetBrains Mono', ui-monospace, monospace;
+  --font-display: 'Sora', var(--font-body);
 
   --shadow-sm: 0 1px 2px rgba(21, 33, 26, 0.05);
   --shadow-md: 0 10px 30px -14px rgba(21, 33, 26, 0.22);
   --shadow-lg: 0 20px 48px -16px rgba(21, 33, 26, 0.28);
   --radius: 20px;
   --radius-sm: 12px;
+}
 
-  /* Market/browsing-side palette — warmer and more saturated than the
-     fintech-style status colors above on purpose (see .theme-market
-     below). Those stay reserved for fraud-report status everywhere else;
-     a listing card is a place someone might want to live, not a
-     compliance record, so it gets its own warmer identity closer to
-     Jiji/Airbnb than a verification tool. */
-  --coral: #e2673f;
-  --coral-deep: #c14f2b;
-  --coral-soft: #fbe4d8;
-  --cream: #fbf3e7;
-  --cream-deep: #f3e4cf;
-  --font-display: 'Quicksand', var(--font-body);
+.theme-market {
+  --brand: var(--brand-bright);
+  --brand-hover: var(--brand-bright-hover);
 }
 
 * { box-sizing: border-box; }
@@ -153,13 +168,13 @@ button { font-family: inherit; }
 }
 
 .site-header nav button.active {
-  background: var(--green);
+  background: var(--brand);
   color: #fff;
 }
 
 .site-header nav button:hover:not(.active) {
-  background: var(--green-soft);
-  color: var(--green);
+  background: var(--brand-tint-light);
+  color: var(--brand);
 }
 
 @media (max-width: 540px) {
@@ -182,8 +197,8 @@ button { font-family: inherit; }
    admin panel (see lib/siteSettings.js) — never pulled automatically
    from a listing or report, which is what caused a scanned ID document
    to end up as the site banner previously. --banner-image defaults to
-   `none`, in which case background-color (the solid ink/green tone)
-   shows through the scrim on its own, identical to having no image set. */
+   `none`, in which case background-color (the solid ink tone) shows
+   through the scrim on its own, identical to having no image set. */
 .hero {
   position: relative;
   left: 50%;
@@ -193,7 +208,7 @@ button { font-family: inherit; }
   margin-right: -50vw;
   padding: 52px 20px 34px;
   background-color: var(--ink);
-  background-image: linear-gradient(135deg, rgba(21, 33, 26, 0.72) 0%, rgba(15, 122, 55, 0.86) 100%), var(--banner-image, none);
+  background-image: linear-gradient(135deg, rgba(21, 33, 26, 0.72) 0%, rgba(113, 43, 19, 0.86) 100%), var(--banner-image, none);
   background-size: cover, cover;
   background-position: center, center;
   background-repeat: no-repeat, no-repeat;
@@ -218,10 +233,11 @@ button { font-family: inherit; }
 }
 
 .hero h1 {
-  font-size: 38px;
-  font-weight: 800;
-  line-height: 1.12;
-  letter-spacing: -0.02em;
+  font-family: var(--font-display);
+  font-size: 32px;
+  font-weight: 500;
+  line-height: 1.18;
+  letter-spacing: -0.01em;
   margin: 0 0 12px;
   max-width: 18ch;
   color: #fff;
@@ -251,7 +267,7 @@ button { font-family: inherit; }
   margin-right: -50vw;
   padding: 36px 20px 28px;
   background-color: var(--ink);
-  background-image: linear-gradient(135deg, rgba(21, 33, 26, 0.72) 0%, rgba(15, 122, 55, 0.86) 100%), var(--banner-image, none);
+  background-image: linear-gradient(135deg, rgba(21, 33, 26, 0.72) 0%, rgba(113, 43, 19, 0.86) 100%), var(--banner-image, none);
   background-size: cover, cover;
   background-position: center, center;
   background-repeat: no-repeat, no-repeat;
@@ -261,8 +277,8 @@ button { font-family: inherit; }
 }
 
 .page-banner.page-banner-market {
-  background-color: var(--coral-deep);
-  background-image: linear-gradient(135deg, rgba(193, 79, 43, 0.72) 0%, rgba(226, 103, 63, 0.86) 100%), var(--banner-image, none);
+  background-color: var(--brand-hover);
+  background-image: linear-gradient(135deg, rgba(184, 72, 31, 0.72) 0%, rgba(216, 90, 48, 0.86) 100%), var(--banner-image, none);
 }
 
 .page-banner .eyebrow {
@@ -281,9 +297,10 @@ button { font-family: inherit; }
 }
 
 .page-banner h1 {
+  font-family: var(--font-display);
   font-size: 24px;
-  font-weight: 800;
-  letter-spacing: -0.02em;
+  font-weight: 500;
+  letter-spacing: -0.01em;
   margin: 0 0 6px;
   color: #fff;
 }
@@ -341,7 +358,7 @@ button { font-family: inherit; }
 
 .search-suggestions button svg { color: var(--ink-faint); flex-shrink: 0; }
 .search-suggestions button:hover,
-.search-suggestions button.active { background: var(--green-soft); }
+.search-suggestions button.active { background: var(--brand-tint-light); }
 
 .search-bar {
   display: flex;
@@ -354,7 +371,7 @@ button { font-family: inherit; }
   transition: border-color 0.15s ease;
 }
 
-.search-bar:focus-within { border-color: var(--green); }
+.search-bar:focus-within { border-color: var(--brand); }
 .search-bar svg { color: var(--ink-faint); flex-shrink: 0; }
 
 .search-bar input {
@@ -371,7 +388,7 @@ button { font-family: inherit; }
 
 .search-bar button {
   border: none;
-  background: var(--green);
+  background: var(--brand);
   color: #fff;
   font-size: 13.5px;
   font-weight: 600;
@@ -382,7 +399,7 @@ button { font-family: inherit; }
   flex-shrink: 0;
 }
 
-.search-bar button:hover { background: var(--green-deep); }
+.search-bar button:hover { background: var(--brand-hover); }
 .search-bar button:active { transform: scale(0.97); }
 
 .chip-row {
@@ -407,8 +424,8 @@ button { font-family: inherit; }
   transition: all 0.15s ease;
 }
 
-.chip:hover { border-color: var(--green); color: var(--green-deep); }
-.chip.active { background: var(--green); color: #fff; border-color: var(--green); }
+.chip:hover { border-color: var(--brand); color: var(--brand-hover); }
+.chip.active { background: var(--brand); color: #fff; border-color: var(--brand); }
 .chip svg { width: 13px; height: 13px; }
 
 /* ---------- Filter bar (segmented view toggle + expandable filters) ---------- */
@@ -450,7 +467,7 @@ button { font-family: inherit; }
   transition: background 0.15s ease, color 0.15s ease;
 }
 
-.segmented-control button.active { background: var(--green); color: #fff; }
+.segmented-control button.active { background: var(--brand); color: #fff; }
 
 .filters-toggle {
   display: inline-flex;
@@ -468,7 +485,7 @@ button { font-family: inherit; }
 }
 
 .filters-toggle:hover,
-.filters-toggle.active { border-color: var(--green); color: var(--green-deep); }
+.filters-toggle.active { border-color: var(--brand); color: var(--brand-hover); }
 
 .filters-count-badge {
   display: inline-flex;
@@ -478,7 +495,7 @@ button { font-family: inherit; }
   height: 17px;
   padding: 0 4px;
   border-radius: 999px;
-  background: var(--green);
+  background: var(--brand);
   color: #fff;
   font-size: 10.5px;
   font-weight: 700;
@@ -586,7 +603,7 @@ button { font-family: inherit; }
   transition: all 0.15s ease;
 }
 
-.sort-toggle button.active { background: var(--green); color: #fff; }
+.sort-toggle button.active { background: var(--brand); color: #fff; }
 
 .status-legend { margin-top: -18px; margin-bottom: 8px; }
 .status-legend .stamp-inline { cursor: default; }
@@ -618,9 +635,9 @@ button { font-family: inherit; }
 
 .report-card:hover { border-top-color: var(--ink-faint); border-right-color: var(--ink-faint); border-bottom-color: var(--ink-faint); }
 
-.report-card:has(.card-icon.verified) { border-left-color: var(--green); }
-.report-card:has(.card-icon.disputed) { border-left-color: var(--red); }
-.report-card:has(.card-icon.unverified) { border-left-color: var(--gold); }
+.report-card:has(.card-icon.verified) { border-left-color: var(--status-verified); }
+.report-card:has(.card-icon.disputed) { border-left-color: var(--status-disputed); }
+.report-card:has(.card-icon.unverified) { border-left-color: var(--status-unverified); }
 
 /* Vouches ("clean transaction" endorsements) get a distinct whole-card
    tint, not just a border-color swap — a fraud flag and a positive vouch
@@ -638,10 +655,10 @@ button { font-family: inherit; }
   flex-shrink: 0;
 }
 
-.report-card .card-icon.verified { background: var(--green-soft); color: var(--green); }
+.report-card .card-icon.verified { background: var(--status-verified-soft); color: var(--status-verified); }
 .report-card .card-icon.clean { background: var(--teal-soft); color: var(--teal); }
-.report-card .card-icon.disputed { background: var(--red-soft); color: var(--red); }
-.report-card .card-icon.unverified { background: var(--gold-soft); color: var(--gold); }
+.report-card .card-icon.disputed { background: var(--status-disputed-soft); color: var(--status-disputed); }
+.report-card .card-icon.unverified { background: var(--status-unverified-soft); color: var(--status-unverified); }
 
 /* Listing cards (ListingCard.jsx) reuse .card-icon without a status
    modifier — a listing has no verified/disputed concept, just possibly a
@@ -707,9 +724,9 @@ button { font-family: inherit; }
   flex-shrink: 0;
 }
 
-.save-btn:hover { background: var(--green-soft); color: var(--green); }
-.save-btn.saved { color: var(--green); }
-.save-btn.saved svg { fill: var(--green); }
+.save-btn:hover { background: var(--brand-tint-light); color: var(--brand); }
+.save-btn.saved { color: var(--brand); }
+.save-btn.saved svg { fill: var(--brand); }
 
 /* ---------- Stamp / status pill ---------- */
 
@@ -726,10 +743,10 @@ button { font-family: inherit; }
 }
 
 .stamp-inline svg { width: 13px; height: 13px; }
-.stamp-inline.verified { color: var(--green); background: var(--green-soft); }
+.stamp-inline.verified { color: var(--status-verified); background: var(--status-verified-soft); }
 .stamp-inline.clean { color: var(--teal); background: var(--teal-soft); }
-.stamp-inline.disputed { color: var(--red); background: var(--red-soft); }
-.stamp-inline.unverified { color: var(--gold); background: var(--gold-soft); }
+.stamp-inline.disputed { color: var(--status-disputed); background: var(--status-disputed-soft); }
+.stamp-inline.unverified { color: var(--status-unverified); background: var(--status-unverified-soft); }
 
 /* ---------- Verification badge (listings) ---------- */
 /* Deliberately NOT the same visual weight as .stamp-inline's confident
@@ -769,8 +786,8 @@ button { font-family: inherit; }
 
 .fee-note svg { width: 13px; height: 13px; flex-shrink: 0; }
 
-.fee-note-warning { color: var(--red); }
-.fee-note-ok { color: var(--green); }
+.fee-note-warning { color: var(--status-disputed); }
+.fee-note-ok { color: var(--status-verified); }
 .fee-note-neutral { color: var(--ink-faint); font-weight: 500; }
 
 /* ---------- Empty state ---------- */
@@ -798,7 +815,7 @@ button { font-family: inherit; }
   cursor: pointer;
 }
 
-.empty-state button:hover { background: var(--green); }
+.empty-state button:hover { background: var(--brand); }
 
 /* ---------- Report detail ---------- */
 
@@ -836,9 +853,10 @@ button { font-family: inherit; }
 }
 
 .detail-header h1 {
+  font-family: var(--font-display);
   font-size: 24px;
-  font-weight: 800;
-  letter-spacing: -0.02em;
+  font-weight: 500;
+  letter-spacing: -0.01em;
   margin: 8px 0 12px;
   line-height: 1.3;
 }
@@ -862,7 +880,7 @@ button { font-family: inherit; }
 }
 
 .icon-btn:hover { border-color: var(--ink); color: var(--ink); }
-.icon-btn.saved { color: var(--green); border-color: var(--green); background: var(--green-soft); }
+.icon-btn.saved { color: var(--brand); border-color: var(--brand); background: var(--brand-tint-light); }
 
 .confirm-bar {
   display: flex;
@@ -894,7 +912,7 @@ button { font-family: inherit; }
 }
 
 .confirm-btn:hover { background: var(--ink); color: var(--paper); }
-.confirm-btn.confirmed { background: var(--green); border-color: var(--green); color: #fff; }
+.confirm-btn.confirmed { background: var(--brand); border-color: var(--brand); color: #fff; }
 .confirm-btn svg { width: 14px; height: 14px; }
 
 .detail-section { padding: 22px 26px; border-bottom: 1px solid var(--line); }
@@ -940,9 +958,10 @@ button { font-family: inherit; }
    instead of wrapping in .page-banner; kept so those aren't unstyled,
    though every current .form-wrap page uses .page-banner now. */
 .form-wrap > h1 {
-  font-size: 26px;
-  font-weight: 800;
-  letter-spacing: -0.02em;
+  font-family: var(--font-display);
+  font-size: 24px;
+  font-weight: 500;
+  letter-spacing: -0.01em;
   margin: 32px 0 6px;
 }
 
@@ -1017,7 +1036,7 @@ button { font-family: inherit; }
 
 .evidence-picked svg:first-child { color: var(--ink-faint); flex-shrink: 0; }
 .evidence-picked button { margin-left: auto; background: none; border: none; color: var(--ink-faint); cursor: pointer; display: flex; padding: 2px; }
-.evidence-picked button:hover { color: var(--red); }
+.evidence-picked button:hover { color: var(--status-disputed); }
 
 .field-checkbox {
   display: flex;
@@ -1030,14 +1049,14 @@ button { font-family: inherit; }
   cursor: pointer;
 }
 
-.field-checkbox input { margin-top: 3px; width: 16px; height: 16px; accent-color: var(--green); flex-shrink: 0; }
+.field-checkbox input { margin-top: 3px; width: 16px; height: 16px; accent-color: var(--brand); flex-shrink: 0; }
 
 .whatsapp-note {
   display: flex;
   gap: 12px;
   align-items: flex-start;
   border-radius: var(--radius-sm);
-  background: var(--green-soft);
+  background: var(--brand-tint-light);
   padding: 14px 16px;
   font-size: 13px;
   color: var(--ink-soft);
@@ -1045,9 +1064,9 @@ button { font-family: inherit; }
   margin-bottom: 24px;
 }
 
-.whatsapp-note svg { color: var(--green); flex-shrink: 0; margin-top: 1px; }
+.whatsapp-note svg { color: var(--brand); flex-shrink: 0; margin-top: 1px; }
 .whatsapp-note strong { color: var(--ink); }
-.whatsapp-note a { color: var(--green); font-weight: 600; }
+.whatsapp-note a { color: var(--brand); font-weight: 600; }
 
 /* ---------- Fact box / nudge (VerifyAgentNudge, FeeCapFactBox) ---------- */
 
@@ -1114,7 +1133,7 @@ button { font-family: inherit; }
 }
 
 .checklist-item:last-child { border-bottom: none; }
-.checklist-item input { margin-top: 3px; width: 16px; height: 16px; accent-color: var(--green); flex-shrink: 0; }
+.checklist-item input { margin-top: 3px; width: 16px; height: 16px; accent-color: var(--brand); flex-shrink: 0; }
 .checklist-item a { color: var(--teal); font-weight: 600; white-space: nowrap; }
 
 .lagos-only-tag {
@@ -1124,8 +1143,8 @@ button { font-family: inherit; }
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.04em;
-  color: var(--gold);
-  background: var(--gold-soft);
+  color: var(--status-unverified);
+  background: var(--status-unverified-soft);
   padding: 2px 7px;
   border-radius: 999px;
   vertical-align: middle;
@@ -1170,11 +1189,11 @@ button { font-family: inherit; }
   cursor: pointer;
 }
 
-.quiz-result button:hover { background: var(--green); }
+.quiz-result button:hover { background: var(--brand); }
 
-.quiz-result-low svg { color: var(--green); }
-.quiz-result-medium svg { color: var(--gold); }
-.quiz-result-high svg { color: var(--red); }
+.quiz-result-low svg { color: var(--brand); }
+.quiz-result-medium svg { color: var(--status-unverified); }
+.quiz-result-high svg { color: var(--status-disputed); }
 
 .watch-alerts { display: flex; flex-direction: column; }
 
@@ -1182,14 +1201,14 @@ button { font-family: inherit; }
   display: flex;
   align-items: center;
   gap: 10px;
-  background: var(--green-soft);
+  background: var(--brand-tint-light);
   color: var(--ink-soft);
   font-size: 13px;
   padding: 10px 20px;
   border-bottom: 1px solid var(--line);
 }
 
-.watch-alert svg:first-child { color: var(--green); flex-shrink: 0; }
+.watch-alert svg:first-child { color: var(--brand); flex-shrink: 0; }
 .watch-alert strong { color: var(--ink); }
 
 .watch-alert button {
@@ -1198,7 +1217,7 @@ button { font-family: inherit; }
   cursor: pointer;
   font-size: 12.5px;
   font-weight: 700;
-  color: var(--green);
+  color: var(--brand);
   padding: 4px 8px;
 }
 
@@ -1210,7 +1229,7 @@ button { font-family: inherit; }
   gap: 7px;
   font-size: 13.5px;
   font-weight: 600;
-  background: var(--red);
+  background: var(--brand);
   color: #fff;
   border: none;
   padding: 14px 26px;
@@ -1219,7 +1238,7 @@ button { font-family: inherit; }
   transition: background 0.15s ease;
 }
 
-.submit-btn:hover { background: #b8362f; }
+.submit-btn:hover { background: var(--brand-hover); }
 
 .disclaimer {
   margin-top: 16px;
@@ -1244,7 +1263,7 @@ button { font-family: inherit; }
   margin-right: -50vw;
   padding: 36px 20px 28px;
   background-color: var(--ink);
-  background-image: linear-gradient(135deg, rgba(21, 33, 26, 0.72) 0%, rgba(15, 122, 55, 0.86) 100%), var(--banner-image, none);
+  background-image: linear-gradient(135deg, rgba(21, 33, 26, 0.72) 0%, rgba(113, 43, 19, 0.86) 100%), var(--banner-image, none);
   background-size: cover, cover;
   background-position: center, center;
   background-repeat: no-repeat, no-repeat;
@@ -1254,9 +1273,10 @@ button { font-family: inherit; }
 }
 
 .saved-header h1 {
-  font-size: 26px;
-  font-weight: 800;
-  letter-spacing: -0.02em;
+  font-family: var(--font-display);
+  font-size: 24px;
+  font-weight: 500;
+  letter-spacing: -0.01em;
   margin: 0 0 6px;
   color: #fff;
 }
@@ -1303,7 +1323,11 @@ button { font-family: inherit; }
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  background: var(--red);
+  /* Always deep coral, never --brand — "Report a problem" is the
+     guideline's explicit deep-coral example, and it stays that one
+     serious, consistent color even when the FAB is showing on a bright
+     Market/Listings page, since the action itself never changes. */
+  background: var(--brand-deep);
   color: #fff;
   border: none;
   padding: 15px 22px;
@@ -1316,7 +1340,7 @@ button { font-family: inherit; }
   transition: transform 0.15s ease, background 0.15s ease;
 }
 
-.fab:hover { background: #b8362f; transform: translateY(-2px); }
+.fab:hover { background: var(--brand-deep-hover); transform: translateY(-2px); }
 .fab svg { width: 18px; height: 18px; }
 
 @media (max-width: 540px) {
@@ -1374,10 +1398,10 @@ button { font-family: inherit; }
   transition: color 0.15s ease, background 0.15s ease;
 }
 
-.bottom-nav button.active { color: var(--green); background: var(--green-soft); }
+.bottom-nav button.active { color: var(--brand); background: var(--brand-tint-light); }
 
 @media (max-width: 600px) {
-  .hero h1 { font-size: 30px; }
+  .hero h1 { font-size: 27px; }
   .detail-header { flex-direction: column; }
   .detail-actions { align-self: flex-end; }
   .app { padding-bottom: 88px; }
@@ -1416,9 +1440,9 @@ button { font-family: inherit; }
 .toast button { background: none; border: none; color: inherit; opacity: 0.6; cursor: pointer; display: flex; padding: 2px; }
 .toast button:hover { opacity: 1; }
 
-.toast-success svg:first-child { color: var(--green); }
+.toast-success svg:first-child { color: var(--brand); }
 .toast-error svg:first-child { color: #ff8a80; }
-.toast-default svg:first-child { color: var(--gold); }
+.toast-default svg:first-child { color: var(--status-unverified); }
 
 /* ==========================================================================
    Market / listings-browsing theme
@@ -1436,8 +1460,8 @@ button { font-family: inherit; }
    Market/Listings banner reaches both edges of the screen exactly like
    every other page's banner now does. */
 .theme-market .hero {
-  background-color: var(--cream-deep);
-  background-image: linear-gradient(180deg, rgba(251, 243, 231, 0.82) 0%, rgba(243, 228, 207, 0.92) 100%), var(--banner-image, none);
+  background-color: var(--brand-tint-mid);
+  background-image: linear-gradient(180deg, rgba(250, 236, 231, 0.75) 0%, rgba(245, 196, 179, 0.88) 100%), var(--banner-image, none);
   background-size: cover, cover;
   background-position: center, center;
   background-repeat: no-repeat, no-repeat;
@@ -1458,35 +1482,19 @@ button { font-family: inherit; }
   font-weight: 700;
   text-transform: none;
   letter-spacing: 0;
-  color: var(--coral-deep);
-  background: var(--coral-soft);
+  color: var(--brand-hover);
+  background: var(--brand-tint-light);
 }
 
-.theme-market .hero h1,
-.theme-market .detail-header h1,
-.theme-market h1 {
-  font-family: var(--font-display);
-  font-weight: 700;
-}
+/* Shape-only — --brand already cascades to the bright intensity here
+   (see the .theme-market rule at the top of this file), so the color
+   itself needs no per-component override anymore; only the rounder
+   pill shape (vs. the base theme's 10px radius) is Market-specific. */
+.theme-market .search-bar,
+.theme-market .search-bar button { border-radius: 999px; }
 
-.theme-market .search-bar { border-radius: 999px; }
-.theme-market .search-bar:focus-within { border-color: var(--coral); }
-.theme-market .search-bar button { background: var(--coral); border-radius: 999px; }
-.theme-market .search-bar button:hover { background: var(--coral-deep); }
-
-.theme-market .chip.active { background: var(--coral); color: #fff; border-color: var(--coral); }
-.theme-market .chip:hover { border-color: var(--coral); color: var(--coral-deep); }
-
-.theme-market .segmented-control button.active { background: var(--coral); }
-.theme-market .filters-toggle:hover,
-.theme-market .filters-toggle.active { border-color: var(--coral); color: var(--coral-deep); }
-.theme-market .filters-count-badge { background: var(--coral); }
-
-.theme-market .submit-btn { background: var(--coral); border-radius: 999px; }
-.theme-market .submit-btn:hover { background: var(--coral-deep); }
-
-.theme-market .icon-btn.saved { color: var(--coral-deep); border-color: var(--coral); background: var(--coral-soft); }
-.theme-market .icon-btn:hover { border-color: var(--coral); color: var(--coral-deep); }
+.theme-market .icon-btn.saved { color: var(--brand-hover); border-color: var(--brand); background: var(--brand-tint-light); }
+.theme-market .icon-btn:hover { border-color: var(--brand); color: var(--brand-hover); }
 
 /* Warms up the listing-detail content card itself — previously only the
    banner/buttons picked up the coral Market identity, leaving the actual
@@ -1497,31 +1505,22 @@ button { font-family: inherit; }
    live" feel instead of half-and-half. */
 .theme-market .detail-card {
   border-radius: 28px;
-  border-color: var(--coral-soft);
+  border-color: var(--brand-tint-light);
 }
 
-.theme-market .detail-header { border-bottom-color: var(--coral-soft); }
+.theme-market .detail-header { border-bottom-color: var(--brand-tint-light); }
 
-.theme-market .detail-section { border-bottom-color: var(--coral-soft); }
+.theme-market .detail-section { border-bottom-color: var(--brand-tint-light); }
 
-.theme-market .detail-section h4 { color: var(--coral-deep); }
+.theme-market .detail-section h4 { color: var(--brand-hover); }
 
 .fact-item { background: var(--paper); }
-.theme-market .fact-item { background: var(--coral-soft); }
+.theme-market .fact-item { background: var(--brand-tint-light); }
 
 .theme-market .verification-badge-unbacked {
-  background: var(--cream);
-  border-color: var(--coral-soft);
+  background: var(--brand-tint-light);
+  border-color: var(--brand-tint-light);
 }
-
-/* .watch-alert is shared with the report side's "watching this area"
-   banner (green there, correctly); ListingsBrowse.jsx/CompareListings.jsx
-   reuse the same component for the compare-selection banner, which
-   should read as Market/coral instead. */
-.theme-market .watch-alert { background: var(--coral-soft); }
-.theme-market .watch-alert svg:first-child { color: var(--coral-deep); }
-.theme-market .watch-alert button { color: var(--coral-deep); }
-.theme-market .watch-alert button.dismiss { color: var(--ink-faint); }
 
 /* ---------- Listing grid + photo-forward card ---------- */
 
@@ -1548,7 +1547,7 @@ button { font-family: inherit; }
 .listing-card-photo {
   position: relative;
   aspect-ratio: 4 / 3;
-  background: var(--cream-deep);
+  background: var(--brand-tint-mid);
   color: var(--ink-faint);
   display: flex;
   align-items: center;
@@ -1590,8 +1589,8 @@ button { font-family: inherit; }
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.04em;
-  color: var(--coral-deep);
-  background: var(--coral-soft);
+  color: var(--brand-hover);
+  background: var(--brand-tint-light);
   padding: 2px 7px;
   border-radius: 999px;
   margin-left: 6px;
@@ -1621,8 +1620,8 @@ button { font-family: inherit; }
   transition: color 0.15s ease;
 }
 
-.listing-card-icon-btn.active { color: var(--coral-deep); }
-.listing-card-icon-btn.active svg { fill: var(--coral-deep); }
+.listing-card-icon-btn.active { color: var(--brand-hover); }
+.listing-card-icon-btn.active svg { fill: var(--brand-hover); }
 
 .listing-card-body { padding: 14px 16px 16px; }
 
@@ -1661,5 +1660,5 @@ button { font-family: inherit; }
   gap: 3px;
   font-size: 12px;
   font-weight: 600;
-  color: var(--coral-deep);
+  color: var(--brand-hover);
 }

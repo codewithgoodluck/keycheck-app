@@ -134,7 +134,7 @@ export default function BecomeBuyersAgent({ listerUser, setView }) {
             <p className="field-hint">Shown to buyers browsing the directory — describe your fee structure in your own words.</p>
           </div>
 
-          {error && <p style={{ color: 'var(--red)', fontSize: 13, fontWeight: 600, margin: '0 0 12px' }}>{error}</p>}
+          {error && <p style={{ color: 'var(--status-disputed)', fontSize: 13, fontWeight: 600, margin: '0 0 12px' }}>{error}</p>}
 
           <button className="submit-btn" type="submit" disabled={submitting}>
             <Send size={15} /> {submitting ? 'Submitting...' : 'Submit for review'}

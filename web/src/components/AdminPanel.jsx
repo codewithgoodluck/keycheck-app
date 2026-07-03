@@ -245,7 +245,7 @@ export default function AdminPanel({ reports, adminEmail }) {
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginBottom: 10 }}>
                   {report.additionalSources.map((src, i) => (
                     <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 12.5 }}>
-                      <a href={src.url} target="_blank" rel="noreferrer" style={{ color: 'var(--green)', textDecoration: 'underline', wordBreak: 'break-all' }}>
+                      <a href={src.url} target="_blank" rel="noreferrer" style={{ color: 'var(--brand)', textDecoration: 'underline', wordBreak: 'break-all' }}>
                         {src.label}
                       </a>
                       <button

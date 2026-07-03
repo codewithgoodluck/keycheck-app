@@ -15,13 +15,13 @@ import { getEffectiveStatus } from '../lib/listingsApi.js'
 // spectrum, they're just "active" or not shown at all here.
 const LISTING_COLOR = '#2563eb'
 
-// Kept in sync with index.css's --green/--red/--gold/--teal tokens —
-// Leaflet's pathOptions need raw JS color strings, so these can't be CSS
-// custom properties directly.
+// Kept in sync with index.css's --status-verified/-disputed/-unverified
+// and --teal tokens — Leaflet's pathOptions need raw JS color strings,
+// so these can't be CSS custom properties directly.
 const STATUS_COLOR = {
-  verified: '#16a34a',
-  disputed: '#ef4444',
-  unverified: '#eaa50d',
+  verified: '#3b6d11',
+  disputed: '#a32d2d',
+  unverified: '#633806',
   clean: '#0d9488'
 }
 
@@ -112,13 +112,15 @@ export default function MapView({ reports, listings = [], setView }) {
   return (
     <div>
       <div className="saved-header">
-        <h1>Map</h1>
-        <p>
-          {layer === 'reports'
-            ? `${geotagged.length} of ${reports.length} reports are area-tagged. Pins mark the general neighbourhood reported, not an exact plot, since locations come from witness descriptions.`
-            : `${geotaggedListings.length} of ${listings.filter((l) => getEffectiveStatus(l) === 'active').length} active listings are area-tagged.`}
-        </p>
+        <h1>See where the risk is.</h1>
+        <p>Every report, plotted. Zoom into your neighborhood before you zoom into a decision.</p>
       </div>
+
+      <p style={{ fontSize: 13, color: 'var(--ink-soft)', margin: '0 0 14px' }}>
+        {layer === 'reports'
+          ? `${geotagged.length} of ${reports.length} reports are area-tagged. Pins mark the general neighbourhood reported, not an exact plot, since locations come from witness descriptions.`
+          : `${geotaggedListings.length} of ${listings.filter((l) => getEffectiveStatus(l) === 'active').length} active listings are area-tagged.`}
+      </p>
 
       <div className="chip-row" style={{ marginTop: 0, marginBottom: 14 }}>
         <button className={`chip ${layer === 'reports' ? 'active' : ''}`} onClick={() => setLayer('reports')}>

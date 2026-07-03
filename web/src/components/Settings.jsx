@@ -62,7 +62,7 @@ export default function Settings({ listerUser, setView }) {
         <button className="chip" onClick={handleResetPassword} disabled={resetSent}>
           <KeyRound size={13} /> {resetSent ? 'Reset link sent — check your email' : 'Send password reset link'}
         </button>
-        {resetError && <p style={{ color: 'var(--red)', fontSize: 12.5, fontWeight: 600, marginTop: 8 }}>{resetError}</p>}
+        {resetError && <p style={{ color: 'var(--status-disputed)', fontSize: 12.5, fontWeight: 600, marginTop: 8 }}>{resetError}</p>}
       </div>
 
       <div className="form-card" style={{ marginBottom: 16 }}>
@@ -84,7 +84,7 @@ export default function Settings({ listerUser, setView }) {
             <BellRing size={13} /> {pushBusy ? 'Requesting...' : 'Enable notifications on this device'}
           </button>
         )}
-        {pushError && <p style={{ color: 'var(--red)', fontSize: 12.5, fontWeight: 600, marginTop: 8 }}>{pushError}</p>}
+        {pushError && <p style={{ color: 'var(--status-disputed)', fontSize: 12.5, fontWeight: 600, marginTop: 8 }}>{pushError}</p>}
       </div>
 
       <div className="form-card">

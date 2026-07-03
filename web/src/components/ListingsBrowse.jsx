@@ -85,10 +85,10 @@ export default function ListingsBrowse({ listings, setView, hasMore, onLoadMore,
         <p className="eyebrow">
           <Home size={13} /> Verified listings
         </p>
-        <h1>Browse listings — checked against KeyCheck's fraud registry.</h1>
+        <h1>Find your next home, already checked.</h1>
         <p>
-          Every listing here has been reviewed by a moderator, and is automatically blocked if the
-          lister has an active disputed or verified fraud report.
+          Every listing here is tied to a real profile — see the track record before you ever pick
+          up the phone.
         </p>
         <div className="search-wrap">
           <form className="search-bar" onSubmit={handleSearch}>
@@ -144,7 +144,7 @@ export default function ListingsBrowse({ listings, setView, hasMore, onLoadMore,
                   padding: 0
                 }}
               >
-                <div style={{ width: '100%', height: 90, background: 'var(--cream-deep)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <div style={{ width: '100%', height: 90, background: 'var(--brand-tint-mid)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                   {(l.photoUrls?.[0] || l.photoUrl) ? (
                     <img src={l.photoUrls?.[0] || l.photoUrl} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                   ) : (

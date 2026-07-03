@@ -174,7 +174,7 @@ export default function MyListings({ listerUser, setView }) {
                   </span>
                 </div>
                 {listing.blockedReason && (
-                  <p style={{ fontSize: 12.5, color: 'var(--red)', margin: '0 0 8px' }}>{listing.blockedReason}</p>
+                  <p style={{ fontSize: 12.5, color: 'var(--status-disputed)', margin: '0 0 8px' }}>{listing.blockedReason}</p>
                 )}
                 <VerificationBadge state={listing.state} lasreraNumber={listing.lasreraNumber} lasreraVerified={listing.lasreraVerified} />
                 <div style={{ marginTop: 8 }}>

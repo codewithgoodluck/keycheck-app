@@ -22,8 +22,11 @@ export default function SavedReports({ reports, savedIds, setView, onToggleSave,
   return (
     <>
       <div className="saved-header">
-        <h1>Saved &amp; watching</h1>
-        <p>Plots, agents, and areas you're keeping an eye on. Saved locally to this device.</p>
+        <h1>Keep an eye on what matters to you.</h1>
+        <p>
+          Track the plots and people you're watching — come back anytime to see what's changed.
+          Saved locally to this device.
+        </p>
       </div>
 
       <div className="results-meta">

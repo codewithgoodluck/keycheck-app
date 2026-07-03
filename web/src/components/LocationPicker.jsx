@@ -98,7 +98,7 @@ export default function LocationPicker({ value, onChange }) {
                 borderRadius: 999,
                 padding: '5px 10px',
                 cursor: 'pointer',
-                color: 'var(--red)'
+                color: 'var(--status-disputed)'
               }}
             >
               <X size={13} /> Clear pin

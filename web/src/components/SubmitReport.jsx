@@ -21,8 +21,15 @@ const MIN_DESCRIPTION_FOR_NO_EVIDENCE = 60
 
 const COPY = {
   flag: {
-    heading: 'Report a problem',
-    subtitle: 'Describe what happened. Your report is reviewed before it appears publicly — your account isn\'t shown to other visitors, only used to attribute the report to you internally.',
+    heading: 'Your report protects the next person.',
+    // "Stay anonymous if you need to" (the brand guideline's draft
+    // copy) no longer describes what actually happens — reporting now
+    // requires an account (see the sign-in gate above). Kept the rest
+    // of the guideline's voice (protective, not alarmist) but swapped
+    // that one clause for what's actually true: honest about certainty
+    // is the guideline's own rule.
+    subtitle:
+      "Two minutes now can save someone else a lifetime's savings. Your account isn't shown to other visitors — the warning still counts.",
     descriptionLabel: 'What happened',
     descriptionPlaceholder: 'Briefly describe the dispute, double-sale, or fraud you experienced or know about.',
     submitLabel: 'Submit for review',
@@ -31,8 +38,9 @@ const COPY = {
     confirmationLabel: (n) => `Report submitted — you've now helped submit ${n} report${n === 1 ? '' : 's'}.`
   },
   endorsement: {
-    heading: 'Vouch for a clean transaction',
-    subtitle: 'Had a good experience? Say so. A track record of clean transactions is just as useful as a warning.',
+    heading: "Give credit where it's earned.",
+    subtitle:
+      'Had a good experience? Say so. Trustworthy agents deserve a track record too, not just a search that comes up empty.',
     descriptionLabel: 'What happened',
     descriptionPlaceholder: 'Describe your positive experience — what you bought/rented, roughly when, and any details others would find reassuring.',
     submitLabel: 'Submit vouch',
@@ -170,7 +178,7 @@ export default function SubmitReport({ addReport, setView, listerUser }) {
 
   if (submittedCount !== null) {
     return (
-      <div className="form-wrap">
+      <div className={`form-wrap ${kind === 'endorsement' ? 'theme-market' : ''}`}>
         <div className="empty-state">
           {kind === 'flag' ? <ShieldAlert size={28} /> : <ShieldCheck size={28} />}
           <p>{copy.confirmationLabel(submittedCount)}</p>
@@ -181,8 +189,8 @@ export default function SubmitReport({ addReport, setView, listerUser }) {
   }
 
   return (
-    <div className="form-wrap">
-      <div className="page-banner">
+    <div className={`form-wrap ${kind === 'endorsement' ? 'theme-market' : ''}`}>
+      <div className={`page-banner ${kind === 'endorsement' ? 'page-banner-market' : ''}`}>
         <h1>{copy.heading}</h1>
         <p>{copy.subtitle}</p>
       </div>
@@ -312,7 +320,7 @@ export default function SubmitReport({ addReport, setView, listerUser }) {
           </label>
 
           {error && (
-            <p style={{ color: 'var(--red)', fontSize: 13, fontWeight: 600, margin: '0 0 12px' }}>{error}</p>
+            <p style={{ color: 'var(--status-disputed)', fontSize: 13, fontWeight: 600, margin: '0 0 12px' }}>{error}</p>
           )}
 
           <button className="submit-btn" type="submit" disabled={submitting}>

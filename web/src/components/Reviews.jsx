@@ -5,7 +5,7 @@ import { msUntilNextSubmit, markSubmitted } from '../lib/antispam.js'
 
 function Stars({ value, size = 14 }) {
   return (
-    <span style={{ display: 'inline-flex', gap: 1, color: 'var(--gold, #eaa50d)' }}>
+    <span style={{ display: 'inline-flex', gap: 1, color: '#eaa50d' }}>
       {[1, 2, 3, 4, 5].map((n) => (
         <Star key={n} size={size} fill={n <= value ? 'currentColor' : 'none'} />
       ))}
@@ -151,7 +151,7 @@ export default function Reviews({ listerName }) {
               onChange={(e) => setVerifiedProofNote(e.target.value)}
             />
           </div>
-          {error && <p style={{ color: 'var(--red)', fontSize: 13, fontWeight: 600, margin: '0 0 12px' }}>{error}</p>}
+          {error && <p style={{ color: 'var(--status-disputed)', fontSize: 13, fontWeight: 600, margin: '0 0 12px' }}>{error}</p>}
           <button className="submit-btn" type="submit" disabled={submitting}>
             <Send size={15} /> {submitting ? 'Submitting...' : 'Submit review'}
           </button>

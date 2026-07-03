@@ -63,7 +63,7 @@ export default function WatchAreaControls({ term }) {
         )}
       </div>
       {pushError && (
-        <p style={{ color: 'var(--red)', fontSize: 12.5, fontWeight: 600, margin: '-8px 0 14px' }}>{pushError}</p>
+        <p style={{ color: 'var(--status-disputed)', fontSize: 12.5, fontWeight: 600, margin: '-8px 0 14px' }}>{pushError}</p>
       )}
     </>
   )

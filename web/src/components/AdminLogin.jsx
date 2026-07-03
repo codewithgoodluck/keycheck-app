@@ -63,7 +63,7 @@ export default function AdminLogin() {
               required
             />
           </div>
-          {error && <p style={{ color: 'var(--red)', fontSize: 13, marginTop: -8, marginBottom: 16 }}>{error}</p>}
+          {error && <p style={{ color: 'var(--status-disputed)', fontSize: 13, marginTop: -8, marginBottom: 16 }}>{error}</p>}
           <button className="submit-btn" type="submit" disabled={loading} style={{ width: '100%', justifyContent: 'center' }}>
             <LogIn size={15} /> {loading ? 'Signing in...' : 'Sign in'}
           </button>

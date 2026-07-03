@@ -88,7 +88,7 @@ export default function AdminSiteBanner() {
 
       <input ref={fileInputRef} type="file" accept="image/*" onChange={handleFileChange} disabled={uploading} />
       {uploading && <p style={{ fontSize: 12.5, color: 'var(--ink-soft)', marginTop: 8 }}>Uploading...</p>}
-      {error && <p style={{ color: 'var(--red)', fontSize: 13, fontWeight: 600, marginTop: 8 }}>{error}</p>}
+      {error && <p style={{ color: 'var(--status-disputed)', fontSize: 13, fontWeight: 600, marginTop: 8 }}>{error}</p>}
       <p className="field-hint" style={{ marginTop: 10 }}>
         <Upload size={12} style={{ verticalAlign: -2, marginRight: 4 }} />
         Max 10MB. Updates that page's banner immediately for everyone.

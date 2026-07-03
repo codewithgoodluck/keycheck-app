@@ -398,7 +398,7 @@ export default function AdminListings() {
             <span>Carries professional indemnity insurance (voluntary, not legally required in Nigeria)</span>
           </label>
 
-          {error && <p style={{ color: 'var(--red)', fontSize: 13, fontWeight: 600, margin: '0 0 12px' }}>{error}</p>}
+          {error && <p style={{ color: 'var(--status-disputed)', fontSize: 13, fontWeight: 600, margin: '0 0 12px' }}>{error}</p>}
 
           <button className="submit-btn" type="submit" disabled={submitting}>
             <Plus size={15} /> {submitting ? 'Creating...' : 'Create listing'}
@@ -453,7 +453,7 @@ export default function AdminListings() {
                   </span>
                 </div>
                 {listing.blockedReason && (
-                  <p style={{ fontSize: 12.5, color: 'var(--red)', margin: '0 0 8px' }}>{listing.blockedReason}</p>
+                  <p style={{ fontSize: 12.5, color: 'var(--status-disputed)', margin: '0 0 8px' }}>{listing.blockedReason}</p>
                 )}
                 <VerificationBadge state={listing.state} lasreraNumber={listing.lasreraNumber} lasreraVerified={listing.lasreraVerified} />
                 <TrustSignals
