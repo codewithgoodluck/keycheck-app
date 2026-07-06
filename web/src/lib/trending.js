@@ -8,7 +8,15 @@ const REPLY_WEIGHT = 1.5
 
 export function trendingScore(report) {
   const engagement = (report.upvotes || 0) + (report.replies?.length || 0) * REPLY_WEIGHT
-  const ageDays = Math.max(0, (Date.now() - new Date(report.dateReported).getTime()) / 86400000)
+  // Real, user-submitted reports only ever get `createdAt` (see
+  // reportsApi.js's submitReport) — `dateReported` is a seed-data-only
+  // field. Falling back to just `dateReported` left this NaN for every
+  // non-seed report, which silently no-ops the sort (a NaN comparator
+  // result leaves Array.prototype.sort's order unchanged) — "Trending"
+  // only ever appeared to work because the seed data happened to have
+  // `dateReported` set.
+  const reportedAt = report.createdAt || report.dateReported
+  const ageDays = Math.max(0, (Date.now() - new Date(reportedAt).getTime()) / 86400000)
   return engagement / Math.sqrt(ageDays + 2)
 }
 

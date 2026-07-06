@@ -108,8 +108,10 @@ export default function SubmitListing({ listerUser, setView }) {
       !form.listerPhone.trim() ||
       !form.price ||
       form.agencyFeePercent === '' ||
-      (SIZE_TYPES.includes(form.type) && !form.sizeSqm)
+      (SIZE_TYPES.includes(form.type) && !form.sizeSqm) ||
+      !pin
     ) {
+      if (!pin) setError('Drop a pin on the map for this property\'s location before submitting.')
       return
     }
 
@@ -251,8 +253,9 @@ export default function SubmitListing({ listerUser, setView }) {
             />
           </div>
           <div className="field">
-            <label>Pin the location on a map (optional)</label>
+            <label>Pin the location on a map</label>
             <LocationPicker value={pin} onChange={setPin} />
+            <p className="field-hint">Required so this listing shows up on the Map section.</p>
           </div>
 
           <div className="field">

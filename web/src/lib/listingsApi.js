@@ -1,5 +1,5 @@
 import { db, storage } from './firebase.js'
-import { collection, addDoc, updateDoc, doc, getDocs, getCountFromServer, onSnapshot, query, where, orderBy, limit } from 'firebase/firestore'
+import { collection, addDoc, updateDoc, deleteDoc, doc, getDocs, getCountFromServer, onSnapshot, query, where, orderBy, limit } from 'firebase/firestore'
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage'
 
 const LISTINGS = 'listings'
@@ -188,6 +188,16 @@ export async function updateListingLifecycle(listingId, status) {
 // button/label even though the code path is shared.
 export async function renewListing(listingId) {
   await updateListingLifecycle(listingId, 'active')
+}
+
+// Owner-initiated permanent removal — distinct from the lifecycle
+// statuses above (expired/sold/etc. still keep the document around, just
+// hidden from public browse). firestore.rules only allows this once the
+// listing is no longer 'active' (the lister has to move it to another
+// status first), so an active listing can't be yanked without at least
+// passing through that state change.
+export async function deleteListing(listingId) {
+  await deleteDoc(doc(db, LISTINGS, listingId))
 }
 
 // Pure, no Firestore dependency — used everywhere a listing's status is

@@ -60,6 +60,7 @@ export default function SubmitReport({ addReport, setView, listerUser }) {
     sourceUrl: ''
   })
   const [pin, setPin] = useState(null)
+  const [unknownAgent, setUnknownAgent] = useState(false)
   const [evidenceFile, setEvidenceFile] = useState(null)
   const [attested, setAttested] = useState(false)
   const [honeypot, setHoneypot] = useState('')
@@ -96,6 +97,10 @@ export default function SubmitReport({ addReport, setView, listerUser }) {
     e.preventDefault()
     setError('')
     if (!form.locationText.trim() || !form.description.trim()) return
+    if (!unknownAgent && !form.agentName.trim()) {
+      setError('Enter a name for the agent, landlord, developer, or company, or check "I don\'t know their name" below.')
+      return
+    }
 
     if (honeypot.trim()) return // bot filled the hidden field — drop silently, no error to tip it off
 
@@ -138,6 +143,7 @@ export default function SubmitReport({ addReport, setView, listerUser }) {
 
       const saved = await addReport({
         ...form,
+        agentName: unknownAgent ? null : form.agentName.trim(),
         sourceUrl: form.sourceUrl.trim(),
         kind,
         status: 'unverified',
@@ -262,14 +268,27 @@ export default function SubmitReport({ addReport, setView, listerUser }) {
           </div>
 
           <div className="field">
-            <label htmlFor="agentName">Name of agent, landlord, developer, or company (optional)</label>
+            <label htmlFor="agentName">Name of agent, landlord, developer, or company</label>
             <input
               id="agentName"
               type="text"
-              placeholder="Leave blank if not applicable"
+              placeholder="Required, unless you don't know it"
               value={form.agentName}
               onChange={(e) => update('agentName', e.target.value)}
+              disabled={unknownAgent}
+              required={!unknownAgent}
             />
+            <label style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 8, fontSize: 13, fontWeight: 500 }}>
+              <input
+                type="checkbox"
+                checked={unknownAgent}
+                onChange={(e) => {
+                  setUnknownAgent(e.target.checked)
+                  if (e.target.checked) update('agentName', '')
+                }}
+              />
+              I don't know their name (e.g. an unidentified person)
+            </label>
           </div>
 
           <div className="field">

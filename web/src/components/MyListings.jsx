@@ -1,11 +1,12 @@
 import { useEffect, useState } from 'react'
-import { LogOut, Plus, ShieldCheck, ShieldAlert, Clock, ShieldX, RefreshCw, MessageSquare, ChevronDown, ChevronUp, Eye, Users } from 'lucide-react'
+import { LogOut, Plus, ShieldCheck, ShieldAlert, Clock, ShieldX, RefreshCw, MessageSquare, ChevronDown, ChevronUp, Eye, Users, Trash2 } from 'lucide-react'
 import { getPropertyTypeLabel } from '../data/propertyTypes.js'
-import { getMyListings, updateListingLifecycle, renewListing, getEffectiveStatus, getListingViewCount } from '../lib/listingsApi.js'
+import { getMyListings, updateListingLifecycle, renewListing, deleteListing, getEffectiveStatus, getListingViewCount } from '../lib/listingsApi.js'
 import { getInquiriesForListing, markInquiryRead, getInquiryCount } from '../lib/inquiriesApi.js'
 import { listerSignOut } from '../lib/listerAuth.js'
 import VerificationBadge from './VerificationBadge.jsx'
 import FeeComplianceNote from './FeeComplianceNote.jsx'
+import ConfirmDialog from './ConfirmDialog.jsx'
 
 const STATUS_ICON = { active: ShieldCheck, pending: Clock, rejected: ShieldX, blocked: ShieldAlert, expired: ShieldX }
 const LIFECYCLE_OPTIONS = ['active', 'under_offer', 'let', 'sold', 'expired']
@@ -16,6 +17,7 @@ export default function MyListings({ listerUser, setView }) {
   const [expandedId, setExpandedId] = useState(null)
   const [inquiries, setInquiries] = useState(null)
   const [counts, setCounts] = useState({}) // listingId -> { views, inquiries }
+  const [confirmingDeleteId, setConfirmingDeleteId] = useState(null)
 
   useEffect(() => {
     if (!listerUser) return
@@ -72,6 +74,19 @@ export default function MyListings({ listerUser, setView }) {
       refresh()
     } catch (err) {
       alert('Failed to renew listing: ' + err.message)
+    } finally {
+      setBusyId(null)
+    }
+  }
+
+  async function handleDelete(id) {
+    setConfirmingDeleteId(null)
+    setBusyId(id)
+    try {
+      await deleteListing(id)
+      refresh()
+    } catch (err) {
+      alert('Failed to delete listing: ' + err.message)
     } finally {
       setBusyId(null)
     }
@@ -215,10 +230,26 @@ export default function MyListings({ listerUser, setView }) {
                   </div>
                 )}
 
-                <button className="chip" style={{ marginTop: 12 }} onClick={() => toggleInquiries(listing.id)}>
-                  <MessageSquare size={13} /> Inquiries ({listingCounts.inquiries})
-                  {expandedId === listing.id ? <ChevronUp size={13} /> : <ChevronDown size={13} />}
-                </button>
+                <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginTop: 12 }}>
+                  <button className="chip" onClick={() => toggleInquiries(listing.id)}>
+                    <MessageSquare size={13} /> Inquiries ({listingCounts.inquiries})
+                    {expandedId === listing.id ? <ChevronUp size={13} /> : <ChevronDown size={13} />}
+                  </button>
+                  <button
+                    className="chip"
+                    onClick={() => setConfirmingDeleteId(listing.id)}
+                    disabled={busyId === listing.id || effectiveStatus === 'active'}
+                    title={effectiveStatus === 'active' ? 'Set availability to something other than active before deleting' : undefined}
+                    style={{ color: 'var(--status-disputed)' }}
+                  >
+                    <Trash2 size={13} /> Delete
+                  </button>
+                </div>
+                {effectiveStatus === 'active' && (
+                  <p className="field-hint" style={{ marginTop: 6 }}>
+                    Set availability to something other than active first if you want to delete this listing.
+                  </p>
+                )}
 
                 {expandedId === listing.id && (
                   <div style={{ marginTop: 10, display: 'flex', flexDirection: 'column', gap: 8 }}>
@@ -261,6 +292,15 @@ export default function MyListings({ listerUser, setView }) {
           })
         )}
       </div>
+
+      <ConfirmDialog
+        open={confirmingDeleteId !== null}
+        title="Delete this listing?"
+        message="This permanently removes the listing and can't be undone. Inquiries and view history for it will also be gone."
+        confirmLabel="Delete"
+        onCancel={() => setConfirmingDeleteId(null)}
+        onConfirm={() => handleDelete(confirmingDeleteId)}
+      />
     </div>
   )
 }

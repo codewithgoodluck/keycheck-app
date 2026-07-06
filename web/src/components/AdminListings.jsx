@@ -118,8 +118,12 @@ export default function AdminListings() {
       !form.listerName.trim() ||
       !form.price ||
       form.agencyFeePercent === '' ||
-      (SIZE_TYPES.includes(form.type) && !form.sizeSqm)
-    ) return
+      (SIZE_TYPES.includes(form.type) && !form.sizeSqm) ||
+      !pin
+    ) {
+      if (!pin) setError('Drop a pin on the map for this property\'s location before submitting.')
+      return
+    }
     setSubmitting(true)
     try {
       await createListing({
@@ -243,8 +247,9 @@ export default function AdminListings() {
             />
           </div>
           <div className="field">
-            <label>Pin the location on a map (optional)</label>
+            <label>Pin the location on a map</label>
             <LocationPicker value={pin} onChange={setPin} />
+            <p className="field-hint">Required so this listing shows up on the Map section.</p>
           </div>
           <div className="field">
             <label htmlFor="listing-price">Price (₦)</label>
